@@ -16,6 +16,7 @@ import (
 	"maket/internal/render"
 	"maket/internal/scene"
 	"maket/internal/style"
+	"maket/internal/style/maket"
 	"maket/internal/style/pixel"
 	"maket/internal/timeline"
 	"maket/internal/video"
@@ -23,6 +24,7 @@ import (
 )
 
 var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, error){
+	"maket": func(root string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
 	"none":  func(_ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
 	"pixel": func(root string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, fonts) },
 }

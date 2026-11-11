@@ -73,6 +73,7 @@ type Entity struct {
 	Count    int             `json:"count"`
 	Spacing  float64         `json:"spacing"`
 	LabelPos string          `json:"label_pos"`
+	FullWord *bool           `json:"full_word"`
 }
 
 type Event struct {
@@ -94,6 +95,9 @@ type Event struct {
 	Dx      float64 `json:"dx"`
 	Consume bool    `json:"consume"`
 	Hold    bool    `json:"hold"`
+
+	Arc     *float64 `json:"arc"`
+	Waiting bool     `json:"waiting"`
 }
 
 type At struct {

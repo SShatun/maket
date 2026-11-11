@@ -1,0 +1,44 @@
+{
+  "style": "maket",
+  "guess": {"text": "Сессия упала?"},
+  "answer": {"at": "p8:окошко", "card_at": "p8.end", "text": "Ждёт окошко"},
+  "phrases": [
+    {"text": "сессия упала?", "caption": "Сессия упала?"},
+    {"text": "ты пишешь: ну чё там? ответа нет.", "caption": "Ну чё там?"},
+    {"text": "пишешь: пиши. опять тишина.", "caption": "Пиши. Тишина."},
+    {"text": "но сессия жива. она просто не читает очередь.", "caption": "Жива. Не читает."},
+    {"text": "она ждёт ответа в окошке, которого ты не видишь.", "caption": "Ждёт ответа"},
+    {"text": "окошко спрашивает: можно войти в копию ветки?", "caption": "Войти в копию?"},
+    {"text": "жмёшь йес, и сообщения пошли.", "caption": "Сообщения пошли"},
+    {"text": "она не упала. она ждёт окошко.", "caption": "Ждёт окошко"}
+  ],
+  "entities": [
+    {"id": "U", "kind": "block", "role": "external", "label": "ты", "at": [0, -2.4], "appear": "p2:ты-0.1",
+     "status": [["p1", "телефон"]]},
+    {"id": "Q", "kind": "slots", "role": "buffer", "label": "очередь", "at": [0, 1.6], "count": 3, "spacing": 2.0, "appear": "p2:ты", "label_pos": "right"},
+    {"id": "S", "kind": "block", "role": "consumer", "label": "сессия лабы", "at": [0, 5.8], "appear": "p2:ты+0.1", "label_pos": "right",
+     "status": [["p1", "молчит 2 ч"], ["p4:жива", "жива, не читает"], ["p5:ждёт", "ждёт ответа"], ["p7:сообщения", "читает"], ["p7:пошли", "пишет код"]]},
+    {"id": "W", "kind": "block", "role": "external", "label": "окошко Yes / No", "at": [-2.7, 10.0], "appear": "p5:окошке-0.3", "label_pos": "below",
+     "status": [["p1", "тебе не видно"], ["p7:йес", "Yes"]]},
+    {"id": "B", "kind": "cylinder", "role": "storage", "label": "копия ветки", "at": [2.7, 10.0], "appear": "p2:ты+0.2",
+     "status": [["p1", "mock-dispatcher"]]}
+  ],
+  "code": {
+    "lines": ["$ claude agents --json", "{", "  \"status\": \"waiting\",", "  \"waitingFor\": \"permission prompt\",", "  \"state\": \"blocked\"", "}"],
+    "highlight": [["p1", 0, "lav"], ["p4:жива", 2, "lav"], ["p5:окошке", 3, "error"], ["p7:йес", 0, "ok"]]
+  },
+  "events": [
+    {"at": "p2:пишешь", "do": "send", "token": "m1", "label": "?", "from": "U", "to": "Q[0]", "dur": 0.7},
+    {"at": "p3:пиши", "do": "send", "token": "m2", "label": "пиши", "from": "U", "to": "Q[1]", "dur": 0.7},
+    {"at": "p4:жива-0.6", "do": "shot", "target": "S", "zoom": 1.3, "dur": 0.6, "until": "p4:очередь"},
+    {"at": "p5:ждёт", "do": "shot", "target": [-1.35, 7.9, 0], "zoom": 1.15, "dur": 0.6, "until": "p6.end"},
+    {"at": "p5:окошке", "do": "block", "target": "W", "until": "p7:йес"},
+    {"at": "p6:войти", "do": "send", "token": "t1", "label": "cd", "from": "S", "to": [-2.7, 10.0, 2.6], "dur": 0.8},
+    {"at": "p7:йес-0.7", "do": "send", "token": "y", "label": "Yes", "from": "U", "to": "W", "dur": 0.7, "consume": true},
+    {"at": "p7:йес", "do": "state", "target": "W", "role": "ok", "until": "p8.end+1.5"},
+    {"at": "p7:йес+0.2", "do": "send", "token": "t1", "from": [-2.7, 10.0, 2.6], "to": "B", "dur": 0.6, "consume": true},
+    {"at": "p7:йес+0.3", "do": "send", "token": "m1", "from": "Q[0]", "to": "S", "dur": 0.6, "consume": true},
+    {"at": "p7:пошли-0.6", "do": "send", "token": "m2", "from": "Q[1]", "to": "S", "dur": 0.6, "consume": true},
+    {"at": "p8:она#2", "do": "focus", "targets": ["W"]}
+  ]
+}
