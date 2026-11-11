@@ -132,7 +132,7 @@ func align(words []sceneWord, got []heard, spell map[string]string) {
 					best, how = c, stepMatch
 				}
 			}
-			if i >= 2 && merged(sw[i-2], sw[i-1], hw[j-1]) {
+			if i >= 2 && i < n && words[i-2].phrase == words[i-1].phrase && words[i].phrase == words[i-1].phrase && merged(sw[i-2], sw[i-1], hw[j-1]) {
 				if c := cost[i-2][j-1]; c < best {
 					best, how = c, stepMerge
 				}

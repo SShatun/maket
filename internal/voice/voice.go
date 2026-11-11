@@ -75,6 +75,10 @@ func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, n
 	if name == "" {
 		name = cfg.Voice
 	}
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
 	vdir := filepath.Join(root, "voices", name)
 	specBytes, err := os.ReadFile(filepath.Join(vdir, "voice.json"))
 	if err != nil {
@@ -90,24 +94,10 @@ func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, n
 		return nil, err
 	}
 	r.dir = filepath.Join(root, ".cache", "voice", key)
-	if b, err := os.ReadFile(filepath.Join(r.dir, "result.json")); err == nil {
-		var res Result
-		if err := json.Unmarshal(b, &res); err == nil {
-			return &res, nil
-		}
-	}
 	if err := os.MkdirAll(r.dir, 0o755); err != nil {
 		return nil, err
 	}
-	res, err := r.synthesize()
-	if err != nil {
-		return nil, err
-	}
-	b, _ := json.MarshalIndent(res, "", " ")
-	if err := os.WriteFile(filepath.Join(r.dir, "result.json"), b, 0o644); err != nil {
-		return nil, err
-	}
-	return res, nil
+	return r.synthesize()
 }
 
 func (r *run) key(specBytes []byte) (string, error) {
@@ -127,7 +117,7 @@ func (r *run) key(specBytes []byte) (string, error) {
 		h.Write(b)
 	}
 	for _, ph := range r.sc.Phrases {
-		p, _ := json.Marshal([]any{ph.Text, ph.Stress, ph.Pause})
+		p, _ := json.Marshal([]any{ph.Text, ph.Stress})
 		h.Write(p)
 	}
 	return hex.EncodeToString(h.Sum(nil))[:24], nil
@@ -189,6 +179,9 @@ func (r *run) stress() ([]string, error) {
 		texts = append(texts, p.Text)
 	}
 	out := filepath.Join(r.dir, "stress.json")
+	if _, err := os.Stat(out); err == nil {
+		return r.readStress(out)
+	}
 	custom := map[string]string{}
 	for k, v := range r.spec.Stress {
 		if strings.Contains(v, "\u0301") {
@@ -199,6 +192,10 @@ func (r *run) stress() ([]string, error) {
 	if err := r.python(r.cfg.StressPython, "stress.py", job); err != nil {
 		return nil, err
 	}
+	return r.readStress(out)
+}
+
+func (r *run) readStress(out string) ([]string, error) {
 	var res struct {
 		Marked []string `json:"marked"`
 	}
@@ -250,12 +247,26 @@ type ttsItem struct {
 }
 
 func (r *run) tts(items []ttsItem, seed int) error {
+	var todo []ttsItem
+	for _, it := range items {
+		if _, err := os.Stat(it.Out); err != nil {
+			todo = append(todo, it)
+		}
+	}
+	if len(todo) == 0 {
+		return nil
+	}
+	items = todo
 	job := map[string]any{"model": r.cfg.TTSModel, "ref_audio": r.ref, "ref_text": r.spec.RefText, "seed": seed, "items": items}
 	return r.python(r.cfg.TTSPython, "tts.py", job)
 }
 
 func (r *run) asr(wav string) ([]heard, error) {
 	out := strings.TrimSuffix(wav, ".wav") + ".words.json"
+	if b, err := os.ReadFile(out); err == nil {
+		var got []heard
+		return got, json.Unmarshal(b, &got)
+	}
 	job := map[string]any{"model": r.cfg.WhisperModel, "items": []map[string]string{{"wav": wav, "out": out}}}
 	if err := r.python(r.cfg.TTSPython, "asr.py", job); err != nil {
 		return nil, err
@@ -414,7 +425,7 @@ func (r *run) place(pieces []*piece) (*Result, error) {
 		pt.Start, pt.End = t, pt.Words[len(pt.Words)-1].E
 		res.Phrases = append(res.Phrases, pt)
 		if len(unheard) > 0 {
-			res.Warnings = append(res.Warnings, fmt.Sprintf("фраза %d: не расслышано %s", i+1, strings.Join(unheard, ", ")))
+			res.Warnings = append(res.Warnings, fmt.Sprintf("phrase %d: not heard: %s", i+1, strings.Join(unheard, ", ")))
 		}
 		t += p.to - p.from
 	}
