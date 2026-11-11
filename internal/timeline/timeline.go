@@ -27,7 +27,7 @@ type Gap struct {
 }
 
 const (
-	lead          = 0.2
+	Lead          = 0.2
 	charsPerSec   = 14.0
 	phraseGap     = 0.35
 	quietLimitSec = 3.0
@@ -35,7 +35,7 @@ const (
 
 func Estimate(sc *scene.Scene) *Timeline {
 	var phrases []PhraseTime
-	t := lead
+	t := Lead
 	for _, p := range sc.Phrases {
 		t += p.Pause
 		pt := PhraseTime{Start: t}

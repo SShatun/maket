@@ -12,12 +12,14 @@ import (
 	"runtime"
 	"strconv"
 
+	"maket/internal/audio"
 	"maket/internal/render"
 	"maket/internal/scene"
 	"maket/internal/style"
 	"maket/internal/style/pixel"
 	"maket/internal/timeline"
 	"maket/internal/video"
+	"maket/internal/voice"
 )
 
 var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, error){
@@ -25,8 +27,9 @@ var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, err
 	"pixel": func(root string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, fonts) },
 }
 
-const usage = `maket render scene.json -o out.mp4 [-workers N] [-root DIR]
-maket stills scene.json -o dir [-root DIR] t1 t2 ...`
+const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
+maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
+maket voice scene.json [-voice NAME] [-seed N] [-root DIR]`
 
 func main() {
 	if len(os.Args) < 3 {
@@ -38,7 +41,11 @@ func main() {
 	out := fs.String("o", "", "output file or directory")
 	workers := fs.Int("workers", runtime.NumCPU(), "frames rendered in parallel")
 	root := fs.String("root", ".", "repository root with assets/")
+	voiceName := fs.String("voice", "", "voice folder in voices/, default from maket.json or the scene")
+	seed := fs.Int("seed", 0, "voice seed, default from the scene")
+	silent := fs.Bool("silent", false, "no voice: phrases timed by letter count")
 	fs.Parse(os.Args[3:])
+	opt := options{root: *root, voice: *voiceName, seed: *seed, silent: *silent}
 	if *workers < 1 {
 		fmt.Fprintln(os.Stderr, "maket: -workers must be at least 1")
 		os.Exit(2)
@@ -47,9 +54,11 @@ func main() {
 	var err error
 	switch cmd {
 	case "render":
-		err = renderVideo(scenePath, *out, *root, *workers)
+		err = renderVideo(scenePath, *out, opt, *workers)
 	case "stills":
-		err = stills(scenePath, *out, *root, fs.Args())
+		err = stills(scenePath, *out, opt, fs.Args())
+	case "voice":
+		err = voiceTable(scenePath, opt)
 	default:
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
@@ -60,13 +69,43 @@ func main() {
 	}
 }
 
-type job struct {
-	sc *scene.Scene
-	tl *timeline.Timeline
-	st style.Style
+type options struct {
+	root, voice string
+	seed        int
+	silent      bool
 }
 
-func prepare(scenePath, root string) (*job, error) {
+type job struct {
+	sc    *scene.Scene
+	tl    *timeline.Timeline
+	st    style.Style
+	voice *voice.Result
+}
+
+func speak(sc *scene.Scene, opt options) (*voice.Result, error) {
+	cfg, err := voice.LoadConfig(opt.root)
+	if err != nil {
+		return nil, err
+	}
+	name := opt.voice
+	if name == "" {
+		name = sc.Voice
+	}
+	if opt.seed != 0 {
+		sc.Seed = opt.seed
+	}
+	res, err := voice.Synthesize(context.Background(), opt.root, cfg, sc, name)
+	if err != nil {
+		return nil, err
+	}
+	for _, w := range res.Warnings {
+		fmt.Fprintln(os.Stderr, "maket:", w)
+	}
+	return res, nil
+}
+
+func prepare(scenePath string, opt options) (*job, error) {
+	root := opt.root
 	sc, err := scene.Load(scenePath)
 	if err != nil {
 		return nil, err
@@ -88,6 +127,13 @@ func prepare(scenePath, root string) (*job, error) {
 		return nil, err
 	}
 	tl := timeline.Estimate(sc)
+	var said *voice.Result
+	if !opt.silent {
+		if said, err = speak(sc, opt); err != nil {
+			return nil, err
+		}
+		tl = timeline.New(sc, said.Phrases)
+	}
 	if _, err := tl.Moments(sc); err != nil {
 		return nil, err
 	}
@@ -97,7 +143,7 @@ func prepare(scenePath, root string) (*job, error) {
 	for _, g := range tl.Quiet(sc) {
 		fmt.Fprintf(os.Stderr, "maket: nothing happens from %.1f to %.1f s\n", g.From, g.To)
 	}
-	return &job{sc: sc, tl: tl, st: st}, nil
+	return &job{sc: sc, tl: tl, st: st, voice: said}, nil
 }
 
 func (j *job) frame(t float64) *image.RGBA {
@@ -107,11 +153,11 @@ func (j *job) frame(t float64) *image.RGBA {
 	return im
 }
 
-func renderVideo(scenePath, out, root string, workers int) error {
+func renderVideo(scenePath, out string, opt options, workers int) error {
 	if out == "" {
 		return fmt.Errorf("render: -o is required")
 	}
-	j, err := prepare(scenePath, root)
+	j, err := prepare(scenePath, opt)
 	if err != nil {
 		return err
 	}
@@ -127,18 +173,43 @@ func renderVideo(scenePath, out, root string, workers int) error {
 	if err != nil {
 		return err
 	}
-	if err := video.Mux(vid, "", out); err != nil {
+	track := ""
+	if j.voice != nil {
+		track = j.voice.Track
+	}
+	mix := out + ".audio.wav"
+	defer os.Remove(mix)
+	if err := audio.Mix(track, j.st.Sounds(), j.tl.Duration, mix); err != nil {
+		return err
+	}
+	if err := video.Mux(vid, mix, out); err != nil {
 		return err
 	}
 	fmt.Println(out)
 	return nil
 }
 
-func stills(scenePath, dir, root string, times []string) error {
+func voiceTable(scenePath string, opt options) error {
+	sc, err := scene.Load(scenePath)
+	if err != nil {
+		return err
+	}
+	res, err := speak(sc, opt)
+	if err != nil {
+		return err
+	}
+	for i, p := range res.Phrases {
+		fmt.Printf("%2d  %6.2f  %6.2f  %s\n", i+1, p.Start, p.End, sc.Phrases[i].Text)
+	}
+	fmt.Println(res.Track)
+	return nil
+}
+
+func stills(scenePath, dir string, opt options, times []string) error {
 	if dir == "" {
 		return fmt.Errorf("stills: -o is required")
 	}
-	j, err := prepare(scenePath, root)
+	j, err := prepare(scenePath, opt)
 	if err != nil {
 		return err
 	}
