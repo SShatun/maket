@@ -3,6 +3,7 @@
  "scale": "12x logical pixel; the pixel frame uses 6x, so draw at 0.5x, nearest-neighbour",
  "files": "<name>/<state>_<i>.png, all frames of one object share size, anchor and top",
  "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
+ "fixed_colour": "sprites with tint=false are drawn as is: the material colour (cardboard) carries meaning; state is shown by face, stickers and badges",
  "sprites": {
   "person": {
    "dir": "person/",
@@ -20,6 +21,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -69,6 +71,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -123,6 +126,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -172,6 +176,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -216,6 +221,7 @@
    ],
    "pixel": 12,
    "rest": "run",
+   "tint": true,
    "states": {
     "run": {
      "frames": 2,
@@ -260,6 +266,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -304,6 +311,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -348,6 +356,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -392,6 +401,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -436,6 +446,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -480,6 +491,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
@@ -529,6 +541,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": false,
    "states": {
     "idle": {
      "frames": 2,
@@ -578,6 +591,7 @@
    ],
    "pixel": 12,
    "rest": "idle",
+   "tint": true,
    "states": {
     "idle": {
      "frames": 2,
