@@ -1,0 +1,62 @@
+{
+  "duration": 30.5,
+  "entities": [
+    {"id": "U", "sprite": "person", "role": "external", "label": "ты", "at": [260, 600], "appear": 1.4,
+     "status": [[0, "дежурный"]]},
+    {"id": "W", "sprite": "service", "role": "producer", "label": "расчёт wl", "at": [760, 600], "appear": 1.5,
+     "status": [[0, "ждёт"], [4.2, "считает"], [6.5, "Skipping"], [7.9, "ждёт"], [10.2, "читает шаблон"], [16.4, "ждёт"], [21.9, "считает 4 мин"], [24.9, "готово"]],
+     "roles": [[6.5, "error"], [7.9, "producer"]],
+     "badges": [[6.5, "bad"], [7.9, null]]},
+    {"id": "I", "sprite": "external", "role": "external", "label": "товар", "at": [260, 960], "appear": 1.6,
+     "status": [[0, "нет доставки"], [24.9, "доставка есть"]],
+     "roles": [[24.9, "ok"]],
+     "badges": [[2.2, "question"], [19.2, "wait"], [24.9, "ok"]]},
+    {"id": "T", "sprite": "db", "role": "storage", "label": "шаблон", "at": [760, 960], "appear": 1.7,
+     "status": [[0, "продавца"], [13.6, "0 методов"], [17.6, "6 методов"]],
+     "badges": [[13.6, "question"], [17.6, null]]}
+  ],
+  "code": {
+    "lines": [
+      {"text": "POST /v1/item-resync"},
+      {"text": "wl: has no skus with shipping"},
+      {"text": "    methods. Skipping"},
+      {"text": "template/methods/get: 0", "appear": 13.4},
+      {"text": "POST /v1/resync_template", "appear": 16.6},
+      {"text": "POST /v1/item-resync", "appear": 21.3}
+    ],
+    "highlight": [
+      [3.6, 0, "yel"], [6.4, 0, "off"], [6.4, 1, "error"], [6.4, 2, "error"], [9.5, 1, "off"], [9.5, 2, "off"],
+      [13.4, 3, "lav"], [16.6, 3, "off"], [16.6, 4, "yel"], [21.3, 4, "off"], [21.3, 5, "yel"], [24.9, 5, "ok"]
+    ]
+  },
+  "events": [
+    {"do": "guess", "t": 0.05, "until": 1.35, "text": "Ресинк сломан?"},
+    {"do": "move", "t": 3.6, "dur": 0.6, "from": [260, 480], "to": [700, 470], "label": "item", "until": 5.4},
+    {"do": "move", "t": 5.4, "dur": 0.5, "from": [700, 470], "to": [700, 760], "label": "item", "until": 6.4},
+    {"do": "shake", "target": "W", "t": 6.5},
+    {"do": "move", "t": 10.2, "dur": 0.5, "from": [700, 520], "to": [700, 760], "label": "?", "until": 12.0},
+    {"do": "number", "t": 14.2, "until": 16.3, "text": "0", "sub": "методов в шаблоне"},
+    {"do": "move", "t": 16.8, "dur": 0.7, "from": [260, 480], "to": [700, 760], "label": "tpl", "until": 17.6},
+    {"do": "move", "t": 21.3, "dur": 0.6, "from": [260, 480], "to": [700, 470], "label": "item", "until": 23.2},
+    {"do": "move", "t": 23.2, "dur": 0.8, "from": [700, 470], "to": [320, 800], "label": "item", "until": 24.9},
+    {"do": "answer", "t": 26.1, "card_t": 27.75, "guess": "Ресинк сломан?", "text": "Шаблон пустой", "size": 64, "badge": "question"}
+  ],
+  "captions": [
+    [1.5, 3.0, "доставка пропала"],
+    [3.3, 4.7, "ресинк товара"],
+    [5.0, 7.6, "молча пропускает"],
+    [7.9, 9.1, "не сломан"],
+    [9.5, 12.7, "методы из шаблона"],
+    [13.2, 16.1, "в шаблоне ноль"],
+    [16.6, 18.7, "ресинк шаблона"],
+    [18.8, 20.8, "товары не пересчитал"],
+    [21.3, 22.6, "ещё ресинк товара"],
+    [23.0, 25.8, "через 4 минуты"],
+    [26.1, 30.3, "пустой был шаблон"]
+  ],
+  "sfx": [
+    [0.05, "title"], [1.4, "appear"], [1.5, "appear"], [1.6, "appear"], [1.7, "appear"],
+    [3.6, "move"], [5.4, "move"], [6.5, "block"], [10.2, "move"], [13.4, "tick"], [14.2, "question"],
+    [16.8, "move"], [17.6, "tick"], [21.3, "move"], [23.2, "move"], [24.9, "ok"], [26.35, "strike"], [27.75, "say"]
+  ]
+}

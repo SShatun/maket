@@ -1,0 +1,610 @@
+{
+ "tint": "multiply ONLY neutral grey pixels (r == g == b): rgb * role / 255; faces, skin, effects are coloured and drawn as is",
+ "scale": "12x logical pixel; the pixel frame uses 6x, so draw at 0.5x, nearest-neighbour",
+ "files": "<name>/<state>_<i>.png, all frames of one object share size, anchor and top",
+ "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
+ "sprites": {
+  "person": {
+   "dir": "person/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "wait": {
+     "frames": 4,
+     "fps": 6,
+     "loop": true
+    },
+    "surprised": {
+     "frames": 2,
+     "fps": 8,
+     "loop": false
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "service": {
+   "dir": "service/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "count": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "skip": {
+     "frames": 3,
+     "fps": 6,
+     "loop": false
+    },
+    "bad": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "session": {
+   "dir": "session/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "type": {
+     "frames": 3,
+     "fps": 8,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "sleep": {
+     "frames": 3,
+     "fps": 2,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "dialog": {
+   "dir": "dialog/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "impatient": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "closed": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "queue": {
+   "dir": "queue/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "run",
+   "states": {
+    "run": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "stop": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "full": {
+     "frames": 3,
+     "fps": 6,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "branch": {
+   "dir": "branch/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "grow": {
+     "frames": 3,
+     "fps": 3,
+     "loop": false
+    },
+    "pushed": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "db": {
+   "dir": "db/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "give": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "empty": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "cache": {
+   "dir": "cache/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "give": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "miss": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "topic": {
+   "dir": "topic/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "flow": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "lag": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "external": {
+   "dir": "external/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "answer": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "closed": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "lock": {
+   "dir": "lock/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "check": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "deny": {
+     "frames": 2,
+     "fps": 6,
+     "loop": false
+    },
+    "allow": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "parcel": {
+   "dir": "parcel/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "sad": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "happy": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "template": {
+   "dir": "template/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "full": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "empty": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  }
+ }
+}

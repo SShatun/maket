@@ -1,0 +1,42 @@
+{
+  "duration": 17,
+  "entities": [
+    {"id": "C", "kind": "block", "role": "external", "label": "клиент", "at": [0, -2.0],
+     "status": [[0, "GET /user/42"]]},
+    {"id": "S", "kind": "block", "role": "producer", "label": "сервис", "at": [0, 2.6], "label_pos": "right",
+     "status": [[0, "ждёт запрос"], [1.2, "cache.Get(42)"], [4.0, "db.Query(42)"], [7.9, "cache.Set(42)"], [11.9, "cache.Get(42)"]]},
+    {"id": "K", "kind": "slots", "role": "storage", "label": "кэш", "at": [-2.9, 7.4], "count": 2, "spacing": 2.2, "full_word": false,
+     "status": [[0, ""], [2.0, "промах"], [3.6, ""], [12.5, "попадание"], [13.6, ""]]},
+    {"id": "DB", "kind": "cylinder", "role": "storage", "label": "база", "at": [2.9, 7.4],
+     "progress": [[4.7, 6.7, "SELECT 40 мс"]]}
+  ],
+  "code": {
+    "lines": ["v, ok := cache.Get(id)", "if !ok {", "    v = db.Query(id) // ~40 мс", "    cache.Set(id, v)", "}", "return v"],
+    "highlight": [[0, 0, "producer"], [2.0, 1, "error"], [4.0, 2, "storage"], [7.9, 3, "storage"], [8.6, 5, "producer"], [11.9, 0, "producer"], [12.5, 0, "ok"], [13.6, 5, "producer"]]
+  },
+  "events": [
+    {"t": 0.6, "do": "send", "token": "r1", "label": "42", "from": "C", "to": "S", "dur": 0.6},
+    {"t": 1.4, "do": "send", "token": "r1", "from": "S", "to": [-2.9, 7.4, 1.3], "dur": 0.6},
+    {"t": 2.0, "do": "state", "target": "K", "role": "error", "until": 2.7},
+    {"t": 2.0, "do": "sfx", "name": "buzz"},
+    {"t": 2.7, "do": "send", "token": "r1", "from": [-2.9, 7.4, 1.3], "to": "S", "dur": 0.6},
+    {"t": 4.0, "do": "send", "token": "r1", "from": "S", "to": "DB", "dur": 0.7},
+    {"t": 6.8, "do": "send", "token": "r1", "from": "DB", "to": "S", "dur": 0.7},
+    {"t": 7.9, "do": "send", "token": "c1", "label": "42", "from": "S", "to": "K[0]", "dur": 0.6},
+    {"t": 8.6, "do": "send", "token": "r1", "from": "S", "to": "C", "dur": 0.7, "consume": true},
+    {"t": 11.3, "do": "send", "token": "r2", "label": "42", "from": "C", "to": "S", "dur": 0.6},
+    {"t": 11.9, "do": "send", "token": "r2", "from": "S", "to": [-2.9, 7.4, 1.6], "dur": 0.6},
+    {"t": 12.5, "do": "state", "target": "K", "role": "ok", "until": 13.2},
+    {"t": 12.5, "do": "flash", "target": "K"},
+    {"t": 13.0, "do": "send", "token": "r2", "from": [-2.9, 7.4, 1.6], "to": "S", "dur": 0.5},
+    {"t": 13.6, "do": "send", "token": "r2", "from": "S", "to": "C", "dur": 0.6, "consume": true},
+    {"t": 14.6, "do": "focus", "targets": ["K"]}
+  ],
+  "captions": [
+    [0.3, 3.6, "Запрос за юзером 42 сначала идёт в кэш."],
+    [3.8, 7.6, "Промах. Тогда сервис идёт в базу, это 40 миллисекунд."],
+    [7.8, 11.0, "Ответ кладём в кэш и сразу отдаём клиенту."],
+    [11.3, 14.4, "Второй запрос за 42 берётся из кэша."],
+    [14.6, 16.9, "Без похода в базу. За пару миллисекунд."]
+  ]
+}

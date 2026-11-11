@@ -1,0 +1,43 @@
+{
+  "duration": 23.5,
+  "entities": [
+    {"id": "U", "kind": "block", "role": "external", "label": "ты", "at": [0, -2.4], "appear": 1.5,
+     "status": [[0, "телефон"]]},
+    {"id": "Q", "kind": "slots", "role": "buffer", "label": "очередь", "at": [0, 1.6], "count": 3, "spacing": 2.0, "appear": 1.6, "label_pos": "right"},
+    {"id": "S", "kind": "block", "role": "consumer", "label": "сессия лабы", "at": [0, 5.8], "appear": 1.7, "label_pos": "right",
+     "status": [[0, "молчит 2 ч"], [8.3, "жива, не читает"], [11.4, "ждёт ответа"], [18.0, "читает"], [19.0, "пишет код"]]},
+    {"id": "W", "kind": "block", "role": "external", "label": "окошко Yes / No", "at": [-2.7, 10.0], "appear": 12.1, "label_pos": "below",
+     "status": [[0, "тебе не видно"], [17.6, "Yes"]]},
+    {"id": "B", "kind": "cylinder", "role": "storage", "label": "копия ветки", "at": [2.7, 10.0], "appear": 1.8,
+     "status": [[0, "mock-dispatcher"]]}
+  ],
+  "code": {
+    "lines": ["$ claude agents --json", "{", "  \"status\": \"waiting\",", "  \"waitingFor\": \"permission prompt\",", "  \"state\": \"blocked\"", "}"],
+    "highlight": [[0, 0, "external"], [8.3, 2, "consumer"], [12.4, 3, "error"], [17.6, 0, "ok"]]
+  },
+  "events": [
+    {"t": 0.1, "do": "title", "text": "Сессия упала?", "until": 1.45},
+    {"t": 2.3, "do": "send", "token": "m1", "label": "?", "from": "U", "to": "Q[0]", "dur": 0.7},
+    {"t": 4.9, "do": "send", "token": "m2", "label": "пиши", "from": "U", "to": "Q[1]", "dur": 0.7},
+    {"t": 7.5, "do": "shot", "target": "S", "zoom": 1.3, "dur": 0.6, "until": 10.4},
+    {"t": 11.5, "do": "shot", "target": [-1.35, 7.9, 0], "zoom": 1.15, "dur": 0.6, "until": 16.6},
+    {"t": 12.4, "do": "block", "target": "W", "until": 17.6},
+    {"t": 15.3, "do": "send", "token": "t1", "label": "cd", "from": "S", "to": [-2.7, 10.0, 2.6], "dur": 0.8},
+    {"t": 16.9, "do": "send", "token": "y", "label": "Yes", "from": "U", "to": "W", "dur": 0.7, "consume": true},
+    {"t": 17.6, "do": "state", "target": "W", "role": "ok", "until": 30},
+    {"t": 17.8, "do": "send", "token": "t1", "from": [-2.7, 10.0, 2.6], "to": "B", "dur": 0.6, "consume": true},
+    {"t": 17.9, "do": "send", "token": "m1", "from": "Q[0]", "to": "S", "dur": 0.6, "consume": true},
+    {"t": 18.3, "do": "send", "token": "m2", "from": "Q[1]", "to": "S", "dur": 0.6, "consume": true},
+    {"t": 20.5, "do": "focus", "targets": ["W"]}
+  ],
+  "captions": [
+    [1.6, 3.9, "«ну чё там?»"],
+    [4.3, 6.7, "«пиши». Тишина."],
+    [7.1, 10.5, "Жива. Не читает."],
+    [10.85, 13.7, "Ждёт ответа"],
+    [14.1, 16.5, "Войти в копию?"],
+    [16.9, 19.2, "Жмёшь Yes"],
+    [19.4, 20.35, "Не упала."],
+    [20.4, 23.3, "Ждёт окошко."]
+  ]
+}

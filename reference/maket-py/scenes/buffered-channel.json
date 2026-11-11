@@ -1,0 +1,37 @@
+{
+  "duration": 20,
+  "entities": [
+    {"id": "A", "kind": "block", "role": "producer", "label": "горутина A", "at": [-2.5, -1.2],
+     "status": [[0, "готова"], [1.2, "ch <- 1"], [8.2, "ch <- 4"], [8.9, "ждёт"], [14.8, "ch <- 4"]]},
+    {"id": "B", "kind": "block", "role": "producer", "label": "горутина B", "at": [0, -1.2],
+     "status": [[0, "готова"], [2.0, "ch <- 2"]]},
+    {"id": "C", "kind": "block", "role": "producer", "label": "горутина C", "at": [2.5, -1.2],
+     "status": [[0, "готова"], [2.8, "ch <- 3"]]},
+    {"id": "ch", "kind": "slots", "role": "buffer", "label": "ch, буфер 3", "at": [0, 4], "count": 3, "spacing": 2.5},
+    {"id": "R", "kind": "block", "role": "consumer", "label": "читатель", "at": [0, 9],
+     "progress": [[0.5, 13.0, "handle(0)"], [13.7, 26, "handle(1)"]]}
+  ],
+  "code": {
+    "lines": ["ch := make(chan int, 3)", "for i := range 3 { go produce(ch) }", "for v := range ch {", "    handle(v) // ~1 сек", "}"],
+    "highlight": [[0, 0, "producer"], [1.2, 1, "producer"], [3.8, 3, "consumer"], [8.0, 1, "error"], [12.8, 2, "consumer"], [16.8, 0, "buffer"]]
+  },
+  "events": [
+    {"t": 1.2, "do": "send", "token": "1", "from": "A", "to": "ch[0]"},
+    {"t": 2.0, "do": "send", "token": "2", "from": "B", "to": "ch[1]"},
+    {"t": 2.8, "do": "send", "token": "3", "from": "C", "to": "ch[2]"},
+    {"t": 8.2, "do": "send", "token": "4", "from": "A", "to": [-2.5, 1.9, 0.2], "arc": 1.2, "waiting": true},
+    {"t": 8.9, "do": "block", "target": "A", "until": 14.8},
+    {"t": 13.0, "do": "send", "token": "1", "from": "ch[0]", "to": "R", "consume": true},
+    {"t": 13.7, "do": "send", "token": "2", "from": "ch[1]", "to": "ch[0]", "dur": 0.5},
+    {"t": 13.7, "do": "send", "token": "3", "from": "ch[2]", "to": "ch[1]", "dur": 0.5},
+    {"t": 14.2, "do": "send", "token": "4", "from": [-2.5, 1.9, 0.2], "to": "ch[2]", "dur": 0.6, "arc": 1.4},
+    {"t": 16.8, "do": "focus", "targets": ["ch"]}
+  ],
+  "captions": [
+    [0.3, 3.6, "Три горутины пишут в канал с буфером на три."],
+    [3.8, 7.6, "Читатель медленный, и буфер быстро забивается."],
+    [8.0, 12.4, "Четвёртому значению некуда лечь. Горутина встаёт и ждёт."],
+    [12.8, 16.4, "Читатель забрал одно, место освободилось, отправка прошла."],
+    [16.8, 19.7, "Буфер не убирает ожидание. Он его откладывает."]
+  ]
+}

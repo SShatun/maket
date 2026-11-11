@@ -1,0 +1,357 @@
+{
+ "v": 3,
+ "layout": "files",
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-10T18:47:32Z"
+ },
+ "title": "Макет",
+ "namespace": "Maket",
+ "libraries": [],
+ "sections": {},
+ "groups": [
+  "Previews",
+  "Objects-Maket",
+  "Objects-Pixel",
+  "Examples"
+ ],
+ "assetGroups": {
+  "Examples": {
+   "name": "Examples",
+   "tile": "l",
+   "order": [
+    "buffered-channel.mp4",
+    "cache-aside.mp4"
+   ],
+   "files": {
+    "buffered-channel.mp4": {
+     "name": "buffered-channel.mp4",
+     "blob": "f9451709f9430eeaa49408d5b31393b8",
+     "size": 2826403,
+     "type": "video/mp4"
+    },
+    "cache-aside.mp4": {
+     "name": "cache-aside.mp4",
+     "blob": "96735517c3ddd084aa0fa6d3c8470960",
+     "size": 2711361,
+     "type": "video/mp4"
+    }
+   }
+  },
+  "Previews": {
+   "name": "Previews",
+   "tile": "l",
+   "order": [
+    "preview-sprites.jpg",
+    "preview-cards.jpg"
+   ],
+   "files": {
+    "preview-sprites.jpg": {
+     "name": "preview-sprites.jpg",
+     "blob": "a6b0b79bf77815c1fc61216d8eb10c6d",
+     "size": 551697,
+     "type": "image/jpeg"
+    },
+    "preview-cards.jpg": {
+     "name": "preview-cards.jpg",
+     "blob": "6b41c7143ca9a5719d1260c19371d019",
+     "size": 270726,
+     "type": "image/jpeg"
+    }
+   }
+  },
+  "Objects-Maket": {
+   "name": "Objects-Maket",
+   "tile": "m",
+   "order": [
+    "person.png",
+    "service.png",
+    "session.png",
+    "dialog.png",
+    "queue.png",
+    "branch.png",
+    "db.png",
+    "cache.png",
+    "topic.png",
+    "external.png",
+    "lock.png",
+    "badge-wait.png",
+    "badge-ok.png",
+    "badge-bad.png",
+    "badge-question.png",
+    "glyph-arrow.png",
+    "glyph-ok.png",
+    "glyph-bad.png",
+    "glyph-question.png"
+   ],
+   "files": {
+    "badge-bad.png": {
+     "name": "badge-bad.png",
+     "blob": "fc0e1e42a2873eda0e1ba5a68f940f82",
+     "size": 5060,
+     "type": "image/png"
+    },
+    "badge-ok.png": {
+     "name": "badge-ok.png",
+     "blob": "378235282e68ab6c4994f897cf3cd5a1",
+     "size": 5264,
+     "type": "image/png"
+    },
+    "badge-question.png": {
+     "name": "badge-question.png",
+     "blob": "0b27dc0f0516c888887d7808c6de60d8",
+     "size": 5868,
+     "type": "image/png"
+    },
+    "badge-wait.png": {
+     "name": "badge-wait.png",
+     "blob": "6dba3c2e84c42ccea373f8a542c80394",
+     "size": 6789,
+     "type": "image/png"
+    },
+    "branch.png": {
+     "name": "branch.png",
+     "blob": "55685702bc881d66a985e90b81479275",
+     "size": 12455,
+     "type": "image/png"
+    },
+    "cache.png": {
+     "name": "cache.png",
+     "blob": "1c508a5a677e98064583eed8ba15f535",
+     "size": 16944,
+     "type": "image/png"
+    },
+    "db.png": {
+     "name": "db.png",
+     "blob": "c1fed5a481b54d0f3b500e7799d8c400",
+     "size": 15843,
+     "type": "image/png"
+    },
+    "dialog.png": {
+     "name": "dialog.png",
+     "blob": "ece08e1692a286519dbeac57baa491cf",
+     "size": 10498,
+     "type": "image/png"
+    },
+    "external.png": {
+     "name": "external.png",
+     "blob": "3187bd7ef02a12a5e85a1b2562207961",
+     "size": 18320,
+     "type": "image/png"
+    },
+    "glyph-arrow.png": {
+     "name": "glyph-arrow.png",
+     "blob": "9a85ff5705f55845fb8bde412b7ee7e6",
+     "size": 1094,
+     "type": "image/png"
+    },
+    "glyph-bad.png": {
+     "name": "glyph-bad.png",
+     "blob": "918fbd2ab4136eeae2a4000a35fe075c",
+     "size": 1186,
+     "type": "image/png"
+    },
+    "glyph-ok.png": {
+     "name": "glyph-ok.png",
+     "blob": "1761675ba6d5240855af372ee6e65375",
+     "size": 1519,
+     "type": "image/png"
+    },
+    "glyph-question.png": {
+     "name": "glyph-question.png",
+     "blob": "82b509d6244b950664e6099e001bcd86",
+     "size": 2026,
+     "type": "image/png"
+    },
+    "lock.png": {
+     "name": "lock.png",
+     "blob": "08234b955a268ddf7884d7467a107052",
+     "size": 11355,
+     "type": "image/png"
+    },
+    "person.png": {
+     "name": "person.png",
+     "blob": "a19775a93bcda384b771db2936933f33",
+     "size": 10478,
+     "type": "image/png"
+    },
+    "queue.png": {
+     "name": "queue.png",
+     "blob": "0e75d163e8cdb60e5256b622d4114561",
+     "size": 16847,
+     "type": "image/png"
+    },
+    "service.png": {
+     "name": "service.png",
+     "blob": "82e4a442ca1fa27ad1996b77edcb4884",
+     "size": 14039,
+     "type": "image/png"
+    },
+    "session.png": {
+     "name": "session.png",
+     "blob": "b109cb8e68c464a5a6fee132b4f5014e",
+     "size": 11718,
+     "type": "image/png"
+    },
+    "topic.png": {
+     "name": "topic.png",
+     "blob": "ca6c6e6a2b480b409288909e0db2b1d2",
+     "size": 25765,
+     "type": "image/png"
+    }
+   }
+  },
+  "Objects-Pixel": {
+   "name": "Objects-Pixel",
+   "tile": "m",
+   "order": [
+    "person.png",
+    "service.png",
+    "session.png",
+    "dialog.png",
+    "queue.png",
+    "branch.png",
+    "db.png",
+    "cache.png",
+    "topic.png",
+    "external.png",
+    "lock.png",
+    "badge-wait.png",
+    "badge-ok.png",
+    "badge-bad.png",
+    "badge-question.png",
+    "glyph-arrow.png",
+    "glyph-ok.png",
+    "glyph-bad.png",
+    "glyph-question.png"
+   ],
+   "files": {
+    "badge-bad.png": {
+     "name": "badge-bad.png",
+     "blob": "a5ec2db468b5f165d882d997375ac20f",
+     "size": 416,
+     "type": "image/png"
+    },
+    "badge-ok.png": {
+     "name": "badge-ok.png",
+     "blob": "bd72ccaa54a86d897f0de2d2a83153ff",
+     "size": 399,
+     "type": "image/png"
+    },
+    "badge-question.png": {
+     "name": "badge-question.png",
+     "blob": "3337094d713d3ce5f40e7bf6fc4e969c",
+     "size": 404,
+     "type": "image/png"
+    },
+    "badge-wait.png": {
+     "name": "badge-wait.png",
+     "blob": "d95529f6f9d3e1faab9aa0e77c1cbbd9",
+     "size": 408,
+     "type": "image/png"
+    },
+    "branch.png": {
+     "name": "branch.png",
+     "blob": "2a09b8b7bfe79547d361ec898f9c197b",
+     "size": 1070,
+     "type": "image/png"
+    },
+    "cache.png": {
+     "name": "cache.png",
+     "blob": "aed997c01f0fd3492687ebd0cb33b790",
+     "size": 1260,
+     "type": "image/png"
+    },
+    "db.png": {
+     "name": "db.png",
+     "blob": "6c0e367f9e1a79cec2d06a6a47416666",
+     "size": 1106,
+     "type": "image/png"
+    },
+    "dialog.png": {
+     "name": "dialog.png",
+     "blob": "276bbb6cde54e5c1332d1189b30f8784",
+     "size": 1127,
+     "type": "image/png"
+    },
+    "external.png": {
+     "name": "external.png",
+     "blob": "bcdd069214e4c12ba8737df609749b67",
+     "size": 924,
+     "type": "image/png"
+    },
+    "glyph-arrow.png": {
+     "name": "glyph-arrow.png",
+     "blob": "34168036cfa2a86843e250e12bb438f5",
+     "size": 189,
+     "type": "image/png"
+    },
+    "glyph-bad.png": {
+     "name": "glyph-bad.png",
+     "blob": "ee81d92a8147f39943c82a74c2252bc3",
+     "size": 220,
+     "type": "image/png"
+    },
+    "glyph-ok.png": {
+     "name": "glyph-ok.png",
+     "blob": "09ce73d9b3e9c541a1e8e2b68718bb66",
+     "size": 193,
+     "type": "image/png"
+    },
+    "glyph-question.png": {
+     "name": "glyph-question.png",
+     "blob": "7950d7bc615b795a0627ba3908f2e483",
+     "size": 200,
+     "type": "image/png"
+    },
+    "lock.png": {
+     "name": "lock.png",
+     "blob": "45f41276a2499b3b694c1094d6f6811f",
+     "size": 987,
+     "type": "image/png"
+    },
+    "person.png": {
+     "name": "person.png",
+     "blob": "1457ba1d956c58bd3c7fee1858670d72",
+     "size": 1182,
+     "type": "image/png"
+    },
+    "queue.png": {
+     "name": "queue.png",
+     "blob": "7aadc9a8be52ae7bf131734a629dba86",
+     "size": 767,
+     "type": "image/png"
+    },
+    "service.png": {
+     "name": "service.png",
+     "blob": "76d93d61abc52f41e181b34fb61c4e18",
+     "size": 1079,
+     "type": "image/png"
+    },
+    "session.png": {
+     "name": "session.png",
+     "blob": "d4afe95dd7abede3d9a13d353372479a",
+     "size": 1141,
+     "type": "image/png"
+    },
+    "topic.png": {
+     "name": "topic.png",
+     "blob": "5211faf45d78bfc36dbf3aaeb4d5e186",
+     "size": 1062,
+     "type": "image/png"
+    }
+   }
+  }
+ },
+ "blobs": {},
+ "docs": {
+  "readme": "project/README.md",
+  "sections": []
+ },
+ "lastChange": {
+  "by": "Georgiy",
+  "at": "2026-11-10T21:27:43Z",
+  "via": "Claude",
+  "note": "Образы в двух стилях (Макет, Пиксели), значки, глифы, правила плашки-догадки и крупного числа"
+ }
+}

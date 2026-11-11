@@ -1,0 +1,207 @@
+{
+ "tint": "multiply ONLY neutral grey pixels (r == g == b): out = rgb * role / 255; coloured pixels (screens, phone, prompt) are drawn as is; alpha from sprite",
+ "anchor": "ground point under the object centre, px in the PNG",
+ "top": "where a token lands or a badge sits",
+ "scale": "PNG is drawn at 100 px per world unit; the frame uses ~50, so draw at 0.5x",
+ "sprites": {
+  "person": {
+   "file": "person.png",
+   "label": "человек с телефоном",
+   "size": [
+    170,
+    264
+   ],
+   "anchor": [
+    85,
+    187
+   ],
+   "top": [
+    85,
+    7
+   ],
+   "units_px": 100
+  },
+  "service": {
+   "file": "service.png",
+   "label": "сервис",
+   "size": [
+    330,
+    340
+   ],
+   "anchor": [
+    165,
+    218
+   ],
+   "top": [
+    165,
+    98
+   ],
+   "units_px": 100
+  },
+  "session": {
+   "file": "session.png",
+   "label": "сессия / терминал",
+   "size": [
+    196,
+    283
+   ],
+   "anchor": [
+    98,
+    197
+   ],
+   "top": [
+    98,
+    57
+   ],
+   "units_px": 100
+  },
+  "dialog": {
+   "file": "dialog.png",
+   "label": "окно-вопрос Yes/No",
+   "size": [
+    196,
+    240
+   ],
+   "anchor": [
+    98,
+    215
+   ],
+   "top": [
+    98,
+    60
+   ],
+   "units_px": 100
+  },
+  "queue": {
+   "file": "queue.png",
+   "label": "очередь",
+   "size": [
+    406,
+    314
+   ],
+   "anchor": [
+    203,
+    172
+   ],
+   "top": [
+    203,
+    150
+   ],
+   "units_px": 100
+  },
+  "branch": {
+   "file": "branch.png",
+   "label": "копия ветки",
+   "size": [
+    313,
+    234
+   ],
+   "anchor": [
+    139,
+    127
+   ],
+   "top": [
+    139,
+    83
+   ],
+   "units_px": 100
+  },
+  "db": {
+   "file": "db.png",
+   "label": "база",
+   "size": [
+    238,
+    300
+   ],
+   "anchor": [
+    119,
+    208
+   ],
+   "top": [
+    119,
+    73
+   ],
+   "units_px": 100
+  },
+  "cache": {
+   "file": "cache.png",
+   "label": "кэш",
+   "size": [
+    296,
+    234
+   ],
+   "anchor": [
+    148,
+    122
+   ],
+   "top": [
+    148,
+    88
+   ],
+   "units_px": 100
+  },
+  "topic": {
+   "file": "topic.png",
+   "label": "топик Kafka",
+   "size": [
+    462,
+    390
+   ],
+   "anchor": [
+    234,
+    233
+   ],
+   "top": [
+    234,
+    138
+   ],
+   "units_px": 100
+  },
+  "external": {
+   "file": "external.png",
+   "label": "внешний сервис",
+   "size": [
+    260,
+    276
+   ],
+   "anchor": [
+    130,
+    174
+   ],
+   "top": [
+    130,
+    14
+   ],
+   "units_px": 100
+  },
+  "lock": {
+   "file": "lock.png",
+   "label": "замок / блокировка",
+   "size": [
+    174,
+    257
+   ],
+   "anchor": [
+    87,
+    180
+   ],
+   "top": [
+    87,
+    25
+   ],
+   "units_px": 100
+  }
+ },
+ "badges": [
+  "badge-wait.png",
+  "badge-ok.png",
+  "badge-bad.png",
+  "badge-question.png"
+ ],
+ "glyphs": [
+  "glyph-arrow.png",
+  "glyph-ok.png",
+  "glyph-bad.png",
+  "glyph-question.png"
+ ]
+}

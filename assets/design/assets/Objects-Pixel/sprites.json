@@ -1,0 +1,207 @@
+{
+ "tint": "multiply ONLY neutral grey pixels (r == g == b): out = rgb * role / 255; coloured pixels (skin, screens, outline) are drawn as is",
+ "scale": "PNG is 12x the logical pixel; the pixel frame uses 6x, so draw at 0.5x with nearest-neighbour",
+ "anchor": "bottom centre: where the object stands",
+ "top": "where a crate lands or a badge sits",
+ "sprites": {
+  "person": {
+   "file": "person.png",
+   "label": "человек с телефоном",
+   "size": [
+    216,
+    288
+   ],
+   "anchor": [
+    108,
+    288
+   ],
+   "top": [
+    108,
+    12
+   ],
+   "pixel": 12
+  },
+  "service": {
+   "file": "service.png",
+   "label": "сервис",
+   "size": [
+    288,
+    264
+   ],
+   "anchor": [
+    144,
+    264
+   ],
+   "top": [
+    144,
+    12
+   ],
+   "pixel": 12
+  },
+  "session": {
+   "file": "session.png",
+   "label": "сессия / терминал",
+   "size": [
+    288,
+    264
+   ],
+   "anchor": [
+    144,
+    264
+   ],
+   "top": [
+    144,
+    12
+   ],
+   "pixel": 12
+  },
+  "dialog": {
+   "file": "dialog.png",
+   "label": "окно-вопрос Yes/No",
+   "size": [
+    312,
+    240
+   ],
+   "anchor": [
+    156,
+    240
+   ],
+   "top": [
+    156,
+    12
+   ],
+   "pixel": 12
+  },
+  "queue": {
+   "file": "queue.png",
+   "label": "очередь",
+   "size": [
+    432,
+    144
+   ],
+   "anchor": [
+    216,
+    144
+   ],
+   "top": [
+    216,
+    84
+   ],
+   "pixel": 12
+  },
+  "branch": {
+   "file": "branch.png",
+   "label": "копия ветки",
+   "size": [
+    288,
+    240
+   ],
+   "anchor": [
+    144,
+    240
+   ],
+   "top": [
+    144,
+    12
+   ],
+   "pixel": 12
+  },
+  "db": {
+   "file": "db.png",
+   "label": "база",
+   "size": [
+    240,
+    288
+   ],
+   "anchor": [
+    120,
+    288
+   ],
+   "top": [
+    120,
+    12
+   ],
+   "pixel": 12
+  },
+  "cache": {
+   "file": "cache.png",
+   "label": "кэш",
+   "size": [
+    264,
+    264
+   ],
+   "anchor": [
+    132,
+    264
+   ],
+   "top": [
+    132,
+    36
+   ],
+   "pixel": 12
+  },
+  "topic": {
+   "file": "topic.png",
+   "label": "топик Kafka",
+   "size": [
+    456,
+    216
+   ],
+   "anchor": [
+    228,
+    216
+   ],
+   "top": [
+    228,
+    12
+   ],
+   "pixel": 12
+  },
+  "external": {
+   "file": "external.png",
+   "label": "внешний сервис",
+   "size": [
+    336,
+    216
+   ],
+   "anchor": [
+    168,
+    216
+   ],
+   "top": [
+    168,
+    24
+   ],
+   "pixel": 12
+  },
+  "lock": {
+   "file": "lock.png",
+   "label": "замок / блокировка",
+   "size": [
+    216,
+    264
+   ],
+   "anchor": [
+    108,
+    264
+   ],
+   "top": [
+    108,
+    12
+   ],
+   "pixel": 12
+  }
+ },
+ "badges": [
+  "badge-wait.png",
+  "badge-ok.png",
+  "badge-bad.png",
+  "badge-question.png"
+ ],
+ "glyphs": [
+  "glyph-arrow.png",
+  "glyph-ok.png",
+  "glyph-bad.png",
+  "glyph-question.png"
+ ]
+}
