@@ -15,12 +15,14 @@ import (
 	"maket/internal/render"
 	"maket/internal/scene"
 	"maket/internal/style"
+	"maket/internal/style/pixel"
 	"maket/internal/timeline"
 	"maket/internal/video"
 )
 
 var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, error){
-	"none": func(_ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
+	"none":  func(_ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
+	"pixel": func(root string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, fonts) },
 }
 
 const usage = `maket render scene.json -o out.mp4 [-workers N] [-root DIR]
