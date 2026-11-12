@@ -735,6 +735,57 @@
      "loop": false
     }
    }
+  },
+  "tariff": {
+   "label": "тариф",
+   "aliases": [
+    "цена",
+    "прайс",
+    "стоимость",
+    "ценник",
+    "тарификация",
+    "price",
+    "tariff"
+   ],
+   "origin": "generated",
+   "dir": "tariff/",
+   "size": [
+    384,
+    480
+   ],
+   "anchor": [
+    192,
+    456
+   ],
+   "top": [
+    192,
+    96
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    }
+   }
   }
  }
 }
