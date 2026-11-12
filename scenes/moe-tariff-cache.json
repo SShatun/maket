@@ -1,0 +1,98 @@
+{
+  "style": "moe",
+  "seed": 5,
+  "hold": 1.2,
+  "phrases": [
+    {"text": "Тариф изменился. А цена осталась.", "caption": "Тариф изменился. А цена осталась."},
+    {"text": "Это не я, бака! Это кэш.", "caption": "Это не я, бака! Это кэш."},
+    {"text": "В базе новая цена. Но кэш помнит старую.", "caption": "В базе новая цена. Но кэш помнит старую."},
+    {"text": "Пока не истёк срок хранения, старый ответ прилетает мгновенно.", "caption": "Пока не истёк срок хранения, старый ответ прилетает мгновенно."},
+    {"text": "Срок истёк. Кэш забрал свежую цену из базы.", "caption": "Срок истёк. Кэш забрал свежую цену из базы."},
+    {"text": "Теперь триста девяносто девять. Вот и весь секрет!", "caption": "Теперь триста девяносто девять. Вот и весь секрет!"}
+  ],
+  "shots": [
+    {
+      "at": 0,
+      "place": "sunset",
+      "cast": [
+        {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [300, 1640], "size": 0.85},
+        {"id": "DB", "kind": "db", "role": "storage", "at": [790, 1640], "size": 0.85}
+      ],
+      "do": [
+        {"at": 0, "do": "cut", "color": "black", "dur": 0.4},
+        {"at": 0, "do": "title", "episode": 7, "lines": ["Цена", "из прошлого"]}
+      ]
+    },
+    {
+      "at": "p2",
+      "place": "sunset",
+      "cast": [
+        {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [300, 1640], "size": 0.85, "state": "give"},
+        {"id": "DB", "kind": "db", "role": "storage", "at": [790, 1640], "size": 0.85}
+      ],
+      "do": [
+        {"at": "p2", "do": "cut", "color": "black", "dur": 0.3},
+        {"at": "p2", "do": "holo", "id": "tariff", "rect": [90, 260, 990, 520], "role": "buffer", "title": "КЭШ ТАРИФА", "lines": [["price: 349 ₽  (старая)", "bad"], ["ttl: ещё не истёк", "hi"], "db: 399 ₽"], "blink": 1}
+      ]
+    },
+    {
+      "at": "p3",
+      "place": "night",
+      "cast": [
+        {"id": "SESSION", "kind": "session", "role": "consumer", "at": [330, 1600], "size": 0.9, "state": "tsun"},
+        {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [790, 1600], "size": 0.8, "state": "idle"}
+      ],
+      "do": [
+        {"at": "p3", "do": "cut", "color": "black", "dur": 0.4},
+        {"at": "p3", "do": "holo", "id": "tariff", "rect": [90, 260, 990, 520], "title": "ДВА РАЗНЫХ ОТВЕТА", "role": "storage", "lines": [["db.price: 399 ₽", "hi"], ["cache.price: 349 ₽", "bad"], "cache hit → без запроса в базу"]},
+        {"at": "p3:Но", "do": "bg", "name": "alert"},
+        {"at": "p3:Но", "do": "state", "target": "SESSION", "state": "shock"},
+        {"at": "p3:Но", "do": "shock"},
+        {"at": "p3:старую", "do": "state", "target": "SESSION", "state": "baka"}
+      ]
+    },
+    {
+      "at": "p4",
+      "place": "night",
+      "cast": [
+        {"id": "SESSION", "kind": "session", "role": "consumer", "at": [330, 1600], "size": 0.9, "state": "wait"},
+        {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [790, 1600], "size": 0.8, "state": "give"}
+      ],
+      "do": [
+        {"at": "p4", "do": "cut", "color": "black", "dur": 0.3},
+        {"at": "p4", "do": "holo", "id": "ttl", "rect": [90, 260, 990, 520], "role": "buffer", "title": "TTL ЕЩЁ ЖИВ", "lines": [["GET /tariff → cache hit", "hi"], "ttl: 28s", "price: 349 ₽"], "blink": 1},
+        {"at": "p4:мгновенно", "do": "bg", "name": "idea", "dur": 0.4},
+        {"at": "p4:мгновенно", "do": "sfx", "name": "sparkle"}
+      ]
+    },
+    {
+      "at": "p5",
+      "place": "idea",
+      "cast": [
+        {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [300, 1640], "size": 0.85, "state": "miss"},
+        {"id": "DB", "kind": "db", "role": "storage", "at": [790, 1640], "size": 0.85, "state": "give"}
+      ],
+      "do": [
+        {"at": "p5", "do": "cut", "color": "white", "dur": 0.3},
+        {"at": "p5", "do": "holo", "id": "tariff", "rect": [90, 260, 990, 520], "role": "buffer", "title": "ПОРА ОБНОВИТЬ", "lines": [["ttl: 0s → cache miss", "bad"], "SELECT price FROM tariff", ["db: 399 ₽", "hi"]], "blink": 0},
+        {"at": "p5:свежую", "do": "state", "target": "CACHE", "state": "give"},
+        {"at": "p5:свежую", "do": "holo", "id": "tariff", "title": "КЭШ ОБНОВЛЁН", "lines": [["price: 399 ₽", "hi"], ["ttl: 60s", "ok"], "следующий запрос → cache hit"], "blink": -1},
+        {"at": "p5:свежую", "do": "bg", "name": "sakura"}
+      ]
+    },
+    {
+      "at": "p6",
+      "place": "moe",
+      "cast": [
+        {"id": "SESSION", "kind": "session", "role": "consumer", "at": [350, 1600], "size": 0.85, "state": "dere", "flip": true, "motion": "bob", "states": [["p6:Вот", "happy"]]},
+        {"id": "CACHE", "kind": "cache", "role": "ok", "at": [800, 1600], "size": 0.8, "state": "give", "motion": "jump"}
+      ],
+      "do": [
+        {"at": "p6", "do": "cut", "color": "white", "dur": 0.4},
+        {"at": "p6", "do": "holo", "rect": [90, 260, 990, 520], "role": "storage", "title": "ЦЕНА СНОВА СОВПАЛА", "lines": [["cache.price == db.price", "ok"], ["399 ₽", "hi"], "срок хранения тоже часть ответа"]},
+        {"at": "p6:Вот", "do": "bg", "name": "sakura"},
+        {"at": "p6:секрет", "do": "sfx", "name": "chime"}
+      ]
+    }
+  ]
+}
