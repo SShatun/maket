@@ -96,6 +96,7 @@ func Check(e Entry, frames string, r Rules) []string {
 				add("%s: %dx%d, entry says %dx%d", id, b.Dx(), b.Dy(), e.Size[0], e.Size[1])
 				continue
 			}
+			cell := e.Cell()
 			colours := map[color.NRGBA]bool{}
 			uneven, half, filled := 0, 0, 0
 			for cy := b.Min.Y; cy < b.Max.Y; cy += cell {

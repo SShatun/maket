@@ -15,11 +15,7 @@ import (
 	"strings"
 )
 
-const (
-	cell  = 12
-	gridW = 32
-	gridH = 40
-)
+const defaultPixel = 12
 
 type gridState struct {
 	name   string
@@ -28,6 +24,8 @@ type gridState struct {
 }
 
 type Grid struct {
+	pixel  int
+	w, h   int
 	legend map[byte]color.NRGBA
 	anchor [2]int
 	top    [2]int
@@ -37,7 +35,7 @@ type Grid struct {
 }
 
 func ParseGrid(r io.Reader) (*Grid, error) {
-	g := &Grid{legend: map[byte]color.NRGBA{}, tint: true}
+	g := &Grid{pixel: defaultPixel, legend: map[byte]color.NRGBA{}, tint: true}
 	sc := bufio.NewScanner(r)
 	var cur *gridState
 	var rows []string
@@ -46,8 +44,14 @@ func ParseGrid(r io.Reader) (*Grid, error) {
 		if rows == nil {
 			return nil
 		}
-		if len(rows) != gridH {
-			return fmt.Errorf("state %s frame %d: %d rows, want %d", cur.name, len(cur.frames), len(rows), gridH)
+		if len(rows) == 0 {
+			return fmt.Errorf("state %s frame %d: no rows", cur.name, len(cur.frames))
+		}
+		if g.h == 0 {
+			g.h = len(rows)
+		}
+		if len(rows) != g.h {
+			return fmt.Errorf("state %s frame %d: %d rows, want %d as in the first frame", cur.name, len(cur.frames), len(rows), g.h)
 		}
 		cur.frames = append(cur.frames, rows)
 		rows = nil
@@ -56,9 +60,12 @@ func ParseGrid(r io.Reader) (*Grid, error) {
 	for sc.Scan() {
 		n++
 		line := strings.TrimRight(sc.Text(), " \t\r")
-		if rows != nil && len(rows) < gridH {
-			if len(line) != gridW {
-				return nil, fmt.Errorf("line %d: %d symbols, want %d", n, len(line), gridW)
+		if rows != nil && line != "" && !strings.ContainsAny(line, " \t") {
+			if g.w == 0 {
+				g.w = len(line)
+			}
+			if len(line) != g.w {
+				return nil, fmt.Errorf("line %d: %d symbols, want %d as in the first row", n, len(line), g.w)
 			}
 			for i := 0; i < len(line); i++ {
 				if _, ok := g.legend[line[i]]; !ok {
@@ -80,6 +87,12 @@ func ParseGrid(r io.Reader) (*Grid, error) {
 			g.anchor, err = pair(f[1:])
 		case "top":
 			g.top, err = pair(f[1:])
+		case "pixel":
+			if len(f) != 2 {
+				err = fmt.Errorf("pixel N")
+			} else if g.pixel, err = strconv.Atoi(f[1]); err == nil && g.pixel < 1 {
+				err = fmt.Errorf("pixel %d", g.pixel)
+			}
 		case "rest":
 			if len(f) != 2 {
 				err = fmt.Errorf("rest NAME")
@@ -186,7 +199,7 @@ func parseState(f []string) (*gridState, error) {
 
 func (g *Grid) Entry() Entry {
 	e := Entry{
-		Size: [2]int{gridW * cell, gridH * cell}, Anchor: g.anchor, Top: g.top, Pixel: cell,
+		Size: [2]int{g.w * g.pixel, g.h * g.pixel}, Anchor: g.anchor, Top: g.top, Pixel: g.pixel,
 		Rest: g.rest, Tint: &g.tint, States: map[string]State{},
 	}
 	for _, s := range g.states {
@@ -201,13 +214,14 @@ func (g *Grid) Write(dir string) error {
 	}
 	for _, s := range g.states {
 		for i, rows := range s.frames {
-			im := image.NewNRGBA(image.Rect(0, 0, gridW*cell, gridH*cell))
+			px := g.pixel
+			im := image.NewNRGBA(image.Rect(0, 0, g.w*px, g.h*px))
 			for y, row := range rows {
-				for x := 0; x < gridW; x++ {
+				for x := 0; x < g.w; x++ {
 					c := g.legend[row[x]]
-					for dy := 0; dy < cell; dy++ {
-						for dx := 0; dx < cell; dx++ {
-							im.SetNRGBA(x*cell+dx, y*cell+dy, c)
+					for dy := 0; dy < px; dy++ {
+						for dx := 0; dx < px; dx++ {
+							im.SetNRGBA(x*px+dx, y*px+dy, c)
 						}
 					}
 				}
@@ -229,6 +243,8 @@ func GridFile(c *Catalog, name string, only string, frame int) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("no character %q", name)
 	}
+	px := e.Cell()
+	w, h := e.Size[0]/px, e.Size[1]/px
 	names := e.StateNames()
 	if only != "" {
 		if _, ok := e.States[only]; !ok {
@@ -255,9 +271,9 @@ func GridFile(c *Catalog, name string, only string, frame int) (string, error) {
 				return "", err
 			}
 			fmt.Fprintf(&body, "frame %d\n", i)
-			for y := 0; y < gridH; y++ {
-				for x := 0; x < gridW; x++ {
-					p := opaque(im.At(x*cell+cell/2, y*cell+cell/2))
+			for y := 0; y < h; y++ {
+				for x := 0; x < w; x++ {
+					p := opaque(im.At(x*px+px/2, y*px+px/2))
 					s, ok := symbols[p]
 					if !ok {
 						if len(symbols)-1 >= len(pool) {
@@ -293,7 +309,7 @@ func GridFile(c *Catalog, name string, only string, frame int) (string, error) {
 		}
 	}
 	tint := e.Tint == nil || *e.Tint
-	fmt.Fprintf(&head, "\nanchor %d %d\ntop %d %d\nrest %s\ntint %t\n", e.Anchor[0], e.Anchor[1], e.Top[0], e.Top[1], e.Rest, tint)
+	fmt.Fprintf(&head, "\npixel %d\nanchor %d %d\ntop %d %d\nrest %s\ntint %t\n", px, e.Anchor[0], e.Anchor[1], e.Top[0], e.Top[1], e.Rest, tint)
 	return head.String() + body.String(), nil
 }
 

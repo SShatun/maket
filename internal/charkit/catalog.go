@@ -31,6 +31,13 @@ type Entry struct {
 	States  map[string]State `json:"states"`
 }
 
+func (e Entry) Cell() int {
+	if e.Pixel > 0 {
+		return e.Pixel
+	}
+	return defaultPixel
+}
+
 func (e Entry) StateNames() []string {
 	names := make([]string, 0, len(e.States))
 	for s := range e.States {
