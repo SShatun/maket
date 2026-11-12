@@ -76,37 +76,53 @@ type run struct {
 	words []sceneWord
 }
 
-func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*run, []byte, error) {
 	if name == "" {
 		name = cfg.Voice
 	}
 	root, err := filepath.Abs(root)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	vdir := filepath.Join(root, "voices", name)
 	specBytes, err := os.ReadFile(filepath.Join(vdir, "voice.json"))
 	if err != nil {
-		return nil, fmt.Errorf("voice %q: %w", name, err)
+		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
 	var spec Spec
 	if err := json.Unmarshal(specBytes, &spec); err != nil {
-		return nil, fmt.Errorf("voice %q: %w", name, err)
+		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
 	r := &run{ctx: ctx, root: root, cfg: cfg, sc: sc, spec: spec, ref: filepath.Join(vdir, spec.RefAudio)}
 	key, err := r.key(specBytes, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	r.dir = filepath.Join(root, ".cache", "voice", key)
 	if err := os.MkdirAll(r.dir, 0o755); err != nil {
+		return nil, nil, err
+	}
+	return r, specBytes, nil
+}
+
+func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	r, _, err := newRun(ctx, root, cfg, sc, name)
+	if err != nil {
+		return nil, err
+	}
+	return r.stress()
+}
+
+func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	r, specBytes, err := newRun(ctx, root, cfg, sc, name)
+	if err != nil {
 		return nil, err
 	}
 	marked, err := r.stress()
 	if err != nil {
 		return nil, err
 	}
-	key, err = r.key(specBytes, marked)
+	key, err := r.key(specBytes, marked)
 	if err != nil {
 		return nil, err
 	}
