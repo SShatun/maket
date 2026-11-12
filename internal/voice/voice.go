@@ -25,6 +25,7 @@ type Config struct {
 	StressPython string `json:"stress_python"`
 	TTSModel     string `json:"tts_model"`
 	RUAccentDir  string `json:"ruaccent_dir"`
+	RUAccent     bool   `json:"ruaccent"`
 	WhisperModel string `json:"whisper_model"`
 }
 
@@ -198,6 +199,9 @@ func (r *run) stress() ([]string, error) {
 	for _, p := range r.sc.Phrases {
 		texts = append(texts, p.Text)
 	}
+	if !r.cfg.RUAccent {
+		return r.restressAll(texts), nil
+	}
 	out := filepath.Join(r.dir, "stress.json")
 	if _, err := os.Stat(out); err == nil {
 		return r.readStress(out)
@@ -226,10 +230,15 @@ func (r *run) readStress(out string) ([]string, error) {
 	if err := json.Unmarshal(b, &res); err != nil {
 		return nil, err
 	}
-	for i := range res.Marked {
-		res.Marked[i] = restress(res.Marked[i], r.spec.Stress, r.sc.Phrases[i].Stress)
+	return r.restressAll(res.Marked), nil
+}
+
+func (r *run) restressAll(texts []string) []string {
+	out := make([]string, len(texts))
+	for i, t := range texts {
+		out[i] = restress(t, r.spec.Stress, r.sc.Phrases[i].Stress)
 	}
-	return res.Marked, nil
+	return out
 }
 
 func plusForm(w string) string {
