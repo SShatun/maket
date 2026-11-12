@@ -168,36 +168,37 @@ func (s *Style) makeTag(label string, col color.RGBA) (*image.RGBA, error) {
 	if strings.TrimSpace(label) == "" || strings.ContainsAny(label, "\n\r") {
 		return nil, fmt.Errorf("move label must be one nonempty line")
 	}
-	face := render.Face(s.theme.Fonts.Bold, 40)
+	const k = 1.75
+	face := render.Face(s.theme.Fonts.Bold, 40*k)
 	defer face.Close()
-	w := math.Max(144, float64(font.MeasureString(face, label).Ceil())+48)
+	w := math.Max(144*k, float64(font.MeasureString(face, label).Ceil())+48*k)
 	if w > render.W-48 {
 		return nil, fmt.Errorf("move label is too wide; shorten it")
 	}
-	b := image.Rect(-int(w/2)-20, -12, int(math.Ceil(w/2))+28, 132)
+	b := image.Rect(-int(w/2+20*k), -int(12*k), int(math.Ceil(w/2+28*k)), int(132*k))
 	im := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 	dc := gg.NewContextForRGBA(im)
 	dc.Translate(float64(-b.Min.X), float64(-b.Min.Y))
 	dc.SetRGBA255(0, 0, 0, 28)
-	dc.DrawRoundedRectangle(-w/2+2, 26, w+8, 94, 20)
+	dc.DrawRoundedRectangle(-w/2+2*k, 26*k, w+8*k, 94*k, 20*k)
 	dc.Fill()
 	dc.SetRGBA255(0, 0, 0, 40)
-	dc.DrawRoundedRectangle(-w/2+6, 29, w, 88, 16)
+	dc.DrawRoundedRectangle(-w/2+6*k, 29*k, w, 88*k, 16*k)
 	dc.Fill()
 	dc.SetRGB(1, 1, 1)
-	dc.DrawRoundedRectangle(-w/2, 20, w, 88, 16)
+	dc.DrawRoundedRectangle(-w/2, 20*k, w, 88*k, 16*k)
 	dc.FillPreserve()
 	dc.SetColor(col)
-	dc.SetLineWidth(3)
+	dc.SetLineWidth(3 * k)
 	dc.Stroke()
 	dc.MoveTo(0, 0)
-	dc.CubicTo(-20, 4, 12, 18, 0, 32)
+	dc.CubicTo(-20*k, 4*k, 12*k, 18*k, 0, 32*k)
 	dc.Stroke()
-	dc.DrawCircle(0, 32, 4)
+	dc.DrawCircle(0, 32*k, 4*k)
 	dc.Stroke()
 	dc.SetFontFace(face)
 	dc.SetColor(s.theme.Caption.Edge)
-	dc.DrawStringAnchored(label, 0, 70, 0.5, 0.35)
+	dc.DrawStringAnchored(label, 0, 70*k, 0.5, 0.35)
 	im.Rect = b
 	return im, nil
 }
