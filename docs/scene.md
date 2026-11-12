@@ -127,6 +127,11 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `state` | `target`, `state`, `hold` | сменить состояние |
 | `role` | `target`, `role`, `until` | сменить цвет, после `until` вернуть |
 | `shake` | `target` | тряхнуть |
+| `split` | `target`, `into`, `dur` (0.6) | цель вздрагивает и исчезает. Две сущности из `into` появляются в её точке и за `dur` выезжают в свои `at`: своего `appear` у них нет, рисуются в 0.75 размера |
+
+```json
+{"at": "p5:пополам", "do": "split", "target": "D", "into": ["D1", "D2"], "dur": 0.6}
+```
 
 ## Макет
 

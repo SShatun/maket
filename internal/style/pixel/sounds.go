@@ -15,7 +15,9 @@ func (p *Pixel) sounds(sc *scene.Scene, tl *timeline.Timeline) []audio.Cue {
 		add(0.05, audio.ChipTitle)
 	}
 	for _, x := range p.ents {
-		add(x.appear, audio.ChipAppear)
+		if x.splitDur == 0 {
+			add(x.appear, audio.ChipAppear)
+		}
 		for _, s := range x.states {
 			if s.v == "happy" {
 				add(s.t, audio.ChipOK)
@@ -39,6 +41,9 @@ func (p *Pixel) sounds(sc *scene.Scene, tl *timeline.Timeline) []audio.Cue {
 	for _, ev := range sc.Events {
 		if ev.Do == "number" {
 			add(tl.MustResolve(ev.At), audio.ChipQuestion)
+		}
+		if ev.Do == "split" {
+			add(tl.MustResolve(ev.At), audio.ChipMove)
 		}
 	}
 	if sc.Code != nil {

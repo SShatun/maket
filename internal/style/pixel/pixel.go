@@ -51,7 +51,10 @@ type timedState struct {
 type ent struct {
 	id, kind, label string
 	x, y            float64
-	appear          float64
+	appear, gone    float64
+	size            float64
+	from            [2]float64
+	splitDur        float64
 	roles           []timedStr
 	states          []timedState
 	status          []timedStr
@@ -118,7 +121,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 		if len(e.At) != 2 {
 			return fmt.Errorf("entity %s: pixel style wants at: [x, y] in px", e.ID)
 		}
-		x := &ent{id: e.ID, kind: e.Kind, label: e.Label, x: e.At[0], y: e.At[1], appear: 1.4 + 0.1*float64(i)}
+		x := &ent{id: e.ID, kind: e.Kind, label: e.Label, x: e.At[0], y: e.At[1], appear: 1.4 + 0.1*float64(i), gone: math.Inf(1), size: 1}
 		if e.Appear != nil {
 			x.appear = at(*e.Appear)
 		}
@@ -239,6 +242,30 @@ func (p *Pixel) event(i int, ev scene.Event, t float64, tl *timeline.Timeline) e
 			return err
 		}
 		x.shakes = append(x.shakes, t)
+	case "split":
+		src, err := target()
+		if err != nil {
+			return err
+		}
+		if len(ev.Into) != 2 {
+			return fmt.Errorf("event %d: split needs two halves", i+1)
+		}
+		dur := ev.Dur
+		if dur == 0 {
+			dur = 0.6
+		}
+		src.shakes = append(src.shakes, t)
+		src.gone = t + 0.45
+		for _, id := range ev.Into {
+			h := p.byID[id]
+			if h == nil {
+				return fmt.Errorf("event %d: unknown entity %q", i+1, id)
+			}
+			h.appear = src.gone
+			h.size = 0.75
+			h.from = [2]float64{src.x, src.y}
+			h.splitDur = dur
+		}
 	case "focus":
 		f := &focus{t: t, targets: map[string]bool{}}
 		for _, pt := range ev.Targets {
@@ -307,6 +334,9 @@ func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 }
 
 func (p *Pixel) drawEnt(dst *image.RGBA, dc *gg.Context, x *ent, t, sway float64, label, status font.Face) {
+	if t >= x.gone {
+		return
+	}
 	k := render.Pop(true, t-x.appear)
 	if k <= 0 {
 		return
@@ -319,15 +349,21 @@ func (p *Pixel) drawEnt(dst *image.RGBA, dc *gg.Context, x *ent, t, sway float64
 			shx = snap(9 * math.Sin((t-s)*60) * (1 - (t-s)/0.45))
 		}
 	}
+	px, py := x.x, x.y
+	if x.splitDur > 0 {
+		u := smooth(clamp((t - x.appear) / x.splitDur))
+		px = x.from[0] + (x.x-x.from[0])*u
+		py = x.from[1] + (x.y-x.from[1])*u
+	}
 	w, h := float64(im.Bounds().Dx()), float64(im.Bounds().Dy())
-	ay := x.y + sway
-	foot := float64(spec.Size[1]-spec.Anchor[1]) * scale
+	ay := py + sway
+	foot := float64(spec.Size[1]-spec.Anchor[1]) * scale * x.size
 	dc.SetColor(floor)
-	dc.DrawRectangle(x.x-w*0.42, ay-6, w*0.84, 12)
+	dc.DrawRectangle(px-w*x.size*0.42, ay-6, w*x.size*0.84, 12)
 	dc.Fill()
-	sw, sh := w*k, h*k
-	r := image.Rect(int(x.x-sw/2+shx), int(ay+foot-sh), int(x.x+sw/2+shx), int(ay+foot))
-	if k == 1 {
+	sw, sh := w*k*x.size, h*k*x.size
+	r := image.Rect(int(px-sw/2+shx), int(ay+foot-sh), int(px+sw/2+shx), int(ay+foot))
+	if k == 1 && x.size == 1 {
 		draw.Draw(dst, r, im, image.Point{}, draw.Over)
 	} else {
 		xdraw.NearestNeighbor.Scale(dst, r, im, im.Bounds(), xdraw.Over, nil)
@@ -337,15 +373,15 @@ func (p *Pixel) drawEnt(dst *image.RGBA, dc *gg.Context, x *ent, t, sway float64
 	}
 	dc.SetFontFace(label)
 	dc.SetColor(p.theme.Ink)
-	dc.DrawStringAnchored(x.label, x.x, ay+40, 0.5, 0.5)
+	dc.DrawStringAnchored(x.label, px, ay+40, 0.5, 0.5)
 	if s := lastStr(x.status, t); s != "" {
 		dc.SetFontFace(status)
 		dc.SetColor(grey)
-		dc.DrawStringAnchored(s, x.x, ay+72, 0.5, 0.5)
+		dc.DrawStringAnchored(s, px, ay+72, 0.5, 0.5)
 	}
 	if b := p.theme.Badges[lastStr(x.badges, t)]; b != nil {
-		ty := ay - float64(spec.Anchor[1]-spec.Top[1])*scale
-		dc.DrawImageAnchored(b, int(x.x+w*0.3+shx), int(ty+6), 0.5, 0.5)
+		ty := ay - float64(spec.Anchor[1]-spec.Top[1])*scale*x.size
+		dc.DrawImageAnchored(b, int(px+w*x.size*0.3+shx), int(ty+6), 0.5, 0.5)
 	}
 }
 

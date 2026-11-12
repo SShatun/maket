@@ -77,24 +77,25 @@ type Entity struct {
 }
 
 type Event struct {
-	At      At      `json:"at"`
-	Until   *At     `json:"until"`
-	Do      string  `json:"do"`
-	Target  *Point  `json:"target"`
-	Targets []Point `json:"targets"`
-	From    *Point  `json:"from"`
-	To      *Point  `json:"to"`
-	Token   string  `json:"token"`
-	Label   string  `json:"label"`
-	State   string  `json:"state"`
-	Role    string  `json:"role"`
-	Text    string  `json:"text"`
-	Sub     string  `json:"sub"`
-	Dur     float64 `json:"dur"`
-	Zoom    float64 `json:"zoom"`
-	Dx      float64 `json:"dx"`
-	Consume bool    `json:"consume"`
-	Hold    bool    `json:"hold"`
+	At      At       `json:"at"`
+	Until   *At      `json:"until"`
+	Do      string   `json:"do"`
+	Target  *Point   `json:"target"`
+	Targets []Point  `json:"targets"`
+	Into    []string `json:"into"`
+	From    *Point   `json:"from"`
+	To      *Point   `json:"to"`
+	Token   string   `json:"token"`
+	Label   string   `json:"label"`
+	State   string   `json:"state"`
+	Role    string   `json:"role"`
+	Text    string   `json:"text"`
+	Sub     string   `json:"sub"`
+	Dur     float64  `json:"dur"`
+	Zoom    float64  `json:"zoom"`
+	Dx      float64  `json:"dx"`
+	Consume bool     `json:"consume"`
+	Hold    bool     `json:"hold"`
 
 	Arc     *float64 `json:"arc"`
 	Waiting bool     `json:"waiting"`
@@ -144,11 +145,13 @@ func Load(path string) (*Scene, error) {
 
 func (sc *Scene) check() error {
 	ids := map[string]bool{}
+	hasAppear := map[string]bool{}
 	for _, e := range sc.Entities {
 		if e.ID == "" {
 			return errors.New("entity without id")
 		}
 		ids[e.ID] = true
+		hasAppear[e.ID] = e.Appear != nil
 	}
 	for i, ev := range sc.Events {
 		pts := append([]Point{}, ev.Targets...)
@@ -160,6 +163,14 @@ func (sc *Scene) check() error {
 		for _, p := range pts {
 			if p.ID != "" && !ids[p.ID] {
 				return fmt.Errorf("event %d: unknown entity %q", i+1, p.ID)
+			}
+		}
+		for _, id := range ev.Into {
+			if !ids[id] {
+				return fmt.Errorf("event %d: unknown entity %q", i+1, id)
+			}
+			if ev.Do == "split" && hasAppear[id] {
+				return fmt.Errorf("event %d: split half %q must not have appear", i+1, id)
 			}
 		}
 	}
