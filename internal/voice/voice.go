@@ -166,26 +166,35 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	align(r.words, got, r.spec.Spell)
+	owner := align(r.words, got, r.spec.Spell)
 	mainPCM, err := audio.Read(main)
 	if err != nil {
 		return nil, err
 	}
 	pieces := make([]*piece, len(r.sc.Phrases))
 	var lost []int
+	repeat := map[int]string{}
 	for i := range r.sc.Phrases {
+		if w := repeated(r.words, got, owner, r.spec.Spell, i); w != "" {
+			lost = append(lost, i)
+			repeat[i] = w
+			continue
+		}
 		if missing(r.words, i) {
 			lost = append(lost, i)
 		}
 	}
 	r.cutMain(mainPCM, pieces, lost)
 	for attempt := 0; len(lost) > 0 && attempt <= maxRetries; attempt++ {
-		lost, err = r.regenerate(marked, pieces, lost, attempt)
+		lost, err = r.regenerate(marked, pieces, lost, attempt, repeat)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if len(lost) > 0 {
+		if w := repeat[lost[0]]; w != "" {
+			return nil, fmt.Errorf("phrase %d: voice repeated «%s»", lost[0]+1, w)
+		}
 		return nil, fmt.Errorf("voice did not say phrase %d «%s»", lost[0]+1, r.sc.Phrases[lost[0]].Text)
 	}
 	if err := r.fitTempo(pieces); err != nil {
@@ -360,7 +369,7 @@ func (r *run) cutMain(pcm []float32, pieces []*piece, lost []int) {
 	}
 }
 
-func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int) ([]int, error) {
+func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int, repeat map[int]string) ([]int, error) {
 	var items []ttsItem
 	for _, i := range lost {
 		items = append(items, ttsItem{Text: marked[i], Out: filepath.Join(r.dir, fmt.Sprintf("phrase%02d-%d.wav", i+1, attempt))})
@@ -378,7 +387,13 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 		for _, w := range scene.Words(r.sc.Phrases[i].Text) {
 			ws = append(ws, sceneWord{text: w, phrase: i})
 		}
-		align(ws, got, r.spec.Spell)
+		owner := align(ws, got, r.spec.Spell)
+		if w := repeated(ws, got, owner, r.spec.Spell, i); w != "" {
+			repeat[i] = w
+			still = append(still, i)
+			continue
+		}
+		delete(repeat, i)
 		if missing(ws, i) {
 			still = append(still, i)
 			continue

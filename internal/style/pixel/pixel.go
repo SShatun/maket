@@ -97,6 +97,8 @@ type focus struct {
 	targets  map[string]bool
 }
 
+type box struct{ x0, y0, x1, y1 float64 }
+
 type Pixel struct {
 	theme   render.Theme
 	sprites *sprites
@@ -240,6 +242,9 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 	}
 	p.bg = background(p.theme.BG, p.dot)
 	p.cues = p.sounds(sc, tl)
+	if len(sc.Shots) == 0 {
+		p.warnOverlap()
+	}
 	return nil
 }
 
@@ -661,8 +666,15 @@ func (p *Pixel) drawSays(dc *gg.Context, t, sway float64) {
 		dc.SetFontFace(face)
 		tw, _ := dc.MeasureString(s.text)
 		bw, bh := tw+56, 92*k
+		w := snap(bw)
 		x0, y0 := snap(cx-bw/2), snap(by-bh)
-		render.FrameBox(dc, x0, y0, x0+snap(bw), by, p.theme.Ink, p.theme.Card, 6)
+		if x0 < 24 {
+			x0 = 24
+		}
+		if x0+w > float64(render.W)-24 {
+			x0 = float64(render.W) - 24 - w
+		}
+		render.FrameBox(dc, x0, y0, x0+w, by, p.theme.Ink, p.theme.Card, 6)
 		dc.SetColor(p.theme.Ink)
 		for i := 0; i < 4; i++ {
 			dc.DrawRectangle(snap(cx)-18+float64(i)*6, by-6, 12, 18-float64(i)*6)
@@ -670,9 +682,85 @@ func (p *Pixel) drawSays(dc *gg.Context, t, sway float64) {
 		dc.Fill()
 		if k == 1 {
 			dc.SetColor(p.theme.Accent)
-			dc.DrawStringAnchored(s.text, cx, y0+bh/2, 0.5, 0.5)
+			dc.DrawStringAnchored(s.text, x0+bw/2, y0+bh/2, 0.5, 0.5)
 		}
 	}
+}
+
+func (p *Pixel) warnOverlap() {
+	label := render.Face(p.theme.Fonts.Pixel, 38*0.62)
+	status := render.Face(p.theme.Fonts.Mono, 22)
+	boxes := make([]box, len(p.ents))
+	for i, e := range p.ents {
+		boxes[i] = entBox(e, p.sprites.specs[e.kind], label, status)
+	}
+	for i := 0; i < len(p.ents); i++ {
+		for j := i + 1; j < len(p.ents); j++ {
+			a, b := p.ents[i], p.ents[j]
+			if a.gone <= b.appear || b.gone <= a.appear {
+				continue
+			}
+			if n := overlapPx(boxes[i], boxes[j]); n > 0 {
+				fmt.Fprintf(os.Stderr, "maket: %s and %s overlap by %d px\n", a.id, b.id, n)
+			}
+		}
+	}
+}
+
+func entBox(e *ent, spec spriteSpec, label, status font.Face) box {
+	k := scale * e.size
+	b := box{
+		e.x - float64(spec.Anchor[0])*k,
+		e.y - float64(spec.Anchor[1]-spec.Top[1])*k,
+		e.x + float64(spec.Size[0]-spec.Anchor[0])*k,
+		e.y + float64(spec.Size[1]-spec.Anchor[1])*k,
+	}
+	if e.label != "" {
+		b = b.add(textBox(label, e.label, e.x, e.y+40))
+	}
+	wide := ""
+	for _, s := range e.status {
+		if s.v != "" && (wide == "" || font.MeasureString(status, s.v) > font.MeasureString(status, wide)) {
+			wide = s.v
+		}
+	}
+	if wide != "" {
+		b = b.add(textBox(status, wide, e.x, e.y+72))
+	}
+	return b
+}
+
+func textBox(face font.Face, text string, x, y float64) box {
+	w := float64(font.MeasureString(face, text) >> 6)
+	m := face.Metrics()
+	h := float64(m.Height) / 64
+	baseline := y + h/2
+	return box{x - w/2, baseline - float64(m.Ascent)/64, x + w/2, baseline + float64(m.Descent)/64}
+}
+
+func (b box) add(c box) box {
+	if c.x0 < b.x0 {
+		b.x0 = c.x0
+	}
+	if c.y0 < b.y0 {
+		b.y0 = c.y0
+	}
+	if c.x1 > b.x1 {
+		b.x1 = c.x1
+	}
+	if c.y1 > b.y1 {
+		b.y1 = c.y1
+	}
+	return b
+}
+
+func overlapPx(a, b box) int {
+	w := math.Min(a.x1, b.x1) - math.Max(a.x0, b.x0)
+	h := math.Min(a.y1, b.y1) - math.Max(a.y0, b.y0)
+	if w < 1 || h < 1 {
+		return 0
+	}
+	return int(math.Round(math.Min(w, h)))
 }
 
 func lastStr(l []timedStr, t float64) string {

@@ -241,8 +241,12 @@ const (
 	stepSkipHeard
 )
 
-func align(words []sceneWord, got []heard, spell map[string]string) {
+func align(words []sceneWord, got []heard, spell map[string]string) []int {
 	n, m := len(words), len(got)
+	owner := make([]int, m)
+	for j := range owner {
+		owner[j] = -1
+	}
 	sw := make([]string, n)
 	for i, w := range words {
 		sw[i] = norm(w.text, spell)
@@ -302,6 +306,7 @@ func align(words []sceneWord, got []heard, spell map[string]string) {
 		switch step[i][j] {
 		case stepMatch:
 			words[i-1].match = j - 1
+			owner[j-1] = words[i-1].phrase
 			i, j = i-1, j-1
 		case stepMerge, stepNumber:
 			size, heardSize := 2, 1
@@ -319,6 +324,9 @@ func align(words []sceneWord, got []heard, spell map[string]string) {
 				words[k].match, words[k].s, words[k].e = j-heardSize, t, t+d
 				t += d
 			}
+			for k := 0; k < heardSize; k++ {
+				owner[j-heardSize+k] = words[i-1].phrase
+			}
 			i, j = i-size, j-heardSize
 		case stepSkipScene:
 			i--
@@ -331,6 +339,32 @@ func align(words []sceneWord, got []heard, spell map[string]string) {
 			words[k].s, words[k].e = got[mt].S, got[mt].E
 		}
 	}
+	return owner
+}
+
+func repeated(words []sceneWord, got []heard, owner []int, spell map[string]string, phrase int) string {
+	count := map[string]int{}
+	show := map[string]string{}
+	for _, w := range words {
+		if w.phrase != phrase {
+			continue
+		}
+		n := norm(w.text, spell)
+		count[n]++
+		if _, ok := show[n]; !ok {
+			show[n] = w.text
+		}
+	}
+	for j := 1; j < len(got); j++ {
+		a := norm(got[j-1].W, spell)
+		if a == "" || a != norm(got[j].W, spell) || count[a] != 1 {
+			continue
+		}
+		if (owner[j-1] == phrase && owner[j] < 0) || (owner[j] == phrase && owner[j-1] < 0) {
+			return show[a]
+		}
+	}
+	return ""
 }
 
 func missing(words []sceneWord, phrase int) bool {
