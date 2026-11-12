@@ -1,0 +1,735 @@
+{
+ "style": "moe",
+ "seed": 5,
+ "hold": 1.2,
+ "phrases": [
+  {
+   "text": "Тариф повысили. В базе уже новая цена.",
+   "caption": "в базе: 399 ₽"
+  },
+  {
+   "text": "Покупатель спрашивает, сколько стоит доставка.",
+   "caption": "вопрос идёт в кэш"
+  },
+  {
+   "text": "Кэш отвечает сразу, из кармана. Старой ценой.",
+   "caption": "ответ из кармана: 349 ₽",
+   "stress": {
+    "из": "из"
+   }
+  },
+  {
+   "text": "Второй покупатель — то же самое. До базы вопрос не доходит, пока не истёк срок хранения.",
+   "caption": "база стоит без дела",
+   "stress": {
+    "до": "до",
+    "самое": "са́мое"
+   }
+  },
+  {
+   "text": "Срок вышел. Кэш выбрасывает старый ответ и идёт к базе.",
+   "caption": "срок хранения: 0"
+  },
+  {
+   "text": "Следующий покупатель получает новую цену.",
+   "caption": "теперь 399 ₽"
+  }
+ ],
+ "shots": [
+  {
+   "at": 0,
+   "place": "sunset",
+   "cast": [
+    {
+     "id": "CACHE",
+     "kind": "cache",
+     "role": "buffer",
+     "at": [
+      330,
+      1640
+     ],
+     "size": 0.95
+    },
+    {
+     "id": "DB",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      800,
+      1640
+     ],
+     "size": 0.95
+    }
+   ],
+   "do": [
+    {
+     "at": 0,
+     "do": "cut",
+     "color": "black",
+     "dur": 0.4
+    },
+    {
+     "at": 0,
+     "do": "title",
+     "episode": 7,
+     "lines": [
+      "Старая",
+      "цена"
+     ],
+     "until": "p1:базе"
+    },
+    {
+     "at": 0.1,
+     "do": "move",
+     "from": [
+      330,
+      1250
+     ],
+     "to": "CACHE",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p2"
+    },
+    {
+     "at": "p1:новая",
+     "do": "move",
+     "from": [
+      800,
+      260
+     ],
+     "to": "DB",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.8,
+     "until": "p2"
+    },
+    {
+     "at": "p1:новая+0.8",
+     "do": "state",
+     "target": "DB",
+     "state": "catch"
+    },
+    {
+     "at": "p1:базе",
+     "do": "move",
+     "from": [
+      330,
+      560
+     ],
+     "to": [
+      330,
+      560
+     ],
+     "label": "КЭШ",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p2"
+    },
+    {
+     "at": "p1:базе",
+     "do": "move",
+     "from": [
+      800,
+      560
+     ],
+     "to": [
+      800,
+      560
+     ],
+     "label": "БАЗА",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p2"
+    }
+   ]
+  },
+  {
+   "at": "p2",
+   "place": "sunset",
+   "cast": [
+    {
+     "id": "BUYER",
+     "kind": "person",
+     "role": "external",
+     "at": [
+      -220,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "CACHE",
+     "kind": "cache",
+     "role": "buffer",
+     "at": [
+      500,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "DB",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      840,
+      1640
+     ],
+     "size": 0.85
+    }
+   ],
+   "do": [
+    {
+     "at": "p2",
+     "do": "cut",
+     "color": "black",
+     "dur": 0.3
+    },
+    {
+     "at": "p2",
+     "do": "move",
+     "from": [
+      500,
+      1250
+     ],
+     "to": "CACHE",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p4:то"
+    },
+    {
+     "at": "p2",
+     "do": "move",
+     "from": [
+      840,
+      1250
+     ],
+     "to": "DB",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p4:то"
+    },
+    {
+     "at": "p2",
+     "do": "walk",
+     "target": "BUYER",
+     "to": [
+      160,
+      1640
+     ],
+     "dur": 1.1
+    },
+    {
+     "at": "p2:сколько",
+     "do": "move",
+     "from": "BUYER",
+     "to": "CACHE",
+     "label": "цена?",
+     "role": "external",
+     "dur": 0.6,
+     "consume": true
+    },
+    {
+     "at": "p3:сразу",
+     "do": "move",
+     "from": "CACHE",
+     "to": "BUYER",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.4,
+     "until": "p4:то"
+    },
+    {
+     "at": "p3:старой",
+     "do": "state",
+     "target": "BUYER",
+     "state": "happy"
+    },
+    {
+     "at": "p4",
+     "do": "walk",
+     "target": "BUYER",
+     "to": [
+      -260,
+      1640
+     ],
+     "dur": 0.9
+    },
+    {
+     "at": "p4",
+     "do": "holo",
+     "id": "ttl",
+     "rect": [
+      40,
+      320,
+      440,
+      660
+     ],
+     "role": "buffer",
+     "title": "СРОК ХРАНЕНИЯ",
+     "lines": [
+      [
+       "3",
+       "hi"
+      ]
+     ],
+     "size": 150,
+     "blink": -1
+    },
+    {
+     "at": "p2",
+     "do": "move",
+     "from": [
+      160,
+      640
+     ],
+     "to": [
+      160,
+      640
+     ],
+     "label": "ПОКУПАТЕЛЬ",
+     "role": "external",
+     "dur": 0.05,
+     "until": "p3"
+    },
+    {
+     "at": "p2",
+     "do": "move",
+     "from": [
+      500,
+      640
+     ],
+     "to": [
+      500,
+      640
+     ],
+     "label": "КЭШ",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p3"
+    },
+    {
+     "at": "p2",
+     "do": "move",
+     "from": [
+      840,
+      560
+     ],
+     "to": [
+      840,
+      560
+     ],
+     "label": "БАЗА: 0 запросов",
+     "role": "error",
+     "dur": 0.05,
+     "until": "p5"
+    }
+   ]
+  },
+  {
+   "at": "p4:то",
+   "place": "sunset",
+   "cast": [
+    {
+     "id": "BUYER2",
+     "kind": "person",
+     "role": "consumer",
+     "at": [
+      -220,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "CACHE",
+     "kind": "cache",
+     "role": "buffer",
+     "at": [
+      500,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "DB",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      840,
+      1640
+     ],
+     "size": 0.85
+    }
+   ],
+   "do": [
+    {
+     "at": "p4:то",
+     "do": "move",
+     "from": [
+      500,
+      1250
+     ],
+     "to": "CACHE",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p5"
+    },
+    {
+     "at": "p4:то",
+     "do": "move",
+     "from": [
+      840,
+      1250
+     ],
+     "to": "DB",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p5"
+    },
+    {
+     "at": "p4:то",
+     "do": "holo",
+     "id": "ttl",
+     "rect": [
+      40,
+      320,
+      440,
+      660
+     ],
+     "role": "buffer",
+     "title": "СРОК ХРАНЕНИЯ",
+     "lines": [
+      [
+       "2",
+       "hi"
+      ]
+     ],
+     "size": 150,
+     "blink": -1
+    },
+    {
+     "at": "p4:то",
+     "do": "walk",
+     "target": "BUYER2",
+     "to": [
+      160,
+      1640
+     ],
+     "dur": 0.9
+    },
+    {
+     "at": "p4:самое",
+     "do": "move",
+     "from": "BUYER2",
+     "to": "CACHE",
+     "label": "цена?",
+     "role": "consumer",
+     "dur": 0.5,
+     "consume": true
+    },
+    {
+     "at": "p4:базы",
+     "do": "move",
+     "from": "CACHE",
+     "to": "BUYER2",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.4,
+     "until": "p5"
+    },
+    {
+     "at": "p4:доходит",
+     "do": "state",
+     "target": "DB",
+     "state": "flinch"
+    },
+    {
+     "at": "p4:истёк",
+     "do": "holo",
+     "id": "ttl",
+     "lines": [
+      [
+       "1",
+       "hi"
+      ]
+     ],
+     "title": "СРОК ХРАНЕНИЯ"
+    },
+    {
+     "at": "p4:то",
+     "do": "move",
+     "from": [
+      840,
+      560
+     ],
+     "to": [
+      840,
+      560
+     ],
+     "label": "БАЗА: 0 запросов",
+     "role": "error",
+     "dur": 0.05,
+     "until": "p5"
+    }
+   ]
+  },
+  {
+   "at": "p5",
+   "place": "night",
+   "cast": [
+    {
+     "id": "CACHE",
+     "kind": "cache",
+     "role": "buffer",
+     "at": [
+      330,
+      1600
+     ],
+     "size": 0.95
+    },
+    {
+     "id": "DB",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      800,
+      1600
+     ],
+     "size": 0.95
+    }
+   ],
+   "do": [
+    {
+     "at": "p5",
+     "do": "cut",
+     "color": "black",
+     "dur": 0.3
+    },
+    {
+     "at": "p5",
+     "do": "move",
+     "from": [
+      330,
+      1250
+     ],
+     "to": "CACHE",
+     "label": "349 ₽",
+     "role": "buffer",
+     "dur": 0.05,
+     "until": "p5:выбрасывает"
+    },
+    {
+     "at": "p5",
+     "do": "move",
+     "from": [
+      800,
+      1250
+     ],
+     "to": "DB",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p5:базе+0.3"
+    },
+    {
+     "at": "p5",
+     "do": "holo",
+     "id": "ttl",
+     "rect": [
+      180,
+      360,
+      580,
+      700
+     ],
+     "role": "error",
+     "title": "СРОК ХРАНЕНИЯ",
+     "lines": [
+      [
+       "0",
+       "bad"
+      ]
+     ],
+     "size": 150,
+     "blink": 0
+    },
+    {
+     "at": "p5:выбрасывает",
+     "do": "move",
+     "from": "CACHE",
+     "to": [
+      -300,
+      700
+     ],
+     "label": "349 ₽",
+     "role": "error",
+     "dur": 0.5,
+     "arc": 160,
+     "consume": true
+    },
+    {
+     "at": "p5:идёт",
+     "do": "walk",
+     "target": "CACHE",
+     "to": [
+      620,
+      1600
+     ],
+     "dur": 0.7
+    },
+    {
+     "at": "p5:базе+0.3",
+     "do": "move",
+     "from": "DB",
+     "to": "CACHE",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.4,
+     "until": "p6"
+    },
+    {
+     "at": "p5",
+     "do": "move",
+     "from": [
+      820,
+      560
+     ],
+     "to": [
+      820,
+      560
+     ],
+     "label": "БАЗА: 0 запросов",
+     "role": "error",
+     "dur": 0.05,
+     "until": "p5:базе"
+    },
+    {
+     "at": "p5:базе",
+     "do": "move",
+     "from": [
+      820,
+      560
+     ],
+     "to": [
+      820,
+      560
+     ],
+     "label": "БАЗА: 1 запрос",
+     "role": "ok",
+     "dur": 0.05,
+     "until": "p6"
+    }
+   ]
+  },
+  {
+   "at": "p6",
+   "place": "sakura",
+   "cast": [
+    {
+     "id": "BUYER3",
+     "kind": "person",
+     "role": "ok",
+     "at": [
+      -220,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "CACHE",
+     "kind": "cache",
+     "role": "buffer",
+     "at": [
+      500,
+      1640
+     ],
+     "size": 0.85
+    },
+    {
+     "id": "DB",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      840,
+      1640
+     ],
+     "size": 0.85
+    }
+   ],
+   "do": [
+    {
+     "at": "p6",
+     "do": "cut",
+     "color": "white",
+     "dur": 0.25
+    },
+    {
+     "at": "p6",
+     "do": "move",
+     "from": [
+      500,
+      1250
+     ],
+     "to": "CACHE",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p6:получает"
+    },
+    {
+     "at": "p6",
+     "do": "move",
+     "from": [
+      840,
+      1250
+     ],
+     "to": "DB",
+     "label": "399 ₽",
+     "role": "storage",
+     "dur": 0.05,
+     "until": "p6.end+1"
+    },
+    {
+     "at": "p6",
+     "do": "walk",
+     "target": "BUYER3",
+     "to": [
+      160,
+      1640
+     ],
+     "dur": 0.8
+    },
+    {
+     "at": "p6:покупатель",
+     "do": "move",
+     "from": "BUYER3",
+     "to": "CACHE",
+     "label": "цена?",
+     "role": "external",
+     "dur": 0.45,
+     "consume": true
+    },
+    {
+     "at": "p6:получает",
+     "do": "move",
+     "from": "CACHE",
+     "to": "BUYER3",
+     "label": "399 ₽",
+     "role": "ok",
+     "dur": 0.4,
+     "until": "p6.end+1"
+    },
+    {
+     "at": "p6:новую",
+     "do": "state",
+     "target": "BUYER3",
+     "state": "happy"
+    }
+   ]
+  }
+ ]
+}

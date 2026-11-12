@@ -48,6 +48,10 @@ type Theme struct {
 	Fonts   *Fonts
 	Tones   map[string]Tone
 	Badges  map[string]image.Image
+
+	Caption    CaptionStyle
+	OwnCaption bool
+	NoProgress bool
 }
 
 func rgb(r, g, b uint8) color.RGBA { return color.RGBA{r, g, b, 255} }
@@ -110,14 +114,24 @@ func PixelTheme(f *Fonts, badges map[string]image.Image, over map[string]color.R
 func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
 	dc := gg.NewContextForRGBA(dst)
 	o := overlay{dc: dc, sc: sc, tl: tl, th: th, t: t}
+	if th.OwnCaption {
+		if !th.NoProgress {
+			o.progress()
+		}
+		return
+	}
 	o.dim()
 	if len(sc.Shots) > 0 {
 		o.numbers()
 		o.camera(dst)
 		o.guess()
 		o.answer()
-		o.caption()
-		o.progress()
+		if !th.OwnCaption {
+			o.caption()
+		}
+		if !th.NoProgress {
+			o.progress()
+		}
 		return
 	}
 	o.guess()
@@ -420,6 +434,10 @@ func (o overlay) code() {
 }
 
 func (o overlay) caption() {
+	if o.th.Caption.Size > 0 {
+		styledCaption(o.dc.Image().(*image.RGBA), o.sc, o.tl, o.th, o.t)
+		return
+	}
 	cur := -1
 	for i, p := range o.tl.Phrases {
 		if i < len(o.sc.Phrases) && o.t >= p.Start {

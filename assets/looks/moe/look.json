@@ -1,0 +1,79 @@
+{
+ "about": "Моэ, аниме-чиби: каждый объект — персонаж со своим характером, настроение несёт фон, эмоции — знаки из манги. Выбирать, когда тема про отношение объектов: кто кого ждёт и что при этом чувствует (кэш отдаёт мгновенно, вахтёр не пускает, база устала). Проверка: фразу хочется сказать от лица объекта. Голос по умолчанию — anime-cheerful (бодрый); под настроение сцены режиссёр может взять anime-soft (мягкий) или anime-sassy (дерзкий).",
+ "voice": "anime-cheerful",
+ "voices": {
+  "soft": "anime-soft",
+  "cheerful": "anime-cheerful",
+  "sassy": "anime-sassy"
+ },
+ "palette": {
+  "holo_bg": [
+   14,
+   18,
+   36
+  ],
+  "hi": [
+   255,
+   236,
+   120
+  ],
+  "bad": [
+   255,
+   120,
+   150
+  ],
+  "sub_ink": [
+   255,
+   255,
+   255
+  ],
+  "sub_dim": [
+   150,
+   150,
+   165
+  ]
+ },
+ "backdrops": {
+  "sunset": {
+   "file": "backdrops/sunset.jpg",
+   "floor": 1640,
+   "use": "титул, начало, «всё спокойно»"
+  },
+  "night": {
+   "file": "backdrops/night.jpg",
+   "floor": 1600,
+   "use": "ожидание, тишина, таймаут"
+  },
+  "rain": {
+   "file": "backdrops/rain.jpg",
+   "floor": 1700,
+   "use": "упало, потеря, грусть"
+  },
+  "sakura": {
+   "file": "backdrops/sakura.jpg",
+   "floor": 1640,
+   "use": "успех, развязка, «не понял» в лёгком тоне"
+  },
+  "flash": {
+   "file": "backdrops/flash.jpg",
+   "floor": null,
+   "use": "шок, резкий поворот"
+  },
+  "idea": {
+   "file": "backdrops/idea.jpg",
+   "floor": null,
+   "use": "озарение, «вот оно что»"
+  },
+  "alert": {
+   "file": "backdrops/alert.jpg",
+   "floor": null,
+   "use": "ошибка, отказ, злость, «бака!»"
+  },
+  "moe": {
+   "file": "backdrops/moe.jpg",
+   "floor": 1640,
+   "use": "цун/дере, смущение, милота, вопрос пользователю"
+  }
+ },
+ "rules": "assets/looks/moe/rules.md"
+}

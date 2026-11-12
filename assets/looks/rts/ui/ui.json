@@ -1,0 +1,26 @@
+{
+ "scale": "tiles: 12x PNG, map draws them at 0.5 (6x). HUD: 12x PNG, drawn at 1/3 (4x)",
+ "tiles": {
+  "grass": [
+   "grass_0..3.png, 16x16 logical, random per cell"
+  ],
+  "dirt": [
+   "dirt_0..1.png"
+  ],
+  "path": "paths are strokes: ellipses w=6 logical, colour 138/106/64, speckles 118/90/54 and 160/128/80",
+  "tree": "tree.png, forests are random clusters sorted by y",
+  "rock": "rock.png",
+  "fog": "fog_edge.png along every map border (rotate per side)"
+ },
+ "hud": {
+  "topbar": "y 0..48 px, stone.png tiled, 1px black line under; resources = res-*.png + Press Start 2P 32px, colour 255/230/120, red 255/80/70 when exhausted",
+  "map_frame": "5 nested 4px rects around the map: 22/18/14, 170/164/150, 118/114/108, 118/114/108, 50/46/42",
+  "panel": "y 1424..1920 px: minimap 248x248 inset at (16,1456), info box inset (312,1456)-(1064,1648) with portrait_frame + idle_0 of the selected object, name white, status coloured, HP bar 84x12; command buttons 6 in a row from (312,1672), 124 px step",
+  "message": "top-left of the map, Press Start 2P 32px, 255/230/120 with 4px black shadow, max 2 lines, 3 s",
+  "select": "select.png around the selected unit + HP bar 10x1 logical (green 60/230/60 on 40/0/0) above it"
+ },
+ "marks": {
+  "files": "ui/mark-<name>_<i>.png, 12x12 logical, frames: bang 2, question 1, wait 1, dots 3, zzz 3 (4 fps)",
+  "place": "bottom of the mark 2 logical px above the unit sprite top; for crowd units that have no such state (warrior waiting in a queue)"
+ }
+}

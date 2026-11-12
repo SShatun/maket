@@ -23,16 +23,17 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 | Поле | Что |
 |---|---|
-| `style` | `pixel` или `maket` |
+| `style` | `pixel`, `moe`, `rts` или `maket`; у `moe` и `rts` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в `docs/styles/moe.md` и `docs/styles/rts.md`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
 | `look` | стилистика Пикселей: папка `assets/looks/<look>/` со своими персонажами и необязательными `look.json` (фон, цвета, роли) и `badges/`; без поля — `assets/live`; с `maket` — ошибка |
 | `guess` | `{"text": "Ресинк сломан?"}` — неверная догадка крупно в начале |
 | `answer` | `{"at": момент, "card_at": момент, "text": "Шаблон пустой", "badge": "ok"\|"bad"\|"question"\|"wait", "size": 64}` — в `at` догадка зачёркивается, в `card_at` появляется ответ (без него через 0.7 с). Без `guess` ответ не рисуется. `size` по умолчанию 70. `badge` рисуется только в Пикселях |
 | `phrases` | что говорит голос, по порядку |
 | `entities` | кто в кадре |
 | `events` | что происходит: `{"at": момент, "do": "move", …}` |
-| `shots` | последовательность кадров Пикселей; заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
+| `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
 | `code` | карточка кода внизу кадра, по желанию |
 | `hold` | секунд после последней фразы, по умолчанию 1.5 |
+| `caption` | размер, место и плашка субтитра; пока только в `rts`, см. `docs/styles/rts.md` |
 | `seed` | seed голоса и раскладки толпы, по умолчанию 42 |
 | `voice` | папка в `voices/`. Не писать: тогда голос берётся из `maket.json`, а `-voice` его меняет |
 
@@ -204,7 +205,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 ### Описание стилистики
 
-`go run ./cmd/maket styles` показывает стили `pixel` и `maket`, а у Пикселей стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
+`go run ./cmd/maket styles` показывает стили `pixel`, `moe`, `rts` и `maket`; у Пикселей — стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`, кроме папок стилей `moe` и `rts`; у `moe` и `rts` — их `about` и голос. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
 
 ```json
 {"about": "Посылки, шаблоны и сервисы для историй о доставке.",

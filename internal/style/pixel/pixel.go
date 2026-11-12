@@ -546,7 +546,7 @@ func (p *Pixel) placedLine(fromEnt, toEnt *ent, from, to *scene.Point, t float64
 
 func (p *Pixel) bodyBox(x *ent, t float64) box {
 	px, py := x.position(t)
-	o := p.sprites.opaque[x.kind]
+	o := p.sprites.Opaque[x.kind]
 	return spriteRect(p.sprites.specs[x.kind].Anchor, [4]int{o[0], o[1], o[2], o[3]}, px, py, scale*x.size)
 }
 

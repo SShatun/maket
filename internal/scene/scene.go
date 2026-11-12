@@ -12,25 +12,27 @@ import (
 )
 
 type Scene struct {
-	Style    string   `json:"style"`
-	Look     string   `json:"look"`
-	Voice    string   `json:"voice"`
-	Seed     int      `json:"seed"`
-	Hold     float64  `json:"hold"`
-	Guess    *Card    `json:"guess"`
-	Answer   *Answer  `json:"answer"`
-	Phrases  []Phrase `json:"phrases"`
-	Entities []Entity `json:"entities"`
-	Events   []Event  `json:"events"`
-	Shots    []Shot   `json:"shots"`
-	Code     *Code    `json:"code"`
+	Style    string          `json:"style"`
+	Look     string          `json:"look"`
+	Voice    string          `json:"voice"`
+	Seed     int             `json:"seed"`
+	Hold     float64         `json:"hold"`
+	Guess    *Card           `json:"guess"`
+	Answer   *Answer         `json:"answer"`
+	Phrases  []Phrase        `json:"phrases"`
+	Entities []Entity        `json:"entities"`
+	Events   []Event         `json:"events"`
+	Shots    []Shot          `json:"shots"`
+	Code     *Code           `json:"code"`
+	Caption  json.RawMessage `json:"caption"`
 }
 
 type Shot struct {
-	At    At      `json:"at"`
-	Place Place   `json:"place"`
-	Cast  []Cast  `json:"cast"`
-	Do    []Event `json:"do"`
+	At    At              `json:"at"`
+	Place Place           `json:"place"`
+	Cast  []Cast          `json:"cast"`
+	Do    []Event         `json:"do"`
+	Raw   json.RawMessage `json:"-"`
 }
 
 type Place struct {
@@ -47,9 +49,10 @@ type Color struct {
 
 type Cast struct {
 	Entity
-	Size  float64 `json:"size"`
-	State string  `json:"state"`
-	Crowd *Crowd  `json:"crowd"`
+	Size  float64         `json:"size"`
+	State string          `json:"state"`
+	Crowd *Crowd          `json:"crowd"`
+	Raw   json.RawMessage `json:"-"`
 }
 
 type Crowd struct {
@@ -156,8 +159,9 @@ type Event struct {
 	Lines   []PanelLine `json:"lines"`
 	Fill    string      `json:"fill"`
 
-	Arc     *float64 `json:"arc"`
-	Waiting bool     `json:"waiting"`
+	Arc     *float64        `json:"arc"`
+	Waiting bool            `json:"waiting"`
+	Raw     json.RawMessage `json:"-"`
 }
 
 type At struct {
@@ -209,7 +213,7 @@ func (sc *Scene) check() error {
 			return errors.New("shots use cast and do instead of entities and events")
 		}
 		for i, s := range sc.Shots {
-			if err := s.check(); err != nil {
+			if err := s.check(sc.Style == "" || sc.Style == "pixel"); err != nil {
 				return fmt.Errorf("shot %d: %w", i+1, err)
 			}
 		}
@@ -217,10 +221,10 @@ func (sc *Scene) check() error {
 	return checkEvents(sc.Entities, sc.Events)
 }
 
-func (s Shot) check() error {
+func (s Shot) check(pixel bool) error {
 	wall := s.Place.Wall.Name != "" || len(s.Place.Wall.RGB) == 3
 	ground := s.Place.Ground.Name != "" || len(s.Place.Ground.RGB) == 3
-	if s.Place.Name == "" && (!wall || s.Place.Floor != nil && (!ground || *s.Place.Floor < 600 || *s.Place.Floor > 1900)) {
+	if pixel && s.Place.Name == "" && (!wall || s.Place.Floor != nil && (!ground || *s.Place.Floor < 600 || *s.Place.Floor > 1900)) {
 		return errors.New("place needs a backdrop name or wall and ground as [r, g, b] or palette names, floor: 600..1900 or null")
 	}
 	ids := map[string]bool{}
@@ -228,8 +232,15 @@ func (s Shot) check() error {
 	for i, c := range s.Cast {
 		if c.Crowd != nil {
 			x := c.Crowd
-			if x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1] {
+			if pixel && (x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1]) {
 				return fmt.Errorf("cast %d: crowd needs kind, count, rows, box: [x0, y0, x1, y1] and size: [min, max] in 0.2..4", i+1)
+			}
+			if c.ID != "" {
+				if ids[c.ID] {
+					return fmt.Errorf("cast %d: duplicate id %q", i+1, c.ID)
+				}
+				ids[c.ID] = true
+				entities = append(entities, c.Entity)
 			}
 			if x.ID != "" {
 				for n := 1; n <= x.Count; n++ {
@@ -359,6 +370,43 @@ func lineEnds(from, to *Point) error {
 	return nil
 }
 
+func plainTone(tone string) string {
+	switch tone {
+	case "hi":
+		return "accent"
+	case "bad":
+		return "error"
+	}
+	return tone
+}
+
+func (s *Shot) UnmarshalJSON(b []byte) error {
+	type shot Shot
+	if err := json.Unmarshal(b, (*shot)(s)); err != nil {
+		return err
+	}
+	s.Raw = append(json.RawMessage(nil), b...)
+	return nil
+}
+
+func (c *Cast) UnmarshalJSON(b []byte) error {
+	type cast Cast
+	if err := json.Unmarshal(b, (*cast)(c)); err != nil {
+		return err
+	}
+	c.Raw = append(json.RawMessage(nil), b...)
+	return nil
+}
+
+func (e *Event) UnmarshalJSON(b []byte) error {
+	type event Event
+	if err := json.Unmarshal(b, (*event)(e)); err != nil {
+		return err
+	}
+	e.Raw = append(json.RawMessage(nil), b...)
+	return nil
+}
+
 func (p *Place) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &p.Name); err == nil && p.Name != "" {
 		return nil
@@ -481,6 +529,22 @@ func (t *Timed[T]) UnmarshalJSON(b []byte) error {
 }
 
 func (l *PanelLine) UnmarshalJSON(b []byte) error {
+	if err := json.Unmarshal(b, &l.Text); err == nil {
+		return nil
+	}
+	var pair []json.RawMessage
+	if err := json.Unmarshal(b, &pair); err == nil {
+		if len(pair) < 1 || len(pair) > 2 || json.Unmarshal(pair[0], &l.Text) != nil {
+			return fmt.Errorf("panel line must be \"text\", [text, tone] or {text, tone, appear}: %s", b)
+		}
+		if len(pair) == 2 && string(pair[1]) != "null" {
+			if err := json.Unmarshal(pair[1], &l.Tone); err != nil {
+				return err
+			}
+		}
+		l.Tone = plainTone(l.Tone)
+		return nil
+	}
 	var o struct {
 		Text   json.RawMessage `json:"text"`
 		Appear *At             `json:"appear"`
@@ -491,7 +555,7 @@ func (l *PanelLine) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &o); err != nil {
 		return err
 	}
-	l.Appear, l.Tone, l.Size, l.Field = o.Appear, o.Tone, o.Size, o.Field
+	l.Appear, l.Tone, l.Size, l.Field = o.Appear, plainTone(o.Tone), o.Size, o.Field
 	if len(o.Text) == 0 || string(o.Text) == "null" {
 		return nil
 	}
@@ -548,5 +612,5 @@ func Words(text string) []string {
 }
 
 func Fold(w string) string {
-	return strings.ReplaceAll(strings.ToLower(w), "ё", "е")
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ToLower(w), "ё", "е"), "\u0301", "")
 }

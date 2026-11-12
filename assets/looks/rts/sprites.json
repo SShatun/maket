@@ -1,0 +1,755 @@
+{
+ "tint": "multiply ONLY neutral grey pixels (r == g == b): rgb * role / 255. Team colour (sashes, banners, capes, shields, chest bands) is drawn grey; orc skin, wood, stone, metal, gold, fire are coloured and drawn as is",
+ "scale": "PNG is 12x the logical pixel; the RTS map uses 6x, so draw at 0.5x, nearest-neighbour only. HUD uses 4x (0.333x)",
+ "files": "<name>/<state>_<i>.png, all frames of one object share size, anchor and top",
+ "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
+ "crowd": "worker and warrior exist only in this mode: many copies on the map, they carry tokens (gold sack = value) or form the horde (load)",
+ "fixed_colour": "parcel is a wooden crate: tint=false",
+ "sprites": {
+  "person": {
+   "dir": "person/",
+   "label": "вождь орков (пользователь)",
+   "size": [
+    384,
+    432
+   ],
+   "anchor": [
+    192,
+    348
+   ],
+   "top": [
+    192,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "wait": {
+     "frames": 4,
+     "fps": 6,
+     "loop": true
+    },
+    "surprised": {
+     "frames": 2,
+     "fps": 8,
+     "loop": false
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "service": {
+   "dir": "service/",
+   "label": "крепость (сервис)",
+   "size": [
+    768,
+    768
+   ],
+   "anchor": [
+    384,
+    744
+   ],
+   "top": [
+    384,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "count": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "skip": {
+     "frames": 3,
+     "fps": 6,
+     "loop": false
+    },
+    "bad": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "session": {
+   "dir": "session/",
+   "label": "шаман у кристалла (сессия)",
+   "size": [
+    480,
+    432
+   ],
+   "anchor": [
+    240,
+    360
+   ],
+   "top": [
+    240,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "type": {
+     "frames": 3,
+     "fps": 8,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "sleep": {
+     "frames": 3,
+     "fps": 2,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "dialog": {
+   "dir": "dialog/",
+   "label": "глашатай с флагами Yes/No",
+   "size": [
+    432,
+    480
+   ],
+   "anchor": [
+    216,
+    396
+   ],
+   "top": [
+    216,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "impatient": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "closed": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "queue": {
+   "dir": "queue/",
+   "label": "помост с ящиками (очередь)",
+   "size": [
+    768,
+    480
+   ],
+   "anchor": [
+    384,
+    444
+   ],
+   "top": [
+    384,
+    24
+   ],
+   "pixel": 12,
+   "rest": "run",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "run": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "stop": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "full": {
+     "frames": 3,
+     "fps": 6,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "branch": {
+   "dir": "branch/",
+   "label": "саженец в загоне (копия ветки)",
+   "size": [
+    576,
+    672
+   ],
+   "anchor": [
+    288,
+    612
+   ],
+   "top": [
+    288,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "grow": {
+     "frames": 3,
+     "fps": 3,
+     "loop": false
+    },
+    "pushed": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "db": {
+   "dir": "db/",
+   "label": "шахта (база)",
+   "size": [
+    768,
+    672
+   ],
+   "anchor": [
+    384,
+    624
+   ],
+   "top": [
+    384,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "give": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "empty": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "cache": {
+   "dir": "cache/",
+   "label": "сундук (кэш)",
+   "size": [
+    480,
+    480
+   ],
+   "anchor": [
+    240,
+    456
+   ],
+   "top": [
+    240,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "give": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "miss": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "topic": {
+   "dir": "topic/",
+   "label": "воронятня (топик Kafka)",
+   "size": [
+    672,
+    768
+   ],
+   "anchor": [
+    336,
+    708
+   ],
+   "top": [
+    336,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "flow": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "lag": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "external": {
+   "dir": "external/",
+   "label": "замок людей (внешний сервис)",
+   "size": [
+    768,
+    768
+   ],
+   "anchor": [
+    384,
+    708
+   ],
+   "top": [
+    384,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "answer": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "closed": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "lock": {
+   "dir": "lock/",
+   "label": "ворота со стражем (замок)",
+   "size": [
+    768,
+    576
+   ],
+   "anchor": [
+    384,
+    516
+   ],
+   "top": [
+    384,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "check": {
+     "frames": 3,
+     "fps": 4,
+     "loop": true
+    },
+    "deny": {
+     "frames": 2,
+     "fps": 6,
+     "loop": false
+    },
+    "allow": {
+     "frames": 3,
+     "fps": 8,
+     "loop": false
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "parcel": {
+   "dir": "parcel/",
+   "label": "ящик груза",
+   "size": [
+    336,
+    336
+   ],
+   "anchor": [
+    168,
+    300
+   ],
+   "top": [
+    168,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": false,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "sad": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "happy": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "template": {
+   "dir": "template/",
+   "label": "доска чертежей (шаблон)",
+   "size": [
+    480,
+    528
+   ],
+   "anchor": [
+    240,
+    504
+   ],
+   "top": [
+    240,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "full": {
+     "frames": 1,
+     "fps": 1,
+     "loop": false
+    },
+    "empty": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "worker": {
+   "dir": "worker/",
+   "label": "батрак (горутина, запрос, воркер)",
+   "size": [
+    336,
+    384
+   ],
+   "anchor": [
+    168,
+    300
+   ],
+   "top": [
+    168,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8,
+     "loop": true
+    },
+    "carry": {
+     "frames": 4,
+     "fps": 8,
+     "loop": true
+    },
+    "mine": {
+     "frames": 3,
+     "fps": 6,
+     "loop": true
+    },
+    "wait": {
+     "frames": 3,
+     "fps": 3,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  },
+  "warrior": {
+   "dir": "warrior/",
+   "label": "воин орды (нагрузка, атака, retry storm)",
+   "size": [
+    336,
+    384
+   ],
+   "anchor": [
+    168,
+    312
+   ],
+   "top": [
+    168,
+    24
+   ],
+   "pixel": 12,
+   "rest": "idle",
+   "tint": true,
+   "crowd": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8,
+     "loop": true
+    },
+    "attack": {
+     "frames": 3,
+     "fps": 8,
+     "loop": true
+    },
+    "catch": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false
+    },
+    "flinch": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false
+    }
+   }
+  }
+ }
+}
