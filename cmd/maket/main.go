@@ -32,7 +32,12 @@ var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, err
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
 maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
-maket char list [-look L] [-root DIR]`
+maket char list [-look L] [-root DIR]
+maket char grid NAME [STATE] [-i N] [-look L] [-root DIR]
+maket char build GRID.txt -o DRAFT
+maket char check DRAFT|NAME [-look L] [-root DIR]
+maket char sheet DRAFT|NAME -o sheet.png [-ref a,b] [-look L] [-root DIR]
+maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]`
 
 func main() {
 	if len(os.Args) >= 3 && os.Args[1] == "char" {

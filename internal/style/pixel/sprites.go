@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"image/color"
-	"image/png"
 	"os"
 	"path/filepath"
 
 	xdraw "golang.org/x/image/draw"
+
+	"maket/internal/charkit"
 )
 
 const scale = 0.75
@@ -62,7 +62,7 @@ func (s *sprites) prepare(name string, roles map[string]bool) error {
 	tint := spec.Tint == nil || *spec.Tint
 	for state, st := range spec.States {
 		for i := 0; i < st.Frames; i++ {
-			src, err := readPNG(filepath.Join(s.dir, name, fmt.Sprintf("%s_%d.png", state, i)))
+			src, err := charkit.ReadPNG(filepath.Join(s.dir, name, fmt.Sprintf("%s_%d.png", state, i)))
 			if err != nil {
 				return err
 			}
@@ -77,7 +77,7 @@ func (s *sprites) prepare(name string, roles map[string]bool) error {
 				}
 				im := src
 				if tint {
-					im = tinted(src, roleColor[role])
+					im = charkit.Tint(src, roleColor[role])
 				}
 				s.frames[k] = scaled(im)
 			}
@@ -110,36 +110,6 @@ func (s *sprites) frame(name string, states []timedState, t float64, role string
 		role = ""
 	}
 	return s.frames[frameKey{name, state, role, i}]
-}
-
-func readPNG(path string) (image.Image, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	im, err := png.Decode(f)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
-	}
-	return im, nil
-}
-
-func tinted(src image.Image, c color.RGBA) image.Image {
-	b := src.Bounds()
-	out := image.NewNRGBA(b)
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			p := color.NRGBAModel.Convert(src.At(x, y)).(color.NRGBA)
-			if p.A > 0 && p.R == p.G && p.G == p.B {
-				p.R = uint8(int(p.R) * int(c.R) / 255)
-				p.G = uint8(int(p.G) * int(c.G) / 255)
-				p.B = uint8(int(p.B) * int(c.B) / 255)
-			}
-			out.SetNRGBA(x, y, p)
-		}
-	}
-	return out
 }
 
 func scaled(src image.Image) *image.RGBA {

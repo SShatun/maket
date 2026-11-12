@@ -14,6 +14,7 @@ import (
 	"golang.org/x/image/font"
 
 	"maket/internal/audio"
+	"maket/internal/charkit"
 	"maket/internal/render"
 	"maket/internal/scene"
 	"maket/internal/style"
@@ -90,10 +91,18 @@ type Pixel struct {
 	dur     float64
 }
 
+func RoleColors() map[string]color.RGBA {
+	out := make(map[string]color.RGBA, len(roleColor))
+	for k, v := range roleColor {
+		out[k] = v
+	}
+	return out
+}
+
 func New(root string, fonts *render.Fonts) (*Pixel, error) {
 	badges := map[string]image.Image{}
 	for _, b := range []string{"wait", "ok", "bad", "question"} {
-		im, err := readPNG(filepath.Join(root, "assets", "pixel-static", "badge-"+b+".png"))
+		im, err := charkit.ReadPNG(filepath.Join(root, "assets", "pixel-static", "badge-"+b+".png"))
 		if err != nil {
 			return nil, err
 		}
