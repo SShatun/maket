@@ -87,7 +87,7 @@ func main() {
 	out := fs.String("o", "", "output file or directory")
 	workers := fs.Int("workers", runtime.NumCPU(), "frames rendered in parallel")
 	root := fs.String("root", ".", "repository root with assets/")
-	voiceName := fs.String("voice", "", "voice folder in voices/, default from maket.json or the scene")
+	voiceName := fs.String("voice", "", "voice folder in voices/, default from the scene, the style look.json or maket.json")
 	seed := fs.Int("seed", 0, "voice seed, default from the scene")
 	silent := fs.Bool("silent", false, "no voice: phrases timed by letter count")
 	fs.Parse(os.Args[3:])

@@ -6,8 +6,11 @@ import (
 	"math"
 	"strings"
 
+	"image/draw"
+
 	"github.com/fogleman/gg"
 	"golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 
 	"maket/internal/scene"
 	"maket/internal/timeline"
@@ -21,7 +24,7 @@ type CaptionStyle struct {
 
 func Caption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
 	if th.Caption.Size > 0 {
-		styledCaption(gg.NewContextForRGBA(dst), sc, tl, th, t)
+		styledCaption(dst, sc, tl, th, t)
 		return
 	}
 	overlay{dc: gg.NewContextForRGBA(dst), sc: sc, tl: tl, th: th, t: t}.caption()
@@ -32,7 +35,7 @@ type spoken struct {
 	at   float64
 }
 
-func styledCaption(dc *gg.Context, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
+func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
 	cur := -1
 	for i, p := range tl.Phrases {
 		if i < len(sc.Phrases) && t >= p.Start {
@@ -80,7 +83,6 @@ func styledCaption(dc *gg.Context, sc *scene.Scene, tl *timeline.Timeline, th Th
 	lines := wrapCaption(face, marks, W-2*(80+cs.Stroke))
 	lh := cs.Size * 1.25
 	y := cs.Y - lh*float64(len(lines)-1)/2
-	dc.SetFontFace(face)
 	space := float64(font.MeasureString(face, " ").Round())
 	for _, line := range lines {
 		width := -space
@@ -93,7 +95,7 @@ func styledCaption(dc *gg.Context, sc *scene.Scene, tl *timeline.Timeline, th Th
 			if cs.Karaoke && t < m.at {
 				col = cs.Dim
 			}
-			strokeText(dc, m.text, x, y, cs.Stroke, cs.Edge, col)
+			strokeText(dst, face, m.text, x, y, cs.Stroke, cs.Edge, col)
 			x += float64(font.MeasureString(face, m.text).Round()) + space
 		}
 		y += lh
@@ -120,15 +122,28 @@ func wrapCaption(face font.Face, marks []spoken, max float64) [][]spoken {
 	return append(lines, line)
 }
 
-func strokeText(dc *gg.Context, s string, x, y, r float64, edge, ink color.RGBA) {
+func strokeText(dst *image.RGBA, face font.Face, s string, x, y, r float64, edge, ink color.RGBA) {
+	m := face.Metrics()
+	asc, desc := m.Ascent.Ceil(), m.Descent.Ceil()
+	pad := int(math.Ceil(r)) + 1
+	w := font.MeasureString(face, s).Ceil() + 2*pad
+	h := asc + desc + 2*pad
+	mask := image.NewAlpha(image.Rect(0, 0, w, h))
+	d := font.Drawer{Dst: mask, Src: image.Opaque, Face: face, Dot: fixed.P(pad, pad+asc)}
+	d.DrawString(s)
+	base := y + 0.35*float64(m.Height.Ceil())
+	ox := int(math.Round(x)) - pad
+	oy := int(math.Round(base)) - asc - pad
+	stamp := func(dx, dy int, c color.RGBA) {
+		rect := image.Rect(ox+dx, oy+dy, ox+dx+w, oy+dy+h)
+		draw.DrawMask(dst, rect, image.NewUniform(c), image.Point{}, mask, image.Point{}, draw.Over)
+	}
 	if r > 0 {
-		dc.SetColor(edge)
-		n := int(math.Max(8, r*3))
+		n := int(math.Max(8, r*2))
 		for i := 0; i < n; i++ {
 			a := 2 * math.Pi * float64(i) / float64(n)
-			dc.DrawStringAnchored(s, x+r*math.Cos(a), y+r*math.Sin(a), 0, 0.35)
+			stamp(int(math.Round(r*math.Cos(a))), int(math.Round(r*math.Sin(a))), edge)
 		}
 	}
-	dc.SetColor(ink)
-	dc.DrawStringAnchored(s, x, y, 0, 0.35)
+	stamp(0, 0, ink)
 }

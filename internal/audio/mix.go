@@ -30,6 +30,8 @@ var pads = map[string][]float64{
 	PadNight:  {196, 233, 294},
 	PadIdea:   {262, 330, 392, 523},
 	PadSakura: {294, 370, 440, 587},
+	Drone:     {146.8, 220, 293.7},
+	DroneLow:  {73.4, 110, 146.8},
 }
 
 func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
@@ -361,12 +363,6 @@ func long(kind string, dur float64, rng *rand.Rand) []float64 {
 	switch kind {
 	case PadSunset, PadNight, PadIdea, PadSakura, Drone, DroneLow:
 		fs := pads[kind]
-		if kind == Drone {
-			fs = []float64{146.8, 220, 293.7}
-		}
-		if kind == DroneLow {
-			fs = []float64{73.4, 110, 146.8}
-		}
 		x := make([]float64, n)
 		for i := range x {
 			t := float64(i) / Rate

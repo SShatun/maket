@@ -226,6 +226,13 @@ func (s Shot) check(pixel bool) error {
 			if pixel && (x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1]) {
 				return fmt.Errorf("cast %d: crowd needs kind, count, rows, box: [x0, y0, x1, y1] and size: [min, max] in 0.2..4", i+1)
 			}
+			if c.ID != "" {
+				if ids[c.ID] {
+					return fmt.Errorf("cast %d: duplicate id %q", i+1, c.ID)
+				}
+				ids[c.ID] = true
+				entities = append(entities, c.Entity)
+			}
 			continue
 		}
 		if c.ID == "" || ids[c.ID] {
@@ -359,7 +366,6 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*event)(e)); err != nil {
 		return err
 	}
-	e.Tone = plainTone(e.Tone)
 	e.Raw = append(json.RawMessage(nil), b...)
 	return nil
 }

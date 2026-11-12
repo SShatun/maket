@@ -114,6 +114,12 @@ func PixelTheme(f *Fonts, badges map[string]image.Image, over map[string]color.R
 func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
 	dc := gg.NewContextForRGBA(dst)
 	o := overlay{dc: dc, sc: sc, tl: tl, th: th, t: t}
+	if th.OwnCaption {
+		if !th.NoProgress {
+			o.progress()
+		}
+		return
+	}
 	o.dim()
 	if len(sc.Shots) > 0 {
 		o.numbers()
@@ -429,7 +435,7 @@ func (o overlay) code() {
 
 func (o overlay) caption() {
 	if o.th.Caption.Size > 0 {
-		styledCaption(o.dc, o.sc, o.tl, o.th, o.t)
+		styledCaption(o.dc.Image().(*image.RGBA), o.sc, o.tl, o.th, o.t)
 		return
 	}
 	cur := -1
