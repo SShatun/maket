@@ -44,6 +44,7 @@ type Result struct {
 	Phrases  []timeline.PhraseTime `json:"phrases"`
 	Warnings []string              `json:"warnings"`
 	Tempo    []string              `json:"tempo"`
+	gaps     []float64
 }
 
 const (
@@ -267,6 +268,12 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	}
 	if r.cfg.ChecksPython == "" {
 		res.Warnings = append(res.Warnings, "voice checks are off: set checks_python and checks_model in maket.json")
+	}
+	for i, g := range res.gaps {
+		tempo[i] += fmt.Sprintf(", pause after %.2f s", g)
+	}
+	if best.choppy > choppyMax {
+		res.Warnings = append(res.Warnings, fmt.Sprintf("take has %.2f short pauses per second of speech (at most %.2f): sentences may sound joined by commas", best.choppy, choppyMax))
 	}
 	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, tempo spread %.0f%%", best.choppy, best.spread*100)}, tempo...)
 	return res, nil
@@ -628,7 +635,7 @@ func (r *run) python(py, script string, job any) error {
 		return err
 	}
 	cmd := exec.CommandContext(r.ctx, py, "-I", filepath.Join(r.root, "tools", "voice", script), jobPath)
-	cmd.Env = append(os.Environ(), "HF_HUB_OFFLINE=1")
+	cmd.Env = append(os.Environ(), "HF_HUB_OFFLINE=1", "TRANSFORMERS_VERBOSITY=error", "TRANSFORMERS_NO_ADVISORY_WARNINGS=1")
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", script, err)
@@ -853,16 +860,13 @@ func (r *run) evenPieces(pieces []*piece) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i, p := range pieces {
+	for i := range pieces {
 		if c := final[i]; c != nil {
 			lines[i] += fmt.Sprintf("; voice %.2f to sample", c.Ref)
 			if c.Prev != nil {
 				lines[i] += fmt.Sprintf(", %.2f to previous", *c.Prev)
 			}
 			lines[i] += fmt.Sprintf(", end fall %+.1f st", c.Fall)
-		}
-		if i+1 < len(pieces) {
-			lines[i] += fmt.Sprintf(", pause after %.2f s", edgeQuiet(p, true)+edgeQuiet(pieces[i+1], false))
 		}
 		if r.flat(i, final[i]) {
 			lines[i] += ", FLAT END"
@@ -1037,9 +1041,12 @@ func (r *run) place(pieces []*piece) (*Result, error) {
 	for i, p := range pieces {
 		t += r.sc.Phrases[i].Pause
 		if i > 0 {
-			if gap := edgeQuiet(pieces[i-1], true) + edgeQuiet(p, false) + r.sc.Phrases[i].Pause; gap < gapMin {
+			gap := edgeQuiet(pieces[i-1], true) + edgeQuiet(p, false) + r.sc.Phrases[i].Pause
+			if gap < gapMin {
 				t += gapMin - gap
+				gap = gapMin
 			}
+			res.gaps = append(res.gaps, gap)
 		}
 		a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
 		at := int(t * audio.Rate)

@@ -1,5 +1,8 @@
 import json
 import sys
+import warnings
+
+warnings.filterwarnings('ignore')
 
 import numpy as np
 import parselmouth
