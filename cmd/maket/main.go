@@ -23,17 +23,26 @@ import (
 	"maket/internal/voice"
 )
 
-var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, error){
-	"maket": func(root string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
-	"none":  func(_ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
-	"pixel": func(root string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, fonts) },
+var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Style, error){
+	"maket": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
+	"none":  func(_, _ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
+	"pixel": func(root, look string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, look, fonts) },
 }
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
-maket voice scene.json [-voice NAME] [-seed N] [-root DIR]`
+maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
+maket char list [-look L] [-root DIR]
+maket char grid NAME [STATE] [-i N] [-look L] [-root DIR]
+maket char build GRID.txt -o DRAFT
+maket char check DRAFT|NAME [-look L] [-root DIR]
+maket char sheet DRAFT|NAME -o sheet.png [-ref a,b] [-look L] [-root DIR]
+maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]`
 
 func main() {
+	if len(os.Args) >= 3 && os.Args[1] == "char" {
+		os.Exit(charMain(os.Args[2], os.Args[3:]))
+	}
 	if len(os.Args) < 3 {
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
@@ -124,7 +133,10 @@ func prepare(scenePath string, opt options) (*job, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown style %q", name)
 	}
-	st, err := mk(root, fonts)
+	if sc.Look != "" && name != "pixel" {
+		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
+	}
+	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
 		return nil, err
 	}

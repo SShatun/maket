@@ -67,8 +67,8 @@ func LightTheme(f *Fonts) Theme {
 	}
 }
 
-func PixelTheme(f *Fonts, badges map[string]image.Image) Theme {
-	return Theme{
+func PixelTheme(f *Fonts, badges map[string]image.Image, over map[string]color.RGBA) Theme {
+	t := Theme{
 		Pixel: true, BG: rgb(29, 43, 83), Ink: rgb(255, 241, 232), Card: rgb(16, 24, 50),
 		Muted: rgb(194, 195, 199), CodeDim: rgb(120, 132, 170), Accent: rgb(255, 236, 39),
 		Error: rgb(255, 0, 77), OK: rgb(0, 228, 54), OKDark: rgb(0, 135, 81), Grid: rgb(131, 118, 156),
@@ -80,6 +80,27 @@ func PixelTheme(f *Fonts, badges map[string]image.Image) Theme {
 			"lav":   {rgb(60, 54, 90), rgb(255, 241, 232)},
 		},
 	}
+	for k, c := range over {
+		switch k {
+		case "bg":
+			t.BG = c
+		case "ink":
+			t.Ink = c
+		case "card":
+			t.Card = c
+		case "muted":
+			t.Muted = c
+		case "accent":
+			t.Accent = c
+		case "error":
+			t.Error = c
+		case "ok":
+			t.OK = c
+		case "grid":
+			t.Grid = c
+		}
+	}
+	return t
 }
 
 func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
