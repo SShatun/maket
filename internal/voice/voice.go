@@ -65,7 +65,6 @@ const (
 	timbreRef    = 0.30
 	timbreNear   = 0.40
 	otherSpeaker = "voice sounds like another speaker"
-	flatShare    = 0.2
 	levelSnap    = 1.0
 	levelTries   = 2
 	peakMax      = 0.89
@@ -215,10 +214,10 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		if err != nil {
 			return nil, err
 		}
-		if best == nil || len(tk.lost) < len(best.lost) || len(tk.lost) == len(best.lost) && (tk.flat < best.flat || tk.flat == best.flat && (tk.choppy < best.choppy || tk.choppy == best.choppy && tk.spread < best.spread)) {
+		if best == nil || len(tk.lost) < len(best.lost) || len(tk.lost) == len(best.lost) && (tk.choppy < best.choppy || tk.choppy == best.choppy && (tk.flat < best.flat || tk.flat == best.flat && tk.spread < best.spread)) {
 			best = tk
 		}
-		if len(best.lost) == 0 && float64(best.flat) <= flatShare*float64(len(r.sc.Phrases)) && best.choppy <= choppyMax && best.spread <= takeTol {
+		if len(best.lost) == 0 && best.choppy <= choppyMax && best.spread <= takeTol {
 			break
 		}
 	}

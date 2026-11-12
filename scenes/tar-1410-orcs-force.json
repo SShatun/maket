@@ -1,0 +1,1651 @@
+{
+ "style": "rts",
+ "seed": 7,
+ "caption": {
+  "size": 56,
+  "y": 1330,
+  "stroke": 7,
+  "plate": [
+   10,
+   8,
+   6,
+   200
+  ]
+ },
+ "hold": 1.0,
+ "phrases": [
+  {
+   "text": "Основная дорога бывает забита: массовые ресинки, аварии.",
+   "caption": "ресинки и аварии",
+   "stress": {
+    "ресинки": "реси́нки"
+   }
+  },
+  {
+   "text": "В октябре очереди к расчёту и обратно копились миллионами.",
+   "caption": "очереди dcg",
+   "pause": 0.29
+  },
+  {
+   "text": "А срочный товар стоит в хвосте вместе со всеми.",
+   "caption": "срочный — в хвосте",
+   "pause": 0.17
+  },
+  {
+   "text": "Форс — своя дорога для срочных мимо очереди: через расчёт и обратно.",
+   "caption": "своя дорога",
+   "pause": 0.34
+  },
+  {
+   "text": "В обычное время она пустая.",
+   "caption": "обычно пусто",
+   "pause": 0.32
+  },
+  {
+   "text": "Шлёшь руками или скриптом до тысячи товаров за раз.",
+   "caption": "до 1000 товаров"
+  },
+  {
+   "text": "Ответ форса пишется в сторадж, даже если цена не изменилась.",
+   "caption": "без пропуска одинаковых",
+   "stress": {
+    "сторадж": "стора́дж"
+   }
+  },
+  {
+   "text": "Десять товаров в секунду на под. Цель — три миллиона за час.",
+   "caption": "цель: 3 млн/ч",
+   "pause": 0.23
+  },
+  {
+   "text": "Через минуту-две проверь цену в сторадже.",
+   "caption": "проверь в storage",
+   "stress": {
+    "сторадже": "стора́дже"
+   },
+   "pause": 0.24
+  },
+  {
+   "text": "Только расчёт общий: пока основной поток в лаге, форсу достаётся часть.",
+   "caption": "пул dcg общий",
+   "pause": 0.3
+  },
+  {
+   "text": "Старые сообщения могут перебить форс. Тогда повтори, когда лаги на нуле.",
+   "caption": "лаги на нуле — повтор",
+   "stress": {
+    "когда": "когда́",
+    "на": "на"
+   },
+   "pause": 0.17
+  },
+  {
+   "text": "Ветка готова, а в мастере её пока нет.",
+   "caption": "TAR-1410 не в master",
+   "pause": 0.21
+  }
+ ],
+ "shots": [
+  {
+   "at": "p1",
+   "map": {
+    "seed": 12,
+    "forest": [
+     {
+      "rect": [
+       10,
+       20,
+       60,
+       200
+      ],
+      "count": 12
+     },
+     {
+      "rect": [
+       125,
+       20,
+       172,
+       200
+      ],
+      "count": 12
+     }
+    ],
+    "path": [
+     [
+      "INTWL",
+      "DCG"
+     ]
+    ]
+   },
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "очередь ответов: {n} млн",
+      "count": [
+       1,
+       92,
+       5
+      ]
+     }
+    ]
+   },
+   "cast": [
+    {
+     "id": "DCG",
+     "kind": "service",
+     "role": "consumer",
+     "at": [
+      90,
+      60
+     ],
+     "state": "count",
+     "label": "dcg",
+     "label_pos": "below"
+    },
+    {
+     "id": "INTWL",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      90,
+      212
+     ],
+     "state": "idle",
+     "label": "int-wl",
+     "label_pos": "above",
+     "select": true
+    },
+    {
+     "id": "HORDE",
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       90,
+       120
+      ],
+      "cols": 4,
+      "rows": 6,
+      "step": [
+       10,
+       8
+      ]
+     }
+    }
+   ],
+   "do": [
+    {
+     "at": "p1",
+     "do": "select",
+     "target": "INTWL",
+     "name": "ОСНОВНАЯ ДОРОГА",
+     "status": "забита",
+     "tone": "bad"
+    },
+    {
+     "at": "p1:забита",
+     "do": "shake",
+     "px": 1,
+     "until": "p1.end"
+    },
+    {
+     "at": "p1:ресинки",
+     "do": "select",
+     "target": "HORDE",
+     "name": "ОСНОВНОЙ ПОТОК",
+     "status": "ресинки и аварии",
+     "tone": "bad"
+    }
+   ]
+  },
+  {
+   "at": "p2",
+   "map": {
+    "seed": 24,
+    "forest": [
+     {
+      "rect": [
+       66,
+       100,
+       114,
+       190
+      ],
+      "count": 5
+     }
+    ],
+    "path": [
+     [
+      [
+       40,
+       228
+      ],
+      "REQ",
+      [
+       40,
+       20
+      ]
+     ],
+     [
+      [
+       140,
+       20
+      ],
+      "RESP",
+      [
+       140,
+       228
+      ]
+     ]
+    ]
+   },
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "очередь ответов: 92,5 млн"
+     }
+    ]
+   },
+   "cast": [
+    {
+     "id": "REQ",
+     "kind": "topic",
+     "role": "buffer",
+     "at": [
+      40,
+      120
+     ],
+     "state": "lag",
+     "label": "запросы в dcg",
+     "label_pos": "above"
+    },
+    {
+     "id": "RESP",
+     "kind": "topic",
+     "role": "buffer",
+     "at": [
+      140,
+      120
+     ],
+     "state": "lag",
+     "label": "ответы dcg",
+     "label_pos": "above",
+     "select": true
+    },
+    {
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       40,
+       160
+      ],
+      "cols": 3,
+      "rows": 4,
+      "step": [
+       10,
+       9
+      ]
+     }
+    },
+    {
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       140,
+       160
+      ],
+      "cols": 3,
+      "rows": 4,
+      "step": [
+       10,
+       9
+      ]
+     }
+    }
+   ],
+   "do": [
+    {
+     "at": "p2",
+     "do": "select",
+     "target": "REQ",
+     "name": "ЗАПРОСЫ В DCG",
+     "status": "пик 61,9 млн",
+     "tone": "bad"
+    },
+    {
+     "at": "p2:обратно",
+     "do": "select",
+     "target": "RESP",
+     "name": "ОТВЕТЫ DCG",
+     "status": "пик 92,5 млн",
+     "tone": "bad"
+    },
+    {
+     "at": "p2:копились",
+     "do": "text",
+     "text": ">1 млн — 46,5 ч за месяц",
+     "pos": [
+      90,
+      200
+     ],
+     "size": 24,
+     "tone": "accent"
+    }
+   ]
+  },
+  {
+   "at": "p3",
+   "map": {
+    "seed": 36,
+    "forest": [
+     {
+      "rect": [
+       10,
+       20,
+       50,
+       200
+      ],
+      "count": 8
+     },
+     {
+      "rect": [
+       130,
+       20,
+       172,
+       200
+      ],
+      "count": 8
+     }
+    ],
+    "path": [
+     [
+      [
+       90,
+       228
+      ],
+      [
+       90,
+       20
+      ]
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "HORDE",
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       90,
+       95
+      ],
+      "cols": 4,
+      "rows": 7,
+      "step": [
+       10,
+       9
+      ]
+     },
+     "label": "все",
+     "label_pos": "above"
+    },
+    {
+     "id": "W",
+     "kind": "worker",
+     "role": "ok",
+     "at": [
+      90,
+      175
+     ],
+     "state": "wait",
+     "label": "срочный товар",
+     "label_pos": "below",
+     "select": true
+    }
+   ],
+   "do": [
+    {
+     "at": "p3",
+     "do": "select",
+     "target": "W",
+     "name": "СРОЧНЫЙ ТОВАР",
+     "status": "ждёт в хвосте",
+     "tone": "warn"
+    },
+    {
+     "at": "p3:хвосте",
+     "do": "tries",
+     "target": "W",
+     "text": "ждёт"
+    }
+   ]
+  },
+  {
+   "at": "p4",
+   "map": {
+    "seed": 52,
+    "forest": [
+     {
+      "rect": [
+       66,
+       95,
+       114,
+       130
+      ],
+      "count": 4
+     }
+    ],
+    "path": [
+     [
+      "INTWL",
+      "MAIN",
+      "DCG"
+     ],
+     [
+      "INTWL",
+      "FORCE",
+      "DCG"
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "DCG",
+     "kind": "service",
+     "role": "consumer",
+     "at": [
+      90,
+      66
+     ],
+     "state": "count",
+     "label": "dcg",
+     "label_pos": "below"
+    },
+    {
+     "id": "INTWL",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      90,
+      200
+     ],
+     "state": "idle",
+     "select": true,
+     "label": "int-wl",
+     "label_pos": "above"
+    },
+    {
+     "id": "MAIN",
+     "kind": "topic",
+     "role": "buffer",
+     "at": [
+      42,
+      135
+     ],
+     "state": "lag",
+     "label": "общий топик",
+     "label_pos": "above"
+    },
+    {
+     "id": "FORCE",
+     "kind": "topic",
+     "role": "ok",
+     "at": [
+      140,
+      135
+     ],
+     "state": "flow",
+     "label": "форс-топики",
+     "label_pos": "above"
+    },
+    {
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       44,
+       170
+      ],
+      "cols": 3,
+      "rows": 2,
+      "step": [
+       10,
+       9
+      ]
+     },
+     "id": "HORDE",
+     "label": "общий поток",
+     "label_pos": "below"
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": "INTWL",
+      "to": "FORCE",
+      "count": 4,
+      "speed": 0.45
+     }
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": "FORCE",
+      "to": "DCG",
+      "count": 4,
+      "speed": 0.45
+     },
+     "id": "FW",
+     "label": "форс",
+     "label_pos": "below"
+    },
+    {
+     "id": "W",
+     "kind": "worker",
+     "role": "ok",
+     "at": [
+      110,
+      200
+     ],
+     "state": "carry",
+     "label": "срочный",
+     "label_pos": "below"
+    }
+   ],
+   "do": [
+    {
+     "at": "p4",
+     "do": "select",
+     "target": "W",
+     "name": "СРОЧНЫЙ ТОВАР",
+     "status": "по своей дороге",
+     "tone": "ok"
+    },
+    {
+     "at": "p4:своя",
+     "do": "walk",
+     "target": "W",
+     "to": [
+      140,
+      140
+     ],
+     "dur": 1.6
+    },
+    {
+     "at": "p4:мимо",
+     "do": "select",
+     "target": "FORCE",
+     "name": "ФОРС-ТОПИКИ",
+     "status": "запросы и ответы dcg",
+     "tone": "ok"
+    },
+    {
+     "at": "p4:через",
+     "do": "walk",
+     "target": "W",
+     "to": [
+      100,
+      75
+     ],
+     "dur": 1.4
+    },
+    {
+     "at": "p4:обратно",
+     "do": "select",
+     "target": "DCG",
+     "name": "DCG",
+     "status": "своя группа чтения",
+     "tone": "ok"
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "форс: своя дорога"
+     }
+    ]
+   }
+  },
+  {
+   "at": "p5",
+   "map": {
+    "seed": 52,
+    "forest": [
+     {
+      "rect": [
+       66,
+       95,
+       114,
+       130
+      ],
+      "count": 4
+     }
+    ],
+    "path": [
+     [
+      "INTWL",
+      "MAIN",
+      "DCG"
+     ],
+     [
+      "INTWL",
+      "FORCE",
+      "DCG"
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "DCG",
+     "kind": "service",
+     "role": "consumer",
+     "at": [
+      90,
+      66
+     ],
+     "state": "count",
+     "label": "dcg",
+     "label_pos": "below"
+    },
+    {
+     "id": "INTWL",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      90,
+      200
+     ],
+     "state": "idle",
+     "select": true,
+     "label": "int-wl",
+     "label_pos": "above"
+    },
+    {
+     "id": "MAIN",
+     "kind": "topic",
+     "role": "buffer",
+     "at": [
+      42,
+      135
+     ],
+     "state": "flow",
+     "label": "общий топик",
+     "label_pos": "above"
+    },
+    {
+     "id": "FORCE",
+     "kind": "topic",
+     "role": "ok",
+     "at": [
+      140,
+      135
+     ],
+     "state": "idle",
+     "label": "форс-топики",
+     "label_pos": "above"
+    },
+    {
+     "kind": "worker",
+     "role": "producer",
+     "crowd": {
+      "behavior": "route",
+      "from": "INTWL",
+      "to": "MAIN",
+      "count": 3,
+      "speed": 0.35
+     }
+    },
+    {
+     "kind": "worker",
+     "role": "producer",
+     "crowd": {
+      "behavior": "route",
+      "from": "MAIN",
+      "to": "DCG",
+      "count": 3,
+      "speed": 0.35
+     }
+    }
+   ],
+   "do": [
+    {
+     "at": "p5",
+     "do": "select",
+     "target": "FORCE",
+     "name": "ФОРС-ТОПИКИ",
+     "status": "обычно пусто",
+     "tone": "ok"
+    },
+    {
+     "at": "p5:пустая",
+     "do": "badge",
+     "target": "FORCE",
+     "badge": "zzz"
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "форс: 0"
+     }
+    ]
+   }
+  },
+  {
+   "at": "p6",
+   "map": {
+    "seed": 44,
+    "forest": [
+     {
+      "rect": [
+       10,
+       20,
+       60,
+       80
+      ],
+      "count": 8
+     },
+     {
+      "rect": [
+       130,
+       20,
+       172,
+       80
+      ],
+      "count": 7
+     }
+    ],
+    "path": [
+     [
+      [
+       90,
+       225
+      ],
+      [
+       90,
+       110
+      ],
+      [
+       90,
+       40
+      ]
+     ]
+    ],
+    "wall": {
+     "gate": "API"
+    }
+   },
+   "hud": {
+    "res": [
+     {
+      "key": "gold",
+      "text": "до 1000 за вызов"
+     }
+    ]
+   },
+   "cast": [
+    {
+     "id": "BOSS",
+     "kind": "person",
+     "role": "producer",
+     "at": [
+      40,
+      185
+     ],
+     "state": "idle",
+     "select": true,
+     "label": "дежурный или скрипт",
+     "label_pos": "below"
+    },
+    {
+     "id": "API",
+     "kind": "lock",
+     "role": "producer",
+     "at": [
+      90,
+      110
+     ],
+     "state": "idle"
+    },
+    {
+     "id": "ITEMS",
+     "kind": "worker",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       100,
+       160
+      ],
+      "cols": 5,
+      "rows": 3,
+      "step": [
+       14,
+       13
+      ],
+      "state": "carry"
+     },
+     "label": "товары",
+     "label_pos": "below",
+     "role": "ok"
+    }
+   ],
+   "do": [
+    {
+     "at": "p6",
+     "do": "select",
+     "target": "BOSS",
+     "name": "ДЕЖУРНЫЙ",
+     "status": "POST /v1/force-calculate",
+     "tone": "ok"
+    },
+    {
+     "at": "p6:шлёшь",
+     "do": "select",
+     "target": "BOSS",
+     "pressed": [
+      "move"
+     ]
+    },
+    {
+     "at": "p6:шлёшь",
+     "do": "state",
+     "target": "BOSS",
+     "state": "happy"
+    },
+    {
+     "at": "p6:шлёшь",
+     "do": "admit",
+     "gate": "API",
+     "from": "ITEMS",
+     "rate": 5,
+     "to": [
+      90,
+      60
+     ]
+    },
+    {
+     "at": "p6:тысячи",
+     "do": "message",
+     "lines": [
+      "до 1000 товаров за вызов"
+     ]
+    },
+    {
+     "at": "p6",
+     "do": "panel",
+     "box": [
+      8,
+      24,
+      172,
+      48
+     ],
+     "title": "POST /v1/force-calculate",
+     "tone": "accent"
+    }
+   ]
+  },
+  {
+   "at": "p7",
+   "map": {
+    "seed": 71,
+    "forest": [
+     {
+      "rect": [
+       140,
+       20,
+       172,
+       90
+      ],
+      "count": 5
+     }
+    ],
+    "path": [
+     [
+      [
+       40,
+       228
+      ],
+      "GATE",
+      "MINE"
+     ],
+     [
+      [
+       150,
+       228
+      ],
+      [
+       140,
+       140
+      ],
+      "MINE"
+     ]
+    ],
+    "wall": {
+     "gate": "GATE",
+     "x": [
+      0,
+      80
+     ]
+    }
+   },
+   "cast": [
+    {
+     "id": "MINE",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      80,
+      85
+     ],
+     "state": "give",
+     "select": true,
+     "label": "STORAGE",
+     "label_pos": "above"
+    },
+    {
+     "id": "GATE",
+     "kind": "lock",
+     "role": "producer",
+     "at": [
+      40,
+      135
+     ],
+     "state": "deny",
+     "label": "пропуск",
+     "label_pos": "above"
+    },
+    {
+     "kind": "worker",
+     "role": "producer",
+     "crowd": {
+      "behavior": "formation",
+      "at": [
+       40,
+       165
+      ],
+      "cols": 3,
+      "rows": 3,
+      "step": [
+       10,
+       10
+      ]
+     },
+     "label": "общий путь",
+     "label_pos": "below"
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": [
+       150,
+       195
+      ],
+      "to": "MINE",
+      "count": 5,
+      "speed": 0.4
+     },
+     "id": "FW",
+     "label": "форс",
+     "label_pos": "below"
+    }
+   ],
+   "do": [
+    {
+     "at": "p7",
+     "do": "select",
+     "target": "GATE",
+     "name": "ПРОПУСК ОДИНАКОВЫХ",
+     "status": "основной путь",
+     "tone": "warn"
+    },
+    {
+     "at": "p7:форса",
+     "do": "select",
+     "target": "MINE",
+     "name": "STORAGE",
+     "status": "форс: без пропуска",
+     "tone": "ok"
+    },
+    {
+     "at": "p7:изменилась",
+     "do": "message",
+     "lines": [
+      "форс узнаётся по топику"
+     ]
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "gold",
+      "text": "запись без пропуска"
+     }
+    ]
+   }
+  },
+  {
+   "at": "p8",
+   "map": {
+    "seed": 84,
+    "forest": [
+     {
+      "rect": [
+       10,
+       150,
+       50,
+       215
+      ],
+      "count": 5
+     },
+     {
+      "rect": [
+       135,
+       150,
+       172,
+       215
+      ],
+      "count": 5
+     }
+    ],
+    "path": [
+     [
+      "P1",
+      "MINE"
+     ],
+     [
+      "P2",
+      "MINE"
+     ],
+     [
+      "P3",
+      "MINE"
+     ]
+    ]
+   },
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "{n}/с",
+      "count": [
+       10,
+       900,
+       3
+      ],
+      "alert": false
+     }
+    ]
+   },
+   "cast": [
+    {
+     "id": "P1",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      34,
+      88
+     ],
+     "state": "count",
+     "select": true,
+     "label": "под",
+     "label_pos": "above"
+    },
+    {
+     "id": "P2",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      90,
+      80
+     ],
+     "state": "count",
+     "label": "под",
+     "label_pos": "above"
+    },
+    {
+     "id": "P3",
+     "kind": "service",
+     "role": "producer",
+     "at": [
+      146,
+      88
+     ],
+     "state": "count",
+     "label": "под",
+     "label_pos": "above"
+    },
+    {
+     "id": "MINE",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      90,
+      195
+     ],
+     "state": "give",
+     "label": "STORAGE",
+     "label_pos": "below"
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": "P1",
+      "to": "MINE",
+      "count": 3,
+      "speed": 0.5
+     }
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": "P2",
+      "to": "MINE",
+      "count": 3,
+      "speed": 0.5
+     }
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "route",
+      "from": "P3",
+      "to": "MINE",
+      "count": 3,
+      "speed": 0.5
+     }
+    }
+   ],
+   "do": [
+    {
+     "at": "p8",
+     "do": "select",
+     "target": "P1",
+     "name": "ПОД INT-WL",
+     "status": "10 товаров/с",
+     "tone": "ok"
+    },
+    {
+     "at": "p8:секунду",
+     "do": "text",
+     "text": "10/с на под",
+     "pos": [
+      90,
+      140
+     ],
+     "size": 24,
+     "tone": "accent"
+    },
+    {
+     "at": "p8:цель",
+     "do": "text",
+     "text": "цель: 3 млн за час",
+     "pos": [
+      90,
+      158
+     ],
+     "size": 24,
+     "tone": "accent"
+    }
+   ]
+  },
+  {
+   "at": "p9",
+   "map": {
+    "seed": 92,
+    "forest": [
+     {
+      "rect": [
+       10,
+       20,
+       60,
+       90
+      ],
+      "count": 8
+     },
+     {
+      "rect": [
+       140,
+       160,
+       172,
+       220
+      ],
+      "count": 5
+     }
+    ],
+    "path": [
+     [
+      "BOSS",
+      "MINE"
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "MINE",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      120,
+      130
+     ],
+     "state": "give",
+     "label": "STORAGE",
+     "label_pos": "above"
+    },
+    {
+     "id": "BOSS",
+     "kind": "person",
+     "role": "producer",
+     "at": [
+      55,
+      185
+     ],
+     "state": "idle",
+     "select": true,
+     "label": "дежурный",
+     "label_pos": "below"
+    }
+   ],
+   "do": [
+    {
+     "at": "p9",
+     "do": "select",
+     "target": "BOSS",
+     "name": "ДЕЖУРНЫЙ",
+     "status": "/v1/delivery-price/get",
+     "tone": "ok"
+    },
+    {
+     "at": "p9:сторадже",
+     "do": "state",
+     "target": "BOSS",
+     "state": "wait"
+    },
+    {
+     "at": "p9:сторадже",
+     "do": "text",
+     "text": "1–2 мин, бывает до часа",
+     "pos": [
+      90,
+      58
+     ],
+     "size": 24,
+     "tone": "accent"
+    },
+    {
+     "at": "p9:проверь",
+     "do": "panel",
+     "box": [
+      8,
+      14,
+      172,
+      40
+     ],
+     "title": "/v1/delivery-price/get",
+     "tone": "accent"
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "gold",
+      "text": "видно через 1–2 мин",
+      "alert": false
+     }
+    ]
+   }
+  },
+  {
+   "at": "p10",
+   "map": {
+    "seed": 101,
+    "forest": [
+     {
+      "rect": [
+       10,
+       175,
+       60,
+       215
+      ],
+      "count": 4
+     }
+    ],
+    "path": [
+     [
+      [
+       180,
+       120
+      ],
+      "DCG"
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "DCG",
+     "kind": "service",
+     "role": "consumer",
+     "at": [
+      65,
+      115
+     ],
+     "state": "count",
+     "select": true,
+     "label": "dcg",
+     "label_pos": "above"
+    },
+    {
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "swarm",
+      "around": "DCG",
+      "radius": [
+       36,
+       24
+      ],
+      "count": 20
+     },
+     "id": "HORDE",
+     "label": "основной поток",
+     "label_pos": "below"
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "stream",
+      "from": "right",
+      "to": [
+       145,
+       120
+      ],
+      "count": 5,
+      "lane": [
+       100,
+       140
+      ],
+      "state": "wait"
+     },
+     "id": "FW",
+     "label": "форс",
+     "label_pos": "above"
+    }
+   ],
+   "do": [
+    {
+     "at": "p10",
+     "do": "select",
+     "target": "DCG",
+     "name": "DCG",
+     "status": "пул общий",
+     "tone": "warn"
+    },
+    {
+     "at": "p10:лаге",
+     "do": "shake",
+     "px": 1,
+     "until": "p10.end"
+    },
+    {
+     "at": "p10:часть",
+     "do": "text",
+     "text": "форсу — только часть dcg",
+     "pos": [
+      90,
+      200
+     ],
+     "size": 24,
+     "tone": "accent"
+    },
+    {
+     "at": "p10:форсу",
+     "do": "select",
+     "target": "FW",
+     "name": "ФОРС",
+     "status": "ждёт свободный dcg",
+     "tone": "warn"
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "форсу — часть"
+     }
+    ]
+   }
+  },
+  {
+   "at": "p11",
+   "map": {
+    "seed": 113,
+    "forest": [
+     {
+      "rect": [
+       140,
+       20,
+       172,
+       100
+      ],
+      "count": 6
+     }
+    ],
+    "path": [
+     [
+      [
+       110,
+       228
+      ],
+      "MINE"
+     ],
+     [
+      [
+       0,
+       150
+      ],
+      "MINE"
+     ]
+    ]
+   },
+   "cast": [
+    {
+     "id": "MINE",
+     "kind": "db",
+     "role": "storage",
+     "at": [
+      100,
+      100
+     ],
+     "state": "give",
+     "select": true,
+     "label": "STORAGE",
+     "label_pos": "above"
+    },
+    {
+     "kind": "worker",
+     "role": "ok",
+     "crowd": {
+      "behavior": "stream",
+      "from": "bottom",
+      "to": "MINE",
+      "count": 4,
+      "lane": [
+       100,
+       120
+      ],
+      "speed": 50
+     },
+     "id": "FW",
+     "label": "форс",
+     "label_pos": "below"
+    },
+    {
+     "kind": "warrior",
+     "crowd": {
+      "behavior": "stream",
+      "from": "left",
+      "to": "MINE",
+      "count": 14,
+      "lane": [
+       130,
+       175
+      ],
+      "speed": 45,
+      "start": "p11:перебить"
+     },
+     "id": "OLD",
+     "label": "старые сообщения",
+     "label_pos": "below"
+    }
+   ],
+   "do": [
+    {
+     "at": "p11",
+     "do": "select",
+     "target": "MINE",
+     "name": "STORAGE",
+     "status": "цена форса",
+     "tone": "ok"
+    },
+    {
+     "at": "p11:перебить",
+     "do": "select",
+     "target": "MINE",
+     "status": "старые сообщения",
+     "tone": "bad"
+    },
+    {
+     "at": "p11:повтори",
+     "do": "shock"
+    },
+    {
+     "at": "p11:повтори",
+     "do": "state",
+     "target": "MINE",
+     "state": "flinch"
+    },
+    {
+     "at": "p11:повтори",
+     "do": "text",
+     "text": "лаги = 0 → повтори форс",
+     "pos": [
+      90,
+      30
+     ],
+     "size": 24,
+     "tone": "accent"
+    },
+    {
+     "at": "p11:нуле",
+     "do": "res",
+     "key": "rps",
+     "text": "лаг основных = 0",
+     "alert": false
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "rps",
+      "text": "лаг основных > 0",
+      "alert": false
+     }
+    ]
+   }
+  },
+  {
+   "at": "p12",
+   "map": {
+    "seed": 121,
+    "forest": [
+     {
+      "rect": [
+       10,
+       20,
+       60,
+       220
+      ],
+      "count": 10
+     },
+     {
+      "rect": [
+       125,
+       20,
+       172,
+       220
+      ],
+      "count": 10
+     }
+    ]
+   },
+   "cast": [
+    {
+     "id": "BR",
+     "kind": "branch",
+     "role": "ok",
+     "at": [
+      90,
+      160
+     ],
+     "state": "grow",
+     "select": true,
+     "label": "TAR-1410",
+     "label_pos": "below"
+    }
+   ],
+   "do": [
+    {
+     "at": "p12",
+     "do": "select",
+     "target": "BR",
+     "name": "TAR-1410",
+     "status": "готова",
+     "tone": "ok"
+    },
+    {
+     "at": "p12:мастере",
+     "do": "select",
+     "target": "BR",
+     "status": "в master не влита",
+     "tone": "warn"
+    },
+    {
+     "at": "p12:мастере",
+     "do": "text",
+     "text": "в master не влита",
+     "pos": [
+      90,
+      60
+     ],
+     "size": 32,
+     "tone": "accent"
+    }
+   ],
+   "hud": {
+    "res": [
+     {
+      "key": "gold",
+      "text": "ветка готова",
+      "alert": false
+     }
+    ]
+   }
+  }
+ ]
+}
