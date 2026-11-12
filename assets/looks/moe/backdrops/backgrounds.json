@@ -1,0 +1,185 @@
+{
+ "size": [
+  1080,
+  1920
+ ],
+ "floor_y": "y of the ground line where anchors stand; null = no ground (shadow only)",
+ "light": "how to grade a character placed on this background: amb + amb_k (blend toward multiply by amb), rim colour on the rim_dir side, optional backglow behind",
+ "backgrounds": {
+  "sunset": {
+   "file": "bg/sunset.jpg",
+   "floor_y": 1640,
+   "use": "титул, начало, «всё спокойно»",
+   "light": {
+    "amb": [
+     255,
+     180,
+     170
+    ],
+    "amb_k": 0.22,
+    "rim": [
+     255,
+     206,
+     150,
+     255
+    ],
+    "rim_dir": [
+     1,
+     -1
+    ]
+   }
+  },
+  "night": {
+   "file": "bg/night.jpg",
+   "floor_y": 1600,
+   "use": "ожидание, тишина, таймаут",
+   "light": {
+    "amb": [
+     140,
+     160,
+     235
+    ],
+    "amb_k": 0.35,
+    "rim": [
+     90,
+     230,
+     255,
+     255
+    ],
+    "rim_dir": [
+     1,
+     -1
+    ],
+    "backglow": [
+     30,
+     90,
+     170,
+     255
+    ]
+   }
+  },
+  "rain": {
+   "file": "bg/rain.jpg",
+   "floor_y": 1700,
+   "use": "упало, потеря, грусть",
+   "light": {
+    "amb": [
+     150,
+     165,
+     205
+    ],
+    "amb_k": 0.35,
+    "rim": [
+     180,
+     205,
+     245,
+     255
+    ],
+    "rim_dir": [
+     -1,
+     -1
+    ]
+   }
+  },
+  "sakura": {
+   "file": "bg/sakura.jpg",
+   "floor_y": 1640,
+   "use": "успех, развязка, «не понял» в лёгком тоне",
+   "light": {
+    "amb": [
+     255,
+     236,
+     244
+    ],
+    "amb_k": 0.08
+   }
+  },
+  "flash": {
+   "file": "bg/flash.jpg",
+   "floor_y": null,
+   "use": "шок, резкий поворот",
+   "light": {}
+  },
+  "idea": {
+   "file": "bg/idea.jpg",
+   "floor_y": null,
+   "use": "озарение, «вот оно что»",
+   "light": {
+    "amb": [
+     255,
+     220,
+     180
+    ],
+    "amb_k": 0.12,
+    "rim": [
+     255,
+     214,
+     110,
+     255
+    ],
+    "rim_dir": [
+     0,
+     -1
+    ],
+    "backglow": [
+     255,
+     190,
+     70,
+     255
+    ]
+   }
+  },
+  "alert": {
+   "file": "bg/alert.jpg",
+   "floor_y": null,
+   "use": "ошибка, отказ, злость, «бака!»",
+   "light": {
+    "amb": [
+     255,
+     150,
+     150
+    ],
+    "amb_k": 0.3,
+    "rim": [
+     255,
+     100,
+     120,
+     255
+    ],
+    "rim_dir": [
+     1,
+     -1
+    ]
+   }
+  },
+  "moe": {
+   "file": "bg/moe.jpg",
+   "floor_y": 1640,
+   "use": "цун/дере, смущение, милота, вопрос пользователю",
+   "light": {
+    "amb": [
+     255,
+     230,
+     240
+    ],
+    "amb_k": 0.06,
+    "rim": [
+     255,
+     255,
+     255,
+     255
+    ],
+    "rim_dir": [
+     -1,
+     -1
+    ],
+    "backglow": [
+     255,
+     160,
+     210,
+     255
+    ]
+   }
+  }
+ }
+}
