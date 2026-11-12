@@ -274,6 +274,9 @@ func voiceTable(scenePath string, opt options) error {
 	for i, p := range res.Phrases {
 		fmt.Printf("%2d  %6.2f  %6.2f  %s\n", i+1, p.Start, p.End, sc.Phrases[i].Text)
 	}
+	for _, t := range res.Tempo {
+		fmt.Println("tempo", t)
+	}
 	fmt.Println(res.Track)
 	return nil
 }

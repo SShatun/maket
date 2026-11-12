@@ -41,6 +41,7 @@ type Result struct {
 	Track    string                `json:"track"`
 	Phrases  []timeline.PhraseTime `json:"phrases"`
 	Warnings []string              `json:"warnings"`
+	Tempo    []string              `json:"tempo"`
 }
 
 const (
@@ -52,8 +53,9 @@ const (
 	edgeSec    = 0.08
 	nearCut    = 0.15
 	tempoTol   = 0.10
-	tempoMin   = 0.8
-	tempoMax   = 1.25
+	tempoSnap  = 0.03
+	tempoTries = 2
+	bridgeSec  = 0.06
 	raggedCut  = "voice piece is cut mid-word or has extra sound at its edges"
 	repeatedAs = "voice repeated «%s»"
 )
@@ -171,6 +173,7 @@ type piece struct {
 	to    float64
 	words []sceneWord
 	wav   string
+	seed  int
 }
 
 func (r *run) synthesize(marked []string) (*Result, error) {
@@ -241,7 +244,8 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		}
 		return nil, fmt.Errorf("voice did not say phrase %d «%s»", lost[0]+1, r.sc.Phrases[lost[0]].Text)
 	}
-	if err := r.fitTempo(pieces); err != nil {
+	tempo, err := r.evenTempo(marked, pieces)
+	if err != nil {
 		return nil, err
 	}
 	res, err := r.place(pieces)
@@ -249,6 +253,7 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		return nil, err
 	}
 	res.Warnings = append(res.Warnings, warnings...)
+	res.Tempo = tempo
 	return res, nil
 }
 
@@ -432,7 +437,7 @@ func (r *run) cutMain(pcm []float32, pieces []*piece, lost []int) {
 		ws := r.phraseWords(i)
 		from := math.Max(cuts[k], ws[0].s-headroom)
 		to := math.Min(cuts[k+1], ws[len(ws)-1].e+tailroom)
-		pieces[i] = &piece{pcm: pcm, from: from, to: to, words: ws}
+		pieces[i] = &piece{pcm: pcm, from: from, to: to, words: ws, seed: r.sc.Seed}
 	}
 }
 
@@ -565,78 +570,118 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 			still = append(still, i)
 			continue
 		}
-		pieces[i] = &piece{pcm: pcm, from: from, to: to, words: ws, wav: items[k].Out}
+		pieces[i] = &piece{pcm: pcm, from: from, to: to, words: ws, wav: items[k].Out, seed: r.sc.Seed + attempt + 1}
 	}
 	return still, nil
 }
 
-func (r *run) fitTempo(pieces []*piece) error {
+func (r *run) evenTempo(marked []string, pieces []*piece) ([]string, error) {
 	rate := make([]float64, len(pieces))
 	var main []float64
 	for i, p := range pieces {
-		rate[i] = phraseTempo(p.words)
+		rate[i] = r.speechRate(i, p)
 		if p.wav == "" {
 			main = append(main, rate[i])
 		}
 	}
-	mid := median(main)
+	target := median(main)
+	if target == 0 {
+		target = median(rate)
+	}
+	first := append([]float64(nil), rate...)
+	for try := 0; try < tempoTries; try++ {
+		var off []int
+		for i := range pieces {
+			if offTempo(rate[i], target) {
+				off = append(off, i)
+			}
+		}
+		if len(off) == 0 {
+			break
+		}
+		alt := make([]*piece, len(pieces))
+		if _, err := r.regenerate(marked, alt, off, maxRetries+1+try, map[int]string{}); err != nil {
+			return nil, err
+		}
+		for _, i := range off {
+			if alt[i] == nil {
+				continue
+			}
+			if v := r.speechRate(i, alt[i]); math.Abs(v/target-1) < math.Abs(rate[i]/target-1) {
+				pieces[i], rate[i] = alt[i], v
+			}
+		}
+	}
+	lines := make([]string, len(pieces))
 	for i, p := range pieces {
-		if p.wav == "" || rate[i] == 0 {
+		k := 1.0
+		if rate[i] > 0 && target > 0 && math.Abs(rate[i]/target-1) > tempoSnap {
+			k = math.Min(1+tempoTol, math.Max(1-tempoTol, target/rate[i]))
+			if err := r.stretch(i, p, k); err != nil {
+				return nil, err
+			}
+		}
+		src := "main"
+		if p.wav != "" {
+			src = "re-voiced"
+		}
+		lines[i] = fmt.Sprintf("phrase %d: %s seed %d, %.1f → %.1f syl/s, atempo %.2f, target %.1f", i+1, src, p.seed, first[i], rate[i]*k, k, target)
+	}
+	return lines, nil
+}
+
+func offTempo(v, target float64) bool {
+	return v > 0 && target > 0 && math.Abs(v/target-1) > tempoTol
+}
+
+func (r *run) speechRate(i int, p *piece) float64 {
+	n := 0
+	for _, w := range scene.Words(r.sc.Phrases[i].Text) {
+		n += vowels(w)
+	}
+	frame := int(frameSec * audio.Rate)
+	th := math.Pow(10, silenceDB/20)
+	a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
+	voiced, gap, started := 0, 0, false
+	for f := a; f+frame <= b; f += frame {
+		sum := 0.0
+		for _, v := range p.pcm[f : f+frame] {
+			sum += float64(v) * float64(v)
+		}
+		if math.Sqrt(sum/float64(frame)) < th {
+			gap++
 			continue
 		}
-		ref := neighborTempo(pieces, rate, i)
-		if ref == 0 {
-			ref = mid
+		if started && float64(gap)*frameSec <= bridgeSec {
+			voiced += gap
 		}
-		if ref == 0 || math.Abs(rate[i]-ref)/ref <= tempoTol {
-			continue
-		}
-		k := math.Min(tempoMax, math.Max(tempoMin, ref/rate[i]))
-		pcm, err := audio.Read(p.wav, fmt.Sprintf("atempo=%g", k))
-		if err != nil {
+		voiced++
+		gap, started = 0, true
+	}
+	if voiced == 0 {
+		return 0
+	}
+	return float64(n) / (float64(voiced) * frameSec)
+}
+
+func (r *run) stretch(i int, p *piece, k float64) error {
+	a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
+	wav := filepath.Join(r.dir, fmt.Sprintf("tempo%02d-%d-%d-%d.wav", i+1, p.seed, a, b))
+	if _, err := os.Stat(wav); err != nil {
+		if err := audio.Write(wav, p.pcm[a:b]); err != nil {
 			return err
 		}
-		p.pcm = pcm
-		p.from /= k
-		p.to /= k
-		for w := range p.words {
-			p.words[w].s /= k
-			p.words[w].e /= k
-		}
 	}
+	pcm, err := audio.Read(wav, fmt.Sprintf("atempo=%g", k))
+	if err != nil {
+		return err
+	}
+	for w := range p.words {
+		p.words[w].s = (p.words[w].s - p.from) / k
+		p.words[w].e = (p.words[w].e - p.from) / k
+	}
+	p.pcm, p.from, p.to = pcm, 0, float64(len(pcm))/audio.Rate
 	return nil
-}
-
-func neighborTempo(pieces []*piece, rate []float64, i int) float64 {
-	var sum float64
-	n := 0
-	if i > 0 && pieces[i-1].wav == "" && rate[i-1] > 0 {
-		sum += rate[i-1]
-		n++
-	}
-	if i+1 < len(pieces) && pieces[i+1].wav == "" && rate[i+1] > 0 {
-		sum += rate[i+1]
-		n++
-	}
-	if n == 0 {
-		return 0
-	}
-	return sum / float64(n)
-}
-
-func phraseTempo(words []sceneWord) float64 {
-	if len(words) == 0 {
-		return 0
-	}
-	d := words[len(words)-1].e - words[0].s
-	if d <= 0 {
-		return 0
-	}
-	n := 0
-	for _, w := range words {
-		n += vowels(w.text)
-	}
-	return float64(n) / d
 }
 
 func vowels(w string) int {
