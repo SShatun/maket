@@ -73,7 +73,8 @@ func (s *Style) Draw(dst *image.RGBA, t float64) {
 		s.wallDraw(world, sh, ox, oy)
 	}
 	s.selection(world, sh, t, items, ox, oy)
-	s.marks(world, t, items, ox, oy)
+	s.marks(world, sh, t, items, ox, oy)
+	s.plates(world, sh, t, items, ox, oy)
 	for _, f := range sh.focuses {
 		if t < f.t || t >= f.until {
 			continue
@@ -90,6 +91,7 @@ func (s *Style) Draw(dst *image.RGBA, t float64) {
 	for _, r := range s.art.fogRuns {
 		copy(dst.Pix[dst.PixOffset(r[1], mapTop+r[0]):dst.PixOffset(r[2], mapTop+r[0])], fog.Pix[fog.PixOffset(r[1], r[0]):fog.PixOffset(r[2], r[0])])
 	}
+	s.elements(world, sh, t)
 	dc := gg.NewContextForRGBA(dst)
 	faces := map[float64]font.Face{}
 	face := func(size float64) font.Face {
@@ -208,7 +210,7 @@ func (s *Style) selection(world *image.RGBA, sh *shot, t float64, items []item, 
 		return
 	}
 	for _, it := range items {
-		if it.a != p.who {
+		if it.a != p.who && !p.group[it.a] {
 			continue
 		}
 		ax, ay, im := s.anchor(it)
@@ -242,6 +244,9 @@ func (s *Style) selection(world *image.RGBA, sh *shot, t float64, items []item, 
 			}
 			cx, top = (r.Min.X+r.Max.X)/2, r.Min.Y
 		}
+		if p.group != nil {
+			continue
+		}
 		bx := cx - 5*px
 		by := top - 2*px
 		fill(world, image.Rect(bx, by, bx+10*px, by+px), hpOff)
@@ -250,9 +255,9 @@ func (s *Style) selection(world *image.RGBA, sh *shot, t float64, items []item, 
 	}
 }
 
-func (s *Style) marks(world *image.RGBA, t float64, items []item, ox, oy int) {
+func (s *Style) marks(world *image.RGBA, sh *shot, t float64, items []item, ox, oy int) {
 	for _, it := range items {
-		if it.moving || len(it.a.marks) == 0 {
+		if it.moving || len(it.a.marks) == 0 || sh.tallyAt(it.a, t) != nil {
 			continue
 		}
 		m, at := last(it.a.marks, t)
@@ -319,7 +324,7 @@ func (s *Style) message(dc *gg.Context, face func(float64) font.Face, sh *shot, 
 	}
 }
 
-func (s *Style) resText(key string, t float64) (string, bool) {
+func (s *Style) resText(key string, t float64) (string, bool, string) {
 	var cur *resStep
 	steps := s.res[key]
 	for i := range steps {
@@ -328,17 +333,17 @@ func (s *Style) resText(key string, t float64) (string, bool) {
 		}
 	}
 	if cur == nil {
-		return "", false
+		return "", false, ""
 	}
 	if cur.count == nil {
-		return cur.text, cur.alert
+		return cur.text, cur.alert, cur.icon
 	}
 	k := 1.0
 	if cur.count[2] > 0 {
 		k = clamp((t - cur.t) / cur.count[2])
 	}
 	n := int(math.Round(cur.count[0] + (cur.count[1]-cur.count[0])*k))
-	return strings.ReplaceAll(cur.text, "{n}", strconv.Itoa(n)), cur.alert
+	return strings.ReplaceAll(cur.text, "{n}", strconv.Itoa(n)), cur.alert, cur.icon
 }
 
 func (s *Style) hud(dst *image.RGBA, dc *gg.Context, face func(float64) font.Face, sh *shot, t float64, items []item) {
@@ -346,12 +351,13 @@ func (s *Style) hud(dst *image.RGBA, dc *gg.Context, face func(float64) font.Fac
 		w := (render.W - 32) / n
 		for i, k := range sh.keys {
 			x := 16 + i*w
-			txt, alert := s.resText(k, t)
+			txt, alert, icon := s.resText(k, t)
 			if txt == "" {
 				continue
 			}
-			ic := s.art.res[k]
-			draw.Draw(dst, image.Rect(x, 6, x+ic.Bounds().Dx(), 6+ic.Bounds().Dy()), ic, image.Point{}, draw.Over)
+			ic := s.art.glyphs[icon]
+			ix, iy := x+(iconW-ic.Bounds().Dx())/2, 6+(iconW-ic.Bounds().Dy())/2
+			draw.Draw(dst, image.Rect(ix, iy, ix+ic.Bounds().Dx(), iy+ic.Bounds().Dy()), ic, image.Point{}, draw.Over)
 			col := s.palette["res_ink"]
 			if alert {
 				col = s.palette["res_bad"]
@@ -369,12 +375,17 @@ func (s *Style) hud(dst *image.RGBA, dc *gg.Context, face func(float64) font.Fac
 			x, y := 388-w/2, 1532-h/2
 			draw.Draw(dst, image.Rect(x, y, x+w, y+h), im, image.Point{}, draw.Over)
 		}
+		if n := len(p.group); n > 0 {
+			c := "×" + strconv.Itoa(n)
+			f := face(16)
+			text(dc, f, c, float64(328+fr.Bounds().Dx()-12-font.MeasureString(f, c).Ceil()), float64(1472+fr.Bounds().Dy()-12), white, true)
+		}
 		fill(dst, image.Rect(342, 1604, 434, 1620), frameInk[0])
 		fill(dst, image.Rect(346, 1608, 430, 1616), hpOff)
 		fill(dst, image.Rect(346, 1608, 346+int(math.Round(p.hp*21))*4, 1616), hpOn)
 		status := p.status
 		if !p.fixed {
-			status, _ = last(p.who.status, t)
+			status, _ = last(p.src, t)
 		}
 		f := fit(face, 1040-472, p.name, status)
 		text(dc, f, p.name, 472, 1520, white, false)

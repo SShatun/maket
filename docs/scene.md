@@ -33,6 +33,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
 | `code` | карточка кода внизу кадра, по желанию |
 | `hold` | секунд после последней фразы, по умолчанию 1.5 |
+| `caption` | размер, место и плашка субтитра; пока только в `rts`, см. `docs/styles/rts.md` |
 | `seed` | seed голоса и раскладки толпы, по умолчанию 42 |
 | `voice` | папка в `voices/`. Не писать: тогда голос берётся из `maket.json`, а `-voice` его меняет |
 

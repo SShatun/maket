@@ -46,6 +46,9 @@ type art struct {
 	lit      map[string]*image.RGBA
 	res      map[string]*image.RGBA
 	marks    map[string][]*image.RGBA
+	small    map[string][]*image.RGBA
+	glyphs   map[string]*image.RGBA
+	chip     *image.RGBA
 	frame    *image.RGBA
 	sel      *image.RGBA
 	selInk   color.RGBA
@@ -56,7 +59,8 @@ type art struct {
 }
 
 func loadArt(dir string) (*art, error) {
-	a := &art{icons: map[string]*image.RGBA{}, lit: map[string]*image.RGBA{}, res: map[string]*image.RGBA{}, marks: map[string][]*image.RGBA{}}
+	a := &art{icons: map[string]*image.RGBA{}, lit: map[string]*image.RGBA{}, res: map[string]*image.RGBA{}, marks: map[string][]*image.RGBA{},
+		small: map[string][]*image.RGBA{}, glyphs: map[string]*image.RGBA{}}
 	var err error
 	get := func(name string, k int) *image.RGBA {
 		if err != nil {
@@ -78,6 +82,7 @@ func loadArt(dir string) (*art, error) {
 	a.tree = get("tiles/tree.png", 12)
 	a.rock = get("tiles/rock.png", 12)
 	a.stone = get("ui/stone.png", 3)
+	a.chip = get("ui/stone.png", 4)
 	a.button = get("ui/button.png", 3)
 	a.pressed = get("ui/button_pressed.png", 3)
 	a.frame = get("ui/portrait_frame.png", 3)
@@ -87,14 +92,31 @@ func loadArt(dir string) (*art, error) {
 		if a.icons[c] != nil {
 			a.lit[c] = lighten(a.icons[c])
 		}
+		a.glyphs["cmd-"+c] = get("ui/cmd-"+c+".png", 6)
 	}
 	for _, r := range resKeys {
 		a.res[r] = get("ui/res-"+r+".png", 3)
+		a.glyphs["res-"+r] = a.res[r]
 	}
 	for m, n := range markFrames {
 		for i := 0; i < n; i++ {
 			a.marks[m] = append(a.marks[m], get(fmt.Sprintf("ui/mark-%s_%d.png", m, i), 2))
 		}
+		if err != nil {
+			return nil, err
+		}
+		a.small[m] = cropAll(a.marks[m])
+		if a.small[m][0].Bounds().Dy() > 48 {
+			var frames []*image.RGBA
+			for i := 0; i < n; i++ {
+				frames = append(frames, get(fmt.Sprintf("ui/mark-%s_%d.png", m, i), 3))
+			}
+			if err != nil {
+				return nil, err
+			}
+			a.small[m] = cropAll(frames)
+		}
+		a.glyphs["mark-"+m] = a.small[m][0]
 	}
 	lock := get("lock/idle_0.png", 12)
 	if err != nil {
@@ -121,6 +143,19 @@ func shrink(src image.Image, k int) *image.RGBA {
 	dst := image.NewRGBA(image.Rect(0, 0, b.Dx()/k, b.Dy()/k))
 	xdraw.NearestNeighbor.Scale(dst, dst.Bounds(), src, b, xdraw.Src, nil)
 	return dst
+}
+
+func cropAll(frames []*image.RGBA) []*image.RGBA {
+	r := image.Rectangle{}
+	for _, f := range frames {
+		r = r.Union(opaque(f))
+	}
+	out := make([]*image.RGBA, len(frames))
+	for i, f := range frames {
+		out[i] = image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
+		draw.Draw(out[i], out[i].Bounds(), f, r.Min, draw.Src)
+	}
+	return out
 }
 
 func lighten(src *image.RGBA) *image.RGBA {

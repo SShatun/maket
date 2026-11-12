@@ -12,25 +12,35 @@ import (
 )
 
 type rawCrowd struct {
-	Behavior string          `json:"behavior"`
-	Kind     string          `json:"kind"`
-	Count    int             `json:"count"`
-	From     json.RawMessage `json:"from"`
-	To       json.RawMessage `json:"to"`
-	At       []float64       `json:"at"`
-	Around   string          `json:"around"`
-	Speed    float64         `json:"speed"`
-	Spread   float64         `json:"spread"`
-	Depth    float64         `json:"depth"`
-	Loop     bool            `json:"loop"`
-	Start    *scene.At       `json:"start"`
-	State    string          `json:"state"`
-	Cols     int             `json:"cols"`
-	Rows     int             `json:"rows"`
-	Step     []float64       `json:"step"`
-	Radius   []float64       `json:"radius"`
-	Face     string          `json:"face"`
-	Lane     []float64       `json:"lane"`
+	Behavior string                `json:"behavior"`
+	Kind     string                `json:"kind"`
+	Count    int                   `json:"count"`
+	From     json.RawMessage       `json:"from"`
+	To       json.RawMessage       `json:"to"`
+	At       []float64             `json:"at"`
+	Around   string                `json:"around"`
+	Speed    float64               `json:"speed"`
+	Spread   float64               `json:"spread"`
+	Depth    float64               `json:"depth"`
+	Loop     bool                  `json:"loop"`
+	Start    *scene.At             `json:"start"`
+	State    string                `json:"state"`
+	Cols     int                   `json:"cols"`
+	Rows     int                   `json:"rows"`
+	Step     []float64             `json:"step"`
+	Radius   []float64             `json:"radius"`
+	Face     string                `json:"face"`
+	Lane     []float64             `json:"lane"`
+	Role     string                `json:"role"`
+	Badges   []scene.Timed[string] `json:"badges"`
+	Part     *rawPart              `json:"part"`
+}
+
+type rawPart struct {
+	Count  int                   `json:"count"`
+	Role   string                `json:"role"`
+	Badges []scene.Timed[string] `json:"badges"`
+	State  string                `json:"state"`
 }
 
 type leg struct {
@@ -49,6 +59,7 @@ type actor struct {
 	legs            []leg
 	period, shift   float64
 	cycle           []leg
+	halt, resume    float64
 	anim            float64
 	appear, gone    float64
 	flip            bool
@@ -59,9 +70,13 @@ type actor struct {
 
 type crowd struct {
 	id       string
+	title    string
 	behavior string
 	kind     string
 	units    []*actor
+	part     []*actor
+	status   []timedStr
+	sel      bool
 	lanes    [][]*actor
 	slot     func(c, i int) [2]float64
 	speed    float64
@@ -113,7 +128,15 @@ func lerp(p, q [2]float64, k float64) (float64, float64) {
 func (a *actor) pose(t float64) (x, y float64, state string, since float64, flip, moving bool) {
 	x, y, flip = a.home[0], a.home[1], a.flip
 	if a.period > 0 {
-		u := math.Mod(t-a.appear+a.shift, a.period)
+		tt, frozen := t, false
+		if t >= a.halt {
+			if t < a.resume {
+				tt, frozen = a.halt, true
+			} else {
+				tt = t - (a.resume - a.halt)
+			}
+		}
+		u := math.Mod(tt-a.appear+a.shift, a.period)
 		if u < 0 {
 			u += a.period
 		}
@@ -122,6 +145,9 @@ func (a *actor) pose(t float64) (x, y float64, state string, since float64, flip
 				x, y = lerp(l.from, l.to, (u-l.t0)/(l.t1-l.t0))
 				if l.to[0] != l.from[0] {
 					flip = l.to[0] < l.from[0]
+				}
+				if frozen {
+					return x, y, "", 0, flip, false
 				}
 				return x, y, l.state, t - (u - l.t0) - a.anim, flip, true
 			}
@@ -194,6 +220,9 @@ func (s *Style) crowd(sh *shot, c scene.Cast, n int, rng *rand.Rand) (*crowd, er
 	has := func(st string) bool { _, ok := spec.States[st]; return ok }
 	role := c.Role
 	if role == "" {
+		role = x.Role
+	}
+	if role == "" {
 		role = "external"
 		if kind == "warrior" {
 			role = "error"
@@ -207,7 +236,15 @@ func (s *Style) crowd(sh *shot, c scene.Cast, n int, rng *rand.Rand) (*crowd, er
 		}
 		roles = append(roles, timedStr{t, r.V})
 	}
-	marks, err := s.timed(c.Badges)
+	badges := c.Badges
+	if badges == nil {
+		badges = x.Badges
+	}
+	marks, err := s.timed(badges)
+	if err != nil {
+		return nil, err
+	}
+	status, err := s.timed(c.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -222,9 +259,14 @@ func (s *Style) crowd(sh *shot, c scene.Cast, n int, rng *rand.Rand) (*crowd, er
 		}
 	}
 	speed := x.Speed
-	cr := &crowd{id: c.ID, behavior: x.Behavior, kind: kind}
+	title := c.Label
+	if title == "" {
+		title = c.ID
+	}
+	cr := &crowd{id: c.ID, title: title, behavior: x.Behavior, kind: kind, status: status, sel: rc.Select}
 	unit := func() *actor {
-		a := &actor{id: c.ID, kind: kind, roles: roles, marks: marks, appear: sh.at, gone: sh.until, unit: true, anim: rng.Float64(), salt: rng.Uint64()}
+		a := &actor{id: c.ID, kind: kind, roles: append([]timedStr(nil), roles...), marks: append([]timedStr(nil), marks...),
+			appear: sh.at, gone: sh.until, unit: true, anim: rng.Float64(), salt: rng.Uint64(), halt: math.Inf(1), resume: math.Inf(1)}
 		cr.units = append(cr.units, a)
 		sh.actors = append(sh.actors, a)
 		return a
@@ -480,7 +522,61 @@ func (s *Style) crowd(sh *shot, c scene.Cast, n int, rng *rand.Rand) (*crowd, er
 	default:
 		return nil, fmt.Errorf("behavior wants route, stream, formation or swarm, got %q", x.Behavior)
 	}
+	if p := x.Part; p != nil {
+		if p.Count < 1 || p.Count > len(cr.units) {
+			return nil, fmt.Errorf("part.count wants 1..%d", len(cr.units))
+		}
+		pm, err := s.timed(p.Badges)
+		if err != nil {
+			return nil, err
+		}
+		idx := make([]int, p.Count)
+		for i := range idx {
+			idx[i] = i
+		}
+		if x.Behavior != "formation" {
+			idx = rng.Perm(len(cr.units))[:p.Count]
+			sort.Ints(idx)
+		}
+		for _, i := range idx {
+			u := cr.units[i]
+			if p.Role != "" {
+				u.roles = []timedStr{{0, p.Role}}
+			}
+			if p.Badges != nil {
+				u.marks = append([]timedStr(nil), pm...)
+			}
+			if p.State != "" && len(u.steps) > 0 {
+				u.steps[0].V = p.State
+			}
+			cr.part = append(cr.part, u)
+		}
+	}
+	if err := s.crowdTag(sh, cr, c); err != nil {
+		return nil, err
+	}
 	return cr, nil
+}
+
+func (cr *crowd) box() (x0, y0, x1, y1 float64) {
+	x0, y0, x1, y1 = math.Inf(1), math.Inf(1), math.Inf(-1), math.Inf(-1)
+	add := func(p [2]float64) {
+		if p[0] < 0 || p[0] > mapW || p[1] < 0 || p[1] > mapH {
+			return
+		}
+		x0, y0, x1, y1 = math.Min(x0, p[0]), math.Min(y0, p[1]), math.Max(x1, p[0]), math.Max(y1, p[1])
+	}
+	for _, u := range cr.units {
+		add(u.home)
+		for _, l := range u.cycle {
+			add(l.from)
+			add(l.to)
+		}
+		for _, l := range u.legs {
+			add(l.to)
+		}
+	}
+	return
 }
 
 func (s *Style) admit(sh *shot, ev scene.Event, re rawEvent, t float64) error {

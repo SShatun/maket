@@ -31,6 +31,7 @@ type rawHUD struct {
 type rawRes struct {
 	Key   string    `json:"key"`
 	Text  string    `json:"text"`
+	Icon  string    `json:"icon"`
 	Alert bool      `json:"alert"`
 	Count []float64 `json:"count"`
 }
@@ -55,6 +56,9 @@ type rawEvent struct {
 	Rate    float64   `json:"rate"`
 	Px      float64   `json:"px"`
 	Shake   *float64  `json:"shake"`
+	Icon    string    `json:"icon"`
+	Badge   *string   `json:"badge"`
+	Part    bool      `json:"part"`
 }
 
 type timedStr struct {
@@ -65,6 +69,7 @@ type timedStr struct {
 type resStep struct {
 	t     float64
 	text  string
+	icon  string
 	alert bool
 	count []float64
 }
@@ -92,6 +97,10 @@ type focus struct {
 type pick struct {
 	t       float64
 	who     *actor
+	group   map[*actor]bool
+	crowd   *crowd
+	part    bool
+	src     []timedStr
 	name    string
 	status  string
 	fixed   bool
@@ -110,6 +119,10 @@ type shot struct {
 	actors    []*actor
 	byID      map[string]*actor
 	crowds    []*crowd
+	crowdByID map[string]*crowd
+	tags      []tag
+	tallies   []tally
+	elems     []element
 	keys      []string
 	picks     []pick
 	msgs      []message
@@ -143,7 +156,7 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 	if rs.Map != nil && rs.Map.Seed != nil {
 		seed = *rs.Map.Seed
 	}
-	sh := &shot{at: at, until: until, seed: uint64(seed), byID: map[string]*actor{}, horde: math.Inf(1), horn: math.Inf(1)}
+	sh := &shot{at: at, until: until, seed: uint64(seed), byID: map[string]*actor{}, crowdByID: map[string]*crowd{}, horde: math.Inf(1), horn: math.Inf(1)}
 	in, err := parseFade(rs.In, i == 0)
 	if err != nil {
 		return nil, err
@@ -168,7 +181,7 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			if rc.HP != nil {
 				hp = *rc.HP
 			}
-			sh.picks = append(sh.picks, pick{t: at, who: a, name: a.title(), tone: "ok", hp: hp})
+			sh.picks = append(sh.picks, pick{t: at, who: a, src: a.status, name: a.title(), tone: "ok", hp: hp})
 		}
 	}
 	rng := rand.New(rand.NewSource(seed))
@@ -203,6 +216,12 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			return nil, fmt.Errorf("crowd %d: %w", j+1, err)
 		}
 		sh.crowds = append(sh.crowds, cr)
+		if cr.id != "" {
+			sh.crowdByID[cr.id] = cr
+		}
+		if cr.sel {
+			sh.picks = append(sh.picks, groupPick(pick{t: at}, cr, false, cr.units))
+		}
 	}
 	sh.bg = image.NewRGBA(s.art.chrome.Bounds())
 	copy(sh.bg.Pix, s.art.chrome.Pix)
@@ -224,7 +243,7 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 		if h.Res != nil {
 			keys = nil
 			for _, r := range h.Res {
-				if err := s.addRes(sh, &keys, at, r.Key, r.Text, r.Alert, r.Count); err != nil {
+				if err := s.addRes(sh, &keys, at, r.Key, r.Text, r.Icon, r.Alert, r.Count); err != nil {
 					return nil, fmt.Errorf("hud.res: %w", err)
 				}
 			}
@@ -262,9 +281,63 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 	for _, a := range sh.actors {
 		sort.SliceStable(a.steps, func(i, j int) bool { return a.steps[i].T < a.steps[j].T })
 		sort.SliceStable(a.roles, func(i, j int) bool { return a.roles[i].t < a.roles[j].t })
+		sort.SliceStable(a.marks, func(i, j int) bool { return a.marks[i].t < a.marks[j].t })
 		sort.SliceStable(a.legs, func(i, j int) bool { return a.legs[i].t0 < a.legs[j].t0 })
 	}
 	return sh, nil
+}
+
+func groupPick(p pick, cr *crowd, part bool, units []*actor) pick {
+	p.who, p.crowd, p.part, p.src, p.name = units[0], cr, part, cr.status, cr.title
+	if !part {
+		in := map[*actor]bool{}
+		for _, u := range cr.part {
+			in[u] = true
+		}
+		for _, u := range units {
+			if !in[u] {
+				p.who = u
+				break
+			}
+		}
+	}
+	p.group = map[*actor]bool{}
+	for _, u := range units {
+		p.group[u] = true
+	}
+	p.status, p.fixed, p.hp, p.tone = "", false, 1, "ok"
+	return p
+}
+
+func (s *Style) targets(sh *shot, ev scene.Event, re rawEvent) ([]*actor, error) {
+	if ev.Target == nil {
+		return nil, fmt.Errorf("needs target: id of a cast entity or crowd in this shot")
+	}
+	id := ev.Target.ID
+	if a := sh.byID[id]; a != nil {
+		if re.Part {
+			return nil, fmt.Errorf("part is for crowds, %s is one entity", id)
+		}
+		return []*actor{a}, nil
+	}
+	cr := sh.crowdByID[id]
+	if cr == nil {
+		return nil, fmt.Errorf("target %q is not a cast entity or crowd of this shot", id)
+	}
+	if !re.Part {
+		return cr.units, nil
+	}
+	if len(cr.part) == 0 {
+		return nil, fmt.Errorf("crowd %s has no part", id)
+	}
+	return cr.part, nil
+}
+
+func (a *actor) react(t float64) float64 {
+	if a.unit {
+		return t + 0.3*a.anim
+	}
+	return t
 }
 
 func parseFade(raw json.RawMessage, first bool) (fade, error) {
@@ -321,9 +394,24 @@ func checkButtons(buttons []string, pressed map[string]bool) error {
 	return nil
 }
 
-func (s *Style) addRes(sh *shot, keys *[]string, t float64, key, text string, alert bool, count []float64) error {
-	if s.art.res[key] == nil {
-		return fmt.Errorf("unknown resource %q, known: %s", key, strings.Join(resKeys, ", "))
+func (s *Style) addRes(sh *shot, keys *[]string, t float64, key, text, icon string, alert bool, count []float64) error {
+	if icon == "" {
+		if steps := s.res[key]; len(steps) > 0 {
+			icon = steps[len(steps)-1].icon
+		} else if s.art.res[key] != nil {
+			icon = "res-" + key
+		}
+	}
+	if key == "" || icon == "" {
+		return fmt.Errorf("unknown resource %q, known: %s; any other key needs icon", key, strings.Join(resKeys, ", "))
+	}
+	if s.art.glyphs[icon] == nil {
+		var names []string
+		for k := range s.art.glyphs {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		return fmt.Errorf("res %s: unknown icon %q, known: %s", key, icon, strings.Join(names, ", "))
 	}
 	if count != nil && (len(count) != 3 || count[2] < 0) {
 		return fmt.Errorf("res %s: count wants [from, to, seconds]", key)
@@ -341,7 +429,7 @@ func (s *Style) addRes(sh *shot, keys *[]string, t float64, key, text string, al
 		}
 		*keys = append(*keys, key)
 	}
-	s.res[key] = append(s.res[key], resStep{t: t, text: text, alert: alert, count: count})
+	s.res[key] = append(s.res[key], resStep{t: t, text: text, icon: icon, alert: alert, count: count})
 	return nil
 }
 
@@ -383,6 +471,9 @@ func (s *Style) entity(sh *shot, c scene.Cast, rc rawCast) (*actor, error) {
 		return nil, err
 	}
 	if a.status, err = s.timed(c.Status); err != nil {
+		return nil, err
+	}
+	if err := s.entityTag(sh, a, c); err != nil {
 		return nil, err
 	}
 	sh.actors = append(sh.actors, a)
@@ -427,27 +518,77 @@ func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 	}
 	switch ev.Do {
 	case "state":
-		a, err := target()
+		us, err := s.targets(sh, ev, re)
 		if err != nil {
 			return err
 		}
-		a.steps = append(a.steps, spr.Step{T: t, V: ev.State, Hold: ev.Hold})
+		moving := ev.State == "walk" || ev.State == "carry"
+		for _, a := range us {
+			at := a.react(t)
+			if a.period > 0 {
+				switch {
+				case !moving && math.IsInf(a.halt, 1):
+					a.halt = at
+				case moving && !math.IsInf(a.halt, 1) && math.IsInf(a.resume, 1):
+					a.resume = at
+				}
+			}
+			a.steps = append(a.steps, spr.Step{T: at, V: ev.State, Hold: ev.Hold})
+		}
 		if ev.State == "deny" {
 			sh.denies = append(sh.denies, t)
 		}
 	case "role":
-		a, err := target()
+		us, err := s.targets(sh, ev, re)
 		if err != nil {
 			return err
 		}
-		a.roles = append(a.roles, timedStr{t, ev.Role})
+		var u float64
 		if ev.Until != nil {
-			u, err := s.when(*ev.Until)
-			if err != nil {
+			if u, err = s.when(*ev.Until); err != nil {
 				return err
 			}
-			a.roles = append(a.roles, timedStr{u, a.roles[0].v})
 		}
+		for _, a := range us {
+			a.roles = append(a.roles, timedStr{a.react(t), ev.Role})
+			if ev.Until != nil {
+				a.roles = append(a.roles, timedStr{a.react(u), a.roles[0].v})
+			}
+		}
+	case "badge":
+		us, err := s.targets(sh, ev, re)
+		if err != nil {
+			return err
+		}
+		v := ""
+		if re.Badge != nil {
+			v = *re.Badge
+		}
+		if v == "bad" {
+			v = "bang"
+		}
+		var u float64
+		if ev.Until != nil {
+			if u, err = s.when(*ev.Until); err != nil {
+				return err
+			}
+		}
+		for _, a := range us {
+			prev, _ := last(a.marks, t)
+			a.marks = append(a.marks, timedStr{a.react(t), v})
+			if ev.Until != nil {
+				a.marks = append(a.marks, timedStr{a.react(u), prev})
+			}
+			sort.SliceStable(a.marks, func(i, j int) bool { return a.marks[i].t < a.marks[j].t })
+		}
+	case "tries":
+		return s.tries(sh, ev, re, t)
+	case "text", "panel", "line":
+		u, err := until(sh.until)
+		if err != nil {
+			return err
+		}
+		return s.element(sh, ev, t, u)
 	case "walk":
 		a, err := target()
 		if err != nil {
@@ -495,7 +636,7 @@ func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 		}
 		sh.msgs = append(sh.msgs, message{t: t, until: u, lines: lines})
 	case "res":
-		return s.addRes(sh, &sh.keys, t, re.Key, ev.Text, re.Alert, re.Count)
+		return s.addRes(sh, &sh.keys, t, re.Key, ev.Text, re.Icon, re.Alert, re.Count)
 	case "select":
 		return s.selectEvent(sh, ev, re, t)
 	case "admit":
@@ -532,7 +673,7 @@ func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 		}
 		sh.focuses = append(sh.focuses, f)
 	default:
-		return fmt.Errorf("style rts does not know %q; known: state, role, walk, shake, shock, message, res, select, admit, sfx, focus", ev.Do)
+		return fmt.Errorf("style rts does not know %q; known: state, role, badge, walk, tries, shake, shock, message, text, panel, line, res, select, admit, sfx, focus", ev.Do)
 	}
 	return nil
 }
@@ -546,12 +687,24 @@ func (s *Style) selectEvent(sh *shot, ev scene.Event, re rawEvent, t float64) er
 	}
 	p.pressed = pressed
 	if ev.Target != nil {
-		a := sh.byID[ev.Target.ID]
-		if a == nil {
-			return fmt.Errorf("select target %q is not a cast entity", ev.Target.ID)
-		}
-		if a != p.who {
-			p.who, p.name, p.status, p.fixed, p.hp, p.tone = a, a.title(), "", false, 1, "ok"
+		if a := sh.byID[ev.Target.ID]; a != nil {
+			if re.Part {
+				return fmt.Errorf("part is for crowds, %s is one entity", a.id)
+			}
+			if a != p.who || p.group != nil {
+				p.who, p.group, p.crowd, p.part, p.src = a, nil, nil, false, a.status
+				p.name, p.status, p.fixed, p.hp, p.tone = a.title(), "", false, 1, "ok"
+			}
+		} else if cr := sh.crowdByID[ev.Target.ID]; cr != nil {
+			us, err := s.targets(sh, ev, re)
+			if err != nil {
+				return err
+			}
+			if cr != p.crowd || re.Part != p.part {
+				p = groupPick(p, cr, re.Part, us)
+			}
+		} else {
+			return fmt.Errorf("select target %q is not a cast entity or crowd", ev.Target.ID)
 		}
 	}
 	if p.who == nil {

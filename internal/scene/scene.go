@@ -12,18 +12,19 @@ import (
 )
 
 type Scene struct {
-	Style    string   `json:"style"`
-	Look     string   `json:"look"`
-	Voice    string   `json:"voice"`
-	Seed     int      `json:"seed"`
-	Hold     float64  `json:"hold"`
-	Guess    *Card    `json:"guess"`
-	Answer   *Answer  `json:"answer"`
-	Phrases  []Phrase `json:"phrases"`
-	Entities []Entity `json:"entities"`
-	Events   []Event  `json:"events"`
-	Shots    []Shot   `json:"shots"`
-	Code     *Code    `json:"code"`
+	Style    string          `json:"style"`
+	Look     string          `json:"look"`
+	Voice    string          `json:"voice"`
+	Seed     int             `json:"seed"`
+	Hold     float64         `json:"hold"`
+	Guess    *Card           `json:"guess"`
+	Answer   *Answer         `json:"answer"`
+	Phrases  []Phrase        `json:"phrases"`
+	Entities []Entity        `json:"entities"`
+	Events   []Event         `json:"events"`
+	Shots    []Shot          `json:"shots"`
+	Code     *Code           `json:"code"`
+	Caption  json.RawMessage `json:"caption"`
 }
 
 type Shot struct {

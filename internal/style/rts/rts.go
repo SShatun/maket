@@ -1,6 +1,7 @@
 package rts
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
@@ -10,6 +11,7 @@ import (
 	"sort"
 
 	xdraw "golang.org/x/image/draw"
+	"golang.org/x/image/font"
 
 	"maket/internal/audio"
 	"maket/internal/charkit"
@@ -46,6 +48,7 @@ type Style struct {
 	looks   map[string]*image.RGBA
 	res     map[string][]resStep
 	cues    []audio.Cue
+	faces   map[float64]font.Face
 }
 
 func New(root string, fonts *render.Fonts) (*Style, error) {
@@ -75,7 +78,7 @@ func New(root string, fonts *render.Fonts) (*Style, error) {
 	}
 	th.OwnCaption = true
 	th.NoProgress = true
-	return &Style{dir: dir, theme: th, fonts: fonts, roles: roles, palette: lk.Palette, set: set, art: a}, nil
+	return &Style{dir: dir, theme: th, fonts: fonts, roles: roles, palette: lk.Palette, set: set, art: a, faces: map[float64]font.Face{}}, nil
 }
 
 func (s *Style) Theme() render.Theme { return s.theme }
@@ -88,6 +91,9 @@ func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 	}
 	starts, err := tl.ShotStarts(sc)
 	if err != nil {
+		return err
+	}
+	if err := s.captionStyle(sc.Caption); err != nil {
 		return err
 	}
 	s.sc, s.tl = sc, tl
@@ -114,6 +120,39 @@ func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 		return err
 	}
 	s.cues = s.sounds()
+	return nil
+}
+
+func (s *Style) captionStyle(raw json.RawMessage) error {
+	if len(raw) == 0 {
+		return nil
+	}
+	var c struct {
+		Size   float64  `json:"size"`
+		Y      float64  `json:"y"`
+		Stroke *float64 `json:"stroke"`
+		Plate  []uint8  `json:"plate"`
+	}
+	if err := json.Unmarshal(raw, &c); err != nil {
+		return fmt.Errorf("caption: %w", err)
+	}
+	cs := &s.theme.Caption
+	if c.Size > 0 {
+		cs.Size = c.Size
+	}
+	if c.Y > 0 {
+		cs.Y = c.Y
+	}
+	if c.Stroke != nil {
+		cs.Stroke = *c.Stroke
+	}
+	switch len(c.Plate) {
+	case 0:
+	case 4:
+		cs.Plate = color.RGBA{c.Plate[0], c.Plate[1], c.Plate[2], c.Plate[3]}
+	default:
+		return errors.New("caption: plate is [r, g, b, a]")
+	}
 	return nil
 }
 
