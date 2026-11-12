@@ -1,0 +1,114 @@
+{
+  "style": "rts",
+  "seed": 5,
+  "phrases": [
+    {"text": "Сервис тарифов отвечает быстро: батраки носят цену из базы.", "caption": "батраки носят цену"},
+    {"text": "Перед ним лимит: два запроса в секунду, остальные ждут у ворот.", "caption": "лимит: 2 в секунду", "stress": {"ворот": "воро́т"}},
+    {"text": "Клиент получил отказ и сразу повторил. И ещё раз. И ещё.", "caption": "отказ — и сразу повтор"},
+    {"text": "Повторы без паузы — орда растёт, а сервис горит.", "caption": "Повторы без паузы — орда растёт"},
+    {"text": "Лечится паузой: ретрай с бэкоффом, и очередь снова идёт.", "caption": "ретрай с паузой", "stress": {"ретрай": "ретра́й", "бэкоффом": "бэ́коффом"}}
+  ],
+  "shots": [
+    {"at": "p1",
+     "map": {"seed": 11,
+             "forest": [{"rect": [16, 18, 70, 92], "count": 16}, {"rect": [138, 150, 168, 200], "count": 6}],
+             "path": ["FORT", [100, 128], [70, 160], "MINE"],
+             "rocks": [[150, 122], [28, 112], [112, 186]]},
+     "hud": {"res": [{"key": "conn", "text": "4/10"}, {"key": "rps", "text": "120"}, {"key": "cpu", "text": "30%"}]},
+     "cast": [
+       {"id": "FORT", "kind": "service", "role": "producer", "label": "ТАРИФ", "at": [122, 92], "state": "idle",
+        "status": [[0, "40 МС"]], "select": true},
+       {"id": "MINE", "kind": "db", "role": "storage", "label": "БАЗА", "at": [52, 178], "state": "idle"},
+       {"kind": "worker", "role": "producer", "crowd": {"behavior": "route", "from": "FORT", "to": "MINE", "count": 7, "speed": 0.3}}
+     ],
+     "do": [
+       {"at": "p1:батраки", "do": "state", "target": "MINE", "state": "give"},
+       {"at": "p1:цену", "do": "state", "target": "FORT", "state": "count"}
+     ]},
+
+    {"at": "p2",
+     "map": {"seed": 23,
+             "forest": [{"rect": [16, 18, 58, 96], "count": 12}, {"rect": [146, 132, 170, 200], "count": 5}],
+             "path": [[[85, 121], [96, 96], "FORT"], [[85, 186], [85, 224]]],
+             "wall": {"gate": "GATE"}},
+     "cast": [
+       {"id": "FORT", "kind": "service", "role": "producer", "label": "ТАРИФ", "at": [126, 72], "state": "idle"},
+       {"id": "GATE", "kind": "lock", "role": "producer", "label": "ЛИМИТ", "at": [90, 118], "state": "check",
+        "status": [[0, "2 В СЕКУНДУ"]], "select": true},
+       {"id": "Q", "kind": "warrior", "at": [85, 162], "badges": [[0, "dots"]],
+        "crowd": {"behavior": "formation", "cols": 6, "rows": 4}}
+     ],
+     "do": [
+       {"at": "p2:лимит", "do": "message", "text": "Лимит: 2 в секунду"},
+       {"at": "p2:два", "do": "admit", "gate": "GATE", "from": "Q", "rate": 2, "to": "FORT"},
+       {"at": "p2:два", "do": "res", "key": "rps", "text": "2/С"},
+       {"at": "p2:остальные", "do": "select", "tone": "warn", "pressed": ["wait"]}
+     ]},
+
+    {"at": "p3",
+     "map": {"seed": 23,
+             "forest": [{"rect": [16, 18, 58, 96], "count": 12}, {"rect": [146, 132, 170, 200], "count": 5}],
+             "path": [[[85, 121], [96, 96], "FORT"], [[85, 186], [85, 224]]],
+             "wall": {"gate": "GATE"}},
+     "cast": [
+       {"id": "FORT", "kind": "service", "role": "producer", "label": "ТАРИФ", "at": [126, 72], "state": "wait"},
+       {"id": "GATE", "kind": "lock", "role": "producer", "label": "ЛИМИТ", "at": [90, 118], "state": "check",
+        "status": [[0, "2 В СЕКУНДУ"]], "select": true},
+       {"id": "Q", "kind": "warrior", "at": [85, 162], "badges": [[0, "dots"]],
+        "crowd": {"behavior": "formation", "cols": 6, "rows": 4}},
+       {"id": "H", "kind": "warrior", "badges": [[0, "bang"]],
+        "crowd": {"behavior": "stream", "from": "bottom", "to": "GATE", "count": 30, "speed": 34, "spread": 40, "depth": 70,
+                  "lane": [40, 140], "start": "p3:сразу"}}
+     ],
+     "do": [
+       {"at": "p3:отказ", "do": "state", "target": "GATE", "state": "deny"},
+       {"at": "p3:отказ", "do": "select", "status": "ОТКАЗ", "tone": "bad", "pressed": ["retry"]},
+       {"at": "p3:сразу", "do": "admit", "gate": "GATE", "from": "Q", "rate": 2, "to": "FORT"},
+       {"at": "p3:сразу", "do": "res", "key": "rps", "count": [120, 900, 3.5]},
+       {"at": "p3:повторил", "do": "res", "key": "conn", "text": "10/10", "alert": true},
+       {"at": "p3:повторил", "do": "shake", "px": 1, "until": "p3.end+0.35"},
+       {"at": "p3:раз", "do": "message", "text": "Орда у ворот!"}
+     ]},
+
+    {"at": "p4", "in": "white",
+     "map": {"seed": 31,
+             "forest": [{"rect": [16, 18, 60, 70], "count": 10}, {"rect": [130, 160, 168, 205], "count": 7}],
+             "path": [["FORT", [90, 150], [80, 224]]],
+             "rocks": [[40, 150], [150, 60]]},
+     "hud": {"res": [{"key": "conn", "text": "10/10", "alert": true}, {"key": "rps", "text": "900", "alert": true}, {"key": "cpu", "text": "100%", "alert": true}]},
+     "cast": [
+       {"id": "FORT", "kind": "service", "role": "producer", "label": "ТАРИФ", "at": [92, 112], "state": "bad",
+        "status": [[0, "ГОРИТ"]], "select": true, "hp": 0.3},
+       {"kind": "warrior", "crowd": {"behavior": "swarm", "around": "FORT", "count": 34, "radius": [52, 34]}}
+     ],
+     "do": [
+       {"at": "p4", "do": "shock"},
+       {"at": "p4", "do": "select", "tone": "bad", "pressed": ["attack"]},
+       {"at": "p4:орда", "do": "shake", "px": 2, "until": "p4.end"},
+       {"at": "p4:сервис", "do": "message", "text": "Крепость горит!"}
+     ]},
+
+    {"at": "p5",
+     "map": {"seed": 23,
+             "forest": [{"rect": [16, 18, 58, 96], "count": 12}, {"rect": [146, 132, 170, 200], "count": 5}],
+             "path": [[[85, 121], [96, 96], "FORT"], [[85, 186], [85, 224]]],
+             "wall": {"gate": "GATE"}},
+     "hud": {"res": [{"key": "conn", "text": "4/10"}, {"key": "rps", "text": "2/С"}, {"key": "cpu", "text": "30%"}],
+             "pressed": ["wait"]},
+     "cast": [
+       {"id": "FORT", "kind": "service", "role": "producer", "label": "ТАРИФ", "at": [126, 72], "state": "count"},
+       {"id": "GATE", "kind": "lock", "role": "producer", "label": "ЛИМИТ", "at": [90, 118], "state": "check",
+        "status": [[0, "ПАУЗА 1-2-4 С"]], "select": true},
+       {"id": "Q", "kind": "warrior", "at": [85, 150], "badges": [[0, "wait"]],
+        "crowd": {"behavior": "formation", "cols": 6, "rows": 2}},
+       {"kind": "warrior", "badges": [[0, "zzz"]],
+        "crowd": {"behavior": "stream", "from": [85, 170], "to": "bottom", "count": 8, "speed": 18, "spread": 30, "loop": true}}
+     ],
+     "do": [
+       {"at": "p5", "do": "admit", "gate": "GATE", "from": "Q", "rate": 2, "to": "FORT"},
+       {"at": "p5:ретрай", "do": "message", "text": "Ретрай с паузой"},
+       {"at": "p5:очередь", "do": "select", "tone": "ok"},
+       {"at": "p5:идет", "do": "sfx", "name": "chime"}
+     ]}
+  ]
+}

@@ -2,30 +2,255 @@ package rts
 
 import (
 	"errors"
+	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"path/filepath"
+	"sort"
+
+	xdraw "golang.org/x/image/draw"
 
 	"maket/internal/audio"
+	"maket/internal/charkit"
 	"maket/internal/render"
 	"maket/internal/scene"
+	"maket/internal/style/pixel"
+	spr "maket/internal/style/sprites"
 	"maket/internal/timeline"
 )
 
+const (
+	mapW, mapH = 180, 229
+	px         = 6
+	mapTop     = 48
+	mapBottom  = mapTop + mapH*px
+	panelTop   = 1424
+)
+
+var mapRect = image.Rect(0, mapTop, render.W, mapBottom)
+
 type Style struct {
-	dir   string
-	theme render.Theme
+	dir     string
+	theme   render.Theme
+	fonts   *render.Fonts
+	roles   map[string]color.RGBA
+	palette map[string]color.RGBA
+	set     *spr.Set
+	art     *art
+	sc      *scene.Scene
+	tl      *timeline.Timeline
+	shots   []*shot
+	flips   map[*image.RGBA]*image.RGBA
+	boxes   map[string]image.Rectangle
+	looks   map[string]*image.RGBA
+	res     map[string][]resStep
+	cues    []audio.Cue
 }
 
 func New(root string, fonts *render.Fonts) (*Style, error) {
-	return &Style{dir: filepath.Join(root, "assets", "looks", "rts"), theme: render.PixelTheme(fonts, nil, nil)}, nil
+	dir := filepath.Join(root, "assets", "looks", "rts")
+	lk, err := charkit.ReadLook(dir)
+	if err != nil {
+		return nil, err
+	}
+	roles, _, err := pixel.Colors(dir)
+	if err != nil {
+		return nil, err
+	}
+	set, err := spr.Load(dir, roles, 0.5)
+	if err != nil {
+		return nil, err
+	}
+	set.HoldOneShots = true
+	a, err := loadArt(dir)
+	if err != nil {
+		return nil, err
+	}
+	th := render.PixelTheme(fonts, nil, nil)
+	th.Caption = render.CaptionStyle{
+		Y: 1330, Size: 46, Stroke: 7,
+		Ink: color.RGBA{255, 255, 255, 255}, Dim: color.RGBA{160, 160, 150, 255}, Edge: color.RGBA{10, 8, 6, 255},
+		Karaoke: true,
+	}
+	th.OwnCaption = true
+	th.NoProgress = true
+	return &Style{dir: dir, theme: th, fonts: fonts, roles: roles, palette: lk.Palette, set: set, art: a}, nil
 }
-
-func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
-	return errors.New("style rts is not ready yet")
-}
-
-func (s *Style) Draw(dst *image.RGBA, t float64) {}
-
-func (s *Style) Sounds() []audio.Cue { return nil }
 
 func (s *Style) Theme() render.Theme { return s.theme }
+
+func (s *Style) Sounds() []audio.Cue { return s.cues }
+
+func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
+	if len(sc.Shots) == 0 {
+		return errors.New("style rts needs shots: every shot has its own map, hud, cast and do")
+	}
+	starts, err := tl.ShotStarts(sc)
+	if err != nil {
+		return err
+	}
+	s.sc, s.tl = sc, tl
+	s.shots = nil
+	s.res = map[string][]resStep{}
+	s.boxes = map[string]image.Rectangle{}
+	var keys []string
+	for i, raw := range sc.Shots {
+		end := tl.Duration
+		if i+1 < len(starts) {
+			end = starts[i+1]
+		}
+		sh, err := s.buildShot(i, raw, starts[i], end, keys, int64(sc.Seed))
+		if err != nil {
+			return fmt.Errorf("shot %d: %w", i+1, err)
+		}
+		keys = sh.keys
+		s.shots = append(s.shots, sh)
+	}
+	for _, steps := range s.res {
+		sort.SliceStable(steps, func(i, j int) bool { return steps[i].t < steps[j].t })
+	}
+	if err := s.prepare(); err != nil {
+		return err
+	}
+	s.cues = s.sounds()
+	return nil
+}
+
+func (s *Style) prepare() error {
+	type want struct {
+		roles, states map[string]bool
+		flip          bool
+	}
+	wants := map[string]*want{}
+	var kinds []string
+	for _, sh := range s.shots {
+		for _, a := range sh.actors {
+			w := wants[a.kind]
+			if w == nil {
+				w = &want{roles: map[string]bool{}, states: map[string]bool{}}
+				wants[a.kind] = w
+				kinds = append(kinds, a.kind)
+			}
+			spec := s.set.Specs[a.kind]
+			for _, r := range a.roles {
+				if _, ok := s.roles[r.v]; !ok {
+					return fmt.Errorf("%s: unknown role %q", a.name(), r.v)
+				}
+				w.roles[r.v] = true
+			}
+			for _, st := range a.states() {
+				if _, ok := spec.States[st]; !ok {
+					return fmt.Errorf("%s: %s has no state %q", a.name(), a.kind, st)
+				}
+				w.states[st] = true
+			}
+			for _, m := range a.marks {
+				if _, ok := s.art.marks[m.v]; !ok && m.v != "" {
+					return fmt.Errorf("%s: unknown mark %q, known: bang, question, wait, dots, zzz", a.name(), m.v)
+				}
+			}
+			w.flip = w.flip || a.unit || a.flip || len(a.legs) > 0
+		}
+	}
+	s.flips = map[*image.RGBA]*image.RGBA{}
+	s.looks = map[string]*image.RGBA{}
+	for _, kind := range kinds {
+		w := wants[kind]
+		if err := s.set.Prepare(kind, w.roles, w.states); err != nil {
+			return err
+		}
+		s.box(kind)
+		spec := s.set.Specs[kind]
+		w.states[spec.Rest] = true
+		if !w.flip {
+			continue
+		}
+		for role := range w.roles {
+			for st := range w.states {
+				ss := spec.States[st]
+				for i := 0; i < ss.Frames; i++ {
+					im := s.set.Frame(kind, []spr.Step{{T: 0, V: st}}, (float64(i)+0.5)/ss.FPS, role)
+					if im != nil && s.flips[im] == nil {
+						s.flips[im] = mirror(im)
+					}
+				}
+			}
+		}
+	}
+	for _, sh := range s.shots {
+		for _, p := range sh.picks {
+			if p.who == nil {
+				continue
+			}
+			for _, r := range p.who.roles {
+				k := p.who.kind + "/" + r.v
+				if s.looks[k] != nil {
+					continue
+				}
+				im, err := s.portrait(p.who.kind, r.v)
+				if err != nil {
+					return err
+				}
+				s.looks[k] = im
+			}
+		}
+	}
+	return nil
+}
+
+func (s *Style) box(kind string) image.Rectangle {
+	if b, ok := s.boxes[kind]; ok {
+		return b
+	}
+	spec := s.set.Specs[kind]
+	src, err := charkit.ReadPNG(filepath.Join(s.dir, kind, spec.Rest+"_0.png"))
+	b := image.Rectangle{}
+	if err == nil {
+		b = opaque(shrink(src, 2))
+	}
+	s.boxes[kind] = b
+	return b
+}
+
+func (s *Style) portrait(kind, role string) (*image.RGBA, error) {
+	spec := s.set.Specs[kind]
+	src, err := charkit.ReadPNG(filepath.Join(s.dir, kind, "idle_0.png"))
+	if err != nil {
+		src, err = charkit.ReadPNG(filepath.Join(s.dir, kind, spec.Rest+"_0.png"))
+		if err != nil {
+			return nil, err
+		}
+	}
+	if spec.Tint == nil || *spec.Tint {
+		src = charkit.Tint(src, s.roles[role])
+	}
+	full := image.NewRGBA(src.Bounds())
+	draw.Draw(full, full.Bounds(), src, src.Bounds().Min, draw.Src)
+	b := opaque(full)
+	w, h := (b.Dx()+11)/12, (b.Dy()+11)/12
+	k := 2
+	for _, c := range []int{6, 4, 3} {
+		if w*c <= 96 && h*c <= 96 {
+			k = c
+			break
+		}
+	}
+	big := image.NewRGBA(image.Rect(0, 0, b.Dx()*k/12, b.Dy()*k/12))
+	xdraw.NearestNeighbor.Scale(big, big.Bounds(), full, b, xdraw.Src, nil)
+	cw, ch := min(96, big.Bounds().Dx()), min(96, big.Bounds().Dy())
+	x0, y0 := (big.Bounds().Dx()-cw)/2/k*k, (big.Bounds().Dy()-ch)/2/k*k
+	out := image.NewRGBA(image.Rect(0, 0, cw, ch))
+	draw.Draw(out, out.Bounds(), big, image.Pt(x0, y0), draw.Src)
+	return out, nil
+}
+
+func (s *Style) shotAt(t float64) *shot {
+	cur := s.shots[0]
+	for _, sh := range s.shots {
+		if t >= sh.at {
+			cur = sh
+		}
+	}
+	return cur
+}
