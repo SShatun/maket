@@ -1,0 +1,102 @@
+{
+  "style": "pixel",
+  "seed": 7,
+  "hold": 1.5,
+  "phrases": [
+    {"text": "Магнит собрал двести восемьдесят заказов в одно поручение.", "caption": "280 в одно поручение"},
+    {"text": "а Ангелина видит в Контуре два по сто сорок заказов.", "caption": "а в Контуре два по 140", "pause": 0.2},
+    {"text": "кто порезал? мы.", "caption": "кто порезал? мы", "pause": 0.3},
+    {"text": "у Контура весы: файл не больше девятисот килобайт.", "caption": "весы: 900 КБ", "pause": 0.2},
+    {"text": "а двести восемьдесят заказов весят мегабайт.", "caption": "280 весят мегабайт"},
+    {"text": "как в аэропорту: перевес, перекладывай в две сумки.", "caption": "перевес: в две сумки", "pause": 0.2},
+    {"text": "хочешь одно поручение? клади двести двадцать заказов.", "caption": "клади 220", "pause": 0.3}
+  ],
+  "shots": [
+    {"at": 0,
+     "place": {"wall": "warehouse", "floor": 640, "ground": "shelf"},
+     "cast": [
+      {"crowd": {"kind": "parcel", "count": 24, "box": [40, 680, 1040, 1600], "size": [0.28, 0.7], "rows": 4, "state": "idle"}}],
+     "do": [
+      {"at": "p1:Магнит", "do": "text", "text": "склад Магнита", "pos": [540, 400], "size": 40},
+      {"at": "p1:собрал", "do": "zoom", "to": 1.12, "dur": 2.4, "pos": [540, 1150]}]},
+
+    {"at": "p1:одно",
+     "place": {"wall": "warehouse", "floor": 1520, "ground": "shelf"},
+     "cast": [
+      {"id": "M", "kind": "parcel", "at": [540, 1500], "size": 2.6, "state": "idle", "label": "одно поручение"}],
+     "do": [
+      {"at": "p1:одно", "do": "text", "text": "280", "pos": [540, 520], "size": 150, "tone": "accent"},
+      {"at": "p1:одно", "do": "text", "text": "заказов", "pos": [540, 660], "size": 36},
+      {"at": "p1:поручение", "do": "zoom", "to": 1.08, "dur": 1.2, "pos": [540, 1200]}]},
+
+    {"at": "p2",
+     "place": {"wall": [54, 44, 72], "floor": 1460, "ground": [39, 32, 54]},
+     "cast": [
+      {"id": "A", "kind": "person", "at": [280, 1480], "size": 1.6, "state": "wait", "label": "Ангелина",
+       "states": [[0, "wait"], ["p2:два", "surprised"]]}],
+     "do": [
+      {"at": "p2:Контуре", "do": "panel", "box": [580, 400, 1010, 1100], "title": "Контур"},
+      {"at": "p2:два", "do": "panel", "box": [630, 560, 960, 790], "title": "140", "tone": "accent"},
+      {"at": "p2:сорок", "do": "panel", "box": [630, 830, 960, 1060], "title": "140", "tone": "accent"},
+      {"at": "p2:два", "do": "line", "from": [400, 960], "to": [560, 820], "kind": "arrow", "tone": "accent"}]},
+
+    {"at": "p3",
+     "place": {"wall": [18, 20, 36], "floor": 1340, "ground": [30, 32, 52]},
+     "cast": [
+      {"id": "P", "kind": "person", "at": [180, 1360], "size": 0.8, "state": "idle"},
+      {"id": "S", "kind": "service", "at": [540, 1380], "size": 1.4, "state": "idle", "label": "наш сервис"},
+      {"id": "K", "kind": "external", "at": [900, 1360], "size": 0.8, "state": "idle", "label": "Контур"}],
+     "do": [
+      {"at": "p3", "do": "text", "text": "кто порезал?", "pos": [540, 420], "size": 56, "tone": "accent"},
+      {"at": "p3:мы", "do": "focus", "targets": ["S"]},
+      {"at": "p3:мы", "do": "say", "target": "S", "text": "мы", "until": "p3.end+0.5"},
+      {"at": "p3:мы", "do": "state", "target": "S", "state": "skip"}]},
+
+    {"at": "p4",
+     "place": {"wall": [48, 58, 70], "floor": 1460, "ground": [70, 80, 92]},
+     "cast": [
+      {"id": "L", "kind": "lock", "at": [740, 1480], "size": 1.8, "state": "check", "label": "весы Контура"}],
+     "do": [
+      {"at": "p4:файл", "do": "text", "text": "900 КБ", "pos": [540, 520], "size": 110, "tone": "accent"},
+      {"at": "p4:больше", "do": "text", "text": "не больше", "pos": [540, 650], "size": 40},
+      {"at": "p4:весы", "do": "zoom", "to": 1.1, "dur": 1.5, "pos": [740, 1200]}]},
+
+    {"at": "p5",
+     "place": {"wall": [48, 58, 70], "floor": 1460, "ground": [70, 80, 92]},
+     "cast": [
+      {"id": "L", "kind": "lock", "at": [800, 1480], "size": 1.4, "state": "check", "label": "весы"},
+      {"id": "P", "kind": "parcel", "at": [60, 1480], "size": 1.5, "state": "wait", "label": "280 заказов"}],
+     "do": [
+      {"at": "p5", "do": "walk", "target": "P", "to": [380, 1480], "dur": 1.2},
+      {"at": "p5:весят", "do": "state", "target": "L", "state": "deny"},
+      {"at": "p5:весят", "do": "role", "target": "L", "role": "error"},
+      {"at": "p5:мегабайт", "do": "text", "text": "1 МБ", "pos": [400, 560], "size": 130, "tone": "error"},
+      {"at": "p5:мегабайт", "do": "text", "text": "перевес", "pos": [400, 700], "size": 40, "tone": "error"},
+      {"at": "p5:мегабайт", "do": "state", "target": "P", "state": "flinch"}]},
+
+    {"at": "p6",
+     "place": {"wall": [38, 48, 86], "floor": 1120, "ground": [28, 38, 66]},
+     "cast": [
+      {"crowd": {"kind": "person", "count": 10, "box": [40, 1060, 1040, 1180], "size": [0.3, 0.45], "rows": 2, "state": "wait"}},
+      {"id": "D", "kind": "parcel", "at": [540, 1480], "size": 1.6, "state": "sad", "label": "280"},
+      {"id": "D1", "kind": "parcel", "at": [280, 1500], "size": 1.5, "state": "idle", "label": "140"},
+      {"id": "D2", "kind": "parcel", "at": [800, 1500], "size": 1.5, "state": "idle", "label": "140"}],
+     "do": [
+      {"at": "p6:аэропорту", "do": "panel", "box": [200, 340, 880, 520], "title": "регистрация"},
+      {"at": "p6:перевес", "do": "shake", "target": "D"},
+      {"at": "p6:перекладывай", "do": "split", "target": "D", "into": ["D1", "D2"], "dur": 0.8},
+      {"at": "p6:сумки", "do": "line", "from": [540, 1180], "to": [540, 1580], "kind": "dash", "tone": "accent"}]},
+
+    {"at": "p7",
+     "place": {"wall": [36, 66, 56], "floor": 1460, "ground": [28, 52, 44]},
+     "cast": [
+      {"id": "P", "kind": "parcel", "at": [320, 1480], "size": 1.8, "state": "wait", "label": "220 заказов"},
+      {"id": "L", "kind": "lock", "at": [800, 1480], "size": 1.4, "state": "check", "label": "весы"}],
+     "do": [
+      {"at": "p7:двести", "do": "text", "text": "220", "pos": [540, 540], "size": 150, "tone": "ok"},
+      {"at": "p7:двадцать", "do": "text", "text": "влезает в 900 КБ", "pos": [540, 690], "size": 36},
+      {"at": "p7:двадцать", "do": "state", "target": "L", "state": "allow"},
+      {"at": "p7:двадцать", "do": "role", "target": "L", "role": "ok"},
+      {"at": "p7:заказов", "do": "state", "target": "P", "state": "happy"}]}
+  ]
+}

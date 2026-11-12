@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -24,6 +25,7 @@ type Config struct {
 	StressPython string `json:"stress_python"`
 	TTSModel     string `json:"tts_model"`
 	RUAccentDir  string `json:"ruaccent_dir"`
+	RUAccent     bool   `json:"ruaccent"`
 	WhisperModel string `json:"whisper_model"`
 }
 
@@ -46,6 +48,9 @@ const (
 	silenceDB  = -38.0
 	frameSec   = 0.01
 	maxRetries = 1
+	tempoTol   = 0.10
+	tempoMin   = 0.8
+	tempoMax   = 1.25
 )
 
 func LoadConfig(root string) (Config, error) {
@@ -71,25 +76,53 @@ type run struct {
 	words []sceneWord
 }
 
-func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*run, []byte, error) {
 	if name == "" {
 		name = cfg.Voice
 	}
 	root, err := filepath.Abs(root)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	vdir := filepath.Join(root, "voices", name)
 	specBytes, err := os.ReadFile(filepath.Join(vdir, "voice.json"))
 	if err != nil {
-		return nil, fmt.Errorf("voice %q: %w", name, err)
+		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
 	var spec Spec
 	if err := json.Unmarshal(specBytes, &spec); err != nil {
-		return nil, fmt.Errorf("voice %q: %w", name, err)
+		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
 	r := &run{ctx: ctx, root: root, cfg: cfg, sc: sc, spec: spec, ref: filepath.Join(vdir, spec.RefAudio)}
-	key, err := r.key(specBytes)
+	key, err := r.key(specBytes, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	r.dir = filepath.Join(root, ".cache", "voice", key)
+	if err := os.MkdirAll(r.dir, 0o755); err != nil {
+		return nil, nil, err
+	}
+	return r, specBytes, nil
+}
+
+func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	r, _, err := newRun(ctx, root, cfg, sc, name)
+	if err != nil {
+		return nil, err
+	}
+	return r.stress()
+}
+
+func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	r, specBytes, err := newRun(ctx, root, cfg, sc, name)
+	if err != nil {
+		return nil, err
+	}
+	marked, err := r.stress()
+	if err != nil {
+		return nil, err
+	}
+	key, err := r.key(specBytes, marked)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +130,10 @@ func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, n
 	if err := os.MkdirAll(r.dir, 0o755); err != nil {
 		return nil, err
 	}
-	return r.synthesize()
+	return r.synthesize(marked)
 }
 
-func (r *run) key(specBytes []byte) (string, error) {
+func (r *run) key(specBytes []byte, marked []string) (string, error) {
 	h := sha256.New()
 	ref, err := os.ReadFile(r.ref)
 	if err != nil {
@@ -120,6 +153,10 @@ func (r *run) key(specBytes []byte) (string, error) {
 		p, _ := json.Marshal([]any{ph.Text, ph.Stress})
 		h.Write(p)
 	}
+	if marked != nil {
+		p, _ := json.Marshal(marked)
+		h.Write(p)
+	}
 	return hex.EncodeToString(h.Sum(nil))[:24], nil
 }
 
@@ -128,13 +165,10 @@ type piece struct {
 	from  float64
 	to    float64
 	words []sceneWord
+	wav   string
 }
 
-func (r *run) synthesize() (*Result, error) {
-	marked, err := r.stress()
-	if err != nil {
-		return nil, err
-	}
+func (r *run) synthesize(marked []string) (*Result, error) {
 	for i, p := range r.sc.Phrases {
 		for _, w := range scene.Words(p.Text) {
 			r.words = append(r.words, sceneWord{text: w, phrase: i})
@@ -148,27 +182,39 @@ func (r *run) synthesize() (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	align(r.words, got, r.spec.Spell)
+	owner := align(r.words, got, r.spec.Spell)
 	mainPCM, err := audio.Read(main)
 	if err != nil {
 		return nil, err
 	}
 	pieces := make([]*piece, len(r.sc.Phrases))
 	var lost []int
+	repeat := map[int]string{}
 	for i := range r.sc.Phrases {
+		if w := repeated(r.words, got, owner, r.spec.Spell, i); w != "" {
+			lost = append(lost, i)
+			repeat[i] = w
+			continue
+		}
 		if missing(r.words, i) {
 			lost = append(lost, i)
 		}
 	}
 	r.cutMain(mainPCM, pieces, lost)
 	for attempt := 0; len(lost) > 0 && attempt <= maxRetries; attempt++ {
-		lost, err = r.regenerate(marked, pieces, lost, attempt)
+		lost, err = r.regenerate(marked, pieces, lost, attempt, repeat)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if len(lost) > 0 {
+		if w := repeat[lost[0]]; w != "" {
+			return nil, fmt.Errorf("phrase %d: voice repeated «%s»", lost[0]+1, w)
+		}
 		return nil, fmt.Errorf("voice did not say phrase %d «%s»", lost[0]+1, r.sc.Phrases[lost[0]].Text)
+	}
+	if err := r.fitTempo(pieces); err != nil {
+		return nil, err
 	}
 	return r.place(pieces)
 }
@@ -177,6 +223,9 @@ func (r *run) stress() ([]string, error) {
 	var texts []string
 	for _, p := range r.sc.Phrases {
 		texts = append(texts, p.Text)
+	}
+	if !r.cfg.RUAccent {
+		return r.restressAll(texts), nil
 	}
 	out := filepath.Join(r.dir, "stress.json")
 	if _, err := os.Stat(out); err == nil {
@@ -206,10 +255,15 @@ func (r *run) readStress(out string) ([]string, error) {
 	if err := json.Unmarshal(b, &res); err != nil {
 		return nil, err
 	}
-	for i := range res.Marked {
-		res.Marked[i] = restress(res.Marked[i], r.spec.Stress, r.sc.Phrases[i].Stress)
+	return r.restressAll(res.Marked), nil
+}
+
+func (r *run) restressAll(texts []string) []string {
+	out := make([]string, len(texts))
+	for i, t := range texts {
+		out[i] = restress(t, r.spec.Stress, r.sc.Phrases[i].Stress)
 	}
-	return res.Marked, nil
+	return out
 }
 
 func plusForm(w string) string {
@@ -331,7 +385,7 @@ func (r *run) cutMain(pcm []float32, pieces []*piece, lost []int) {
 	}
 }
 
-func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int) ([]int, error) {
+func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int, repeat map[int]string) ([]int, error) {
 	var items []ttsItem
 	for _, i := range lost {
 		items = append(items, ttsItem{Text: marked[i], Out: filepath.Join(r.dir, fmt.Sprintf("phrase%02d-%d.wav", i+1, attempt))})
@@ -349,7 +403,13 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 		for _, w := range scene.Words(r.sc.Phrases[i].Text) {
 			ws = append(ws, sceneWord{text: w, phrase: i})
 		}
-		align(ws, got, r.spec.Spell)
+		owner := align(ws, got, r.spec.Spell)
+		if w := repeated(ws, got, owner, r.spec.Spell, i); w != "" {
+			repeat[i] = w
+			still = append(still, i)
+			continue
+		}
+		delete(repeat, i)
 		if missing(ws, i) {
 			still = append(still, i)
 			continue
@@ -360,9 +420,101 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 			return nil, err
 		}
 		length := float64(len(pcm)) / audio.Rate
-		pieces[i] = &piece{pcm: pcm, from: math.Max(0, ws[0].s-headroom), to: math.Min(length, ws[len(ws)-1].e+tailroom), words: ws}
+		pieces[i] = &piece{pcm: pcm, from: math.Max(0, ws[0].s-headroom), to: math.Min(length, ws[len(ws)-1].e+tailroom), words: ws, wav: items[k].Out}
 	}
 	return still, nil
+}
+
+func (r *run) fitTempo(pieces []*piece) error {
+	rate := make([]float64, len(pieces))
+	var main []float64
+	for i, p := range pieces {
+		rate[i] = phraseTempo(p.words)
+		if p.wav == "" {
+			main = append(main, rate[i])
+		}
+	}
+	mid := median(main)
+	for i, p := range pieces {
+		if p.wav == "" || rate[i] == 0 {
+			continue
+		}
+		ref := neighborTempo(pieces, rate, i)
+		if ref == 0 {
+			ref = mid
+		}
+		if ref == 0 || math.Abs(rate[i]-ref)/ref <= tempoTol {
+			continue
+		}
+		k := math.Min(tempoMax, math.Max(tempoMin, ref/rate[i]))
+		pcm, err := audio.Read(p.wav, fmt.Sprintf("atempo=%g", k))
+		if err != nil {
+			return err
+		}
+		p.pcm = pcm
+		p.from /= k
+		p.to /= k
+		for w := range p.words {
+			p.words[w].s /= k
+			p.words[w].e /= k
+		}
+	}
+	return nil
+}
+
+func neighborTempo(pieces []*piece, rate []float64, i int) float64 {
+	var sum float64
+	n := 0
+	if i > 0 && pieces[i-1].wav == "" && rate[i-1] > 0 {
+		sum += rate[i-1]
+		n++
+	}
+	if i+1 < len(pieces) && pieces[i+1].wav == "" && rate[i+1] > 0 {
+		sum += rate[i+1]
+		n++
+	}
+	if n == 0 {
+		return 0
+	}
+	return sum / float64(n)
+}
+
+func phraseTempo(words []sceneWord) float64 {
+	if len(words) == 0 {
+		return 0
+	}
+	d := words[len(words)-1].e - words[0].s
+	if d <= 0 {
+		return 0
+	}
+	n := 0
+	for _, w := range words {
+		n += vowels(w.text)
+	}
+	return float64(n) / d
+}
+
+func vowels(w string) int {
+	n := 0
+	for _, r := range strings.ToLower(w) {
+		if strings.ContainsRune("аеёиоуыэюя", r) {
+			n++
+		}
+	}
+	return n
+}
+
+func median(xs []float64) float64 {
+	if len(xs) == 0 {
+		return 0
+	}
+	s := append([]float64(nil), xs...)
+	sort.Float64s(s)
+	m := len(s) / 2
+	if len(s)%2 == 1 {
+		return s[m]
+	}
+	return (s[m-1] + s[m]) / 2
 }
 
 func pauseCut(pcm []float32, lo, hi, lastEnd, nextStart float64) float64 {

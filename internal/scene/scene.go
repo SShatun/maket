@@ -22,7 +22,43 @@ type Scene struct {
 	Phrases  []Phrase `json:"phrases"`
 	Entities []Entity `json:"entities"`
 	Events   []Event  `json:"events"`
+	Shots    []Shot   `json:"shots"`
 	Code     *Code    `json:"code"`
+}
+
+type Shot struct {
+	At    At      `json:"at"`
+	Place Place   `json:"place"`
+	Cast  []Cast  `json:"cast"`
+	Do    []Event `json:"do"`
+}
+
+type Place struct {
+	Name   string   `json:"-"`
+	Wall   Color    `json:"wall"`
+	Floor  *float64 `json:"floor"`
+	Ground Color    `json:"ground"`
+}
+
+type Color struct {
+	Name string
+	RGB  []uint8
+}
+
+type Cast struct {
+	Entity
+	Size  float64 `json:"size"`
+	State string  `json:"state"`
+	Crowd *Crowd  `json:"crowd"`
+}
+
+type Crowd struct {
+	Kind  string    `json:"kind"`
+	Count int       `json:"count"`
+	Box   []float64 `json:"box"`
+	Size  []float64 `json:"size"`
+	Rows  int       `json:"rows"`
+	State string    `json:"state"`
 }
 
 type Phrase struct {
@@ -54,6 +90,12 @@ type CodeLine struct {
 	Appear *At
 }
 
+type PanelLine struct {
+	Text   string `json:"text"`
+	Appear *At    `json:"appear"`
+	Tone   string `json:"tone"`
+}
+
 type Highlight struct {
 	At   At
 	Line int
@@ -78,24 +120,33 @@ type Entity struct {
 }
 
 type Event struct {
-	At      At      `json:"at"`
-	Until   *At     `json:"until"`
-	Do      string  `json:"do"`
-	Target  *Point  `json:"target"`
-	Targets []Point `json:"targets"`
-	From    *Point  `json:"from"`
-	To      *Point  `json:"to"`
-	Token   string  `json:"token"`
-	Label   string  `json:"label"`
-	State   string  `json:"state"`
-	Role    string  `json:"role"`
-	Text    string  `json:"text"`
-	Sub     string  `json:"sub"`
-	Dur     float64 `json:"dur"`
-	Zoom    float64 `json:"zoom"`
-	Dx      float64 `json:"dx"`
-	Consume bool    `json:"consume"`
-	Hold    bool    `json:"hold"`
+	At      At          `json:"at"`
+	Until   *At         `json:"until"`
+	Do      string      `json:"do"`
+	Target  *Point      `json:"target"`
+	Targets []Point     `json:"targets"`
+	Into    []string    `json:"into"`
+	From    *Point      `json:"from"`
+	To      *Point      `json:"to"`
+	Token   string      `json:"token"`
+	Label   string      `json:"label"`
+	State   string      `json:"state"`
+	Role    string      `json:"role"`
+	Text    string      `json:"text"`
+	Sub     string      `json:"sub"`
+	Dur     float64     `json:"dur"`
+	Zoom    float64     `json:"zoom"`
+	Dx      float64     `json:"dx"`
+	Pos     []float64   `json:"pos"`
+	Tone    string      `json:"tone"`
+	Consume bool        `json:"consume"`
+	Hold    bool        `json:"hold"`
+	Kind    string      `json:"kind"`
+	Size    float64     `json:"size"`
+	Box     []float64   `json:"box"`
+	Title   string      `json:"title"`
+	Lines   []PanelLine `json:"lines"`
+	Fill    string      `json:"fill"`
 
 	Arc     *float64 `json:"arc"`
 	Waiting bool     `json:"waiting"`
@@ -114,6 +165,7 @@ type Point struct {
 	ID     string
 	Slot   int
 	Coords []float64
+	Value  *float64
 }
 
 type Timed[T any] struct {
@@ -144,14 +196,106 @@ func Load(path string) (*Scene, error) {
 }
 
 func (sc *Scene) check() error {
+	if len(sc.Shots) > 0 {
+		if len(sc.Entities) > 0 || len(sc.Events) > 0 {
+			return errors.New("shots use cast and do instead of entities and events")
+		}
+		for i, s := range sc.Shots {
+			if err := s.check(); err != nil {
+				return fmt.Errorf("shot %d: %w", i+1, err)
+			}
+		}
+	}
+	return checkEvents(sc.Entities, sc.Events)
+}
+
+func (s Shot) check() error {
+	wall := s.Place.Wall.Name != "" || len(s.Place.Wall.RGB) == 3
+	ground := s.Place.Ground.Name != "" || len(s.Place.Ground.RGB) == 3
+	if s.Place.Name == "" && (!wall || s.Place.Floor != nil && (!ground || *s.Place.Floor < 600 || *s.Place.Floor > 1900)) {
+		return errors.New("place needs a backdrop name or wall and ground as [r, g, b] or palette names, floor: 600..1900 or null")
+	}
 	ids := map[string]bool{}
-	for _, e := range sc.Entities {
+	var entities []Entity
+	for i, c := range s.Cast {
+		if c.Crowd != nil {
+			x := c.Crowd
+			if x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1] {
+				return fmt.Errorf("cast %d: crowd needs kind, count, rows, box: [x0, y0, x1, y1] and size: [min, max] in 0.2..4", i+1)
+			}
+			continue
+		}
+		if c.ID == "" || ids[c.ID] {
+			return fmt.Errorf("cast %d: missing or duplicate id %q", i+1, c.ID)
+		}
+		if c.Kind == "" || len(c.At) != 2 || c.Size != 0 && (c.Size < 0.2 || c.Size > 4) {
+			return fmt.Errorf("cast %s: needs kind, at: [x, y] and size in 0.2..4", c.ID)
+		}
+		if c.Appear != nil {
+			return fmt.Errorf("cast %s: appears at the shot start", c.ID)
+		}
+		ids[c.ID] = true
+		entities = append(entities, c.Entity)
+	}
+	return checkEvents(entities, s.Do)
+}
+
+func checkEvents(entities []Entity, events []Event) error {
+	ids := map[string]bool{}
+	hasAppear := map[string]bool{}
+	for _, e := range entities {
 		if e.ID == "" {
 			return errors.New("entity without id")
 		}
 		ids[e.ID] = true
+		hasAppear[e.ID] = e.Appear != nil
 	}
-	for i, ev := range sc.Events {
+	for i, ev := range events {
+		if ev.Pos != nil && len(ev.Pos) != 2 {
+			return fmt.Errorf("event %d: pos wants [x, y] in px", i+1)
+		}
+		if ev.Do == "number" && ev.Tone != "" && ev.Tone != "accent" && ev.Tone != "ok" && ev.Tone != "error" {
+			return fmt.Errorf("event %d: unknown number tone %q", i+1, ev.Tone)
+		}
+		if ev.Do == "line" || ev.Do == "text" || ev.Do == "panel" {
+			if !elementTone(ev.Tone) {
+				return fmt.Errorf("event %d: unknown %s tone %q", i+1, ev.Do, ev.Tone)
+			}
+			switch ev.Do {
+			case "line":
+				if ev.From == nil || len(ev.From.Coords) != 2 || ev.To == nil || len(ev.To.Coords) != 2 {
+					return fmt.Errorf("event %d: line needs from and to: [x, y]", i+1)
+				}
+				if ev.Kind != "" && ev.Kind != "solid" && ev.Kind != "dash" && ev.Kind != "arrow" {
+					return fmt.Errorf("event %d: unknown line kind %q", i+1, ev.Kind)
+				}
+			case "text":
+				if len(ev.Pos) != 2 || ev.Size < 0 {
+					return fmt.Errorf("event %d: text needs pos: [x, y] and positive size", i+1)
+				}
+			case "panel":
+				if len(ev.Box) != 4 || ev.Box[0] >= ev.Box[2] || ev.Box[1] >= ev.Box[3] {
+					return fmt.Errorf("event %d: panel needs box: [x0, y0, x1, y1]", i+1)
+				}
+				if ev.Fill != "" && ev.Fill != "card" && ev.Fill != "accent" && ev.Fill != "error" {
+					return fmt.Errorf("event %d: unknown panel fill %q", i+1, ev.Fill)
+				}
+				for j, l := range ev.Lines {
+					if !elementTone(l.Tone) {
+						return fmt.Errorf("event %d line %d: unknown panel tone %q", i+1, j+1, l.Tone)
+					}
+				}
+			}
+		}
+		if ev.Do == "zoom" && (ev.To == nil || ev.To.Value == nil || *ev.To.Value < 1 || ev.Dur <= 0) {
+			return fmt.Errorf("event %d: zoom needs to >= 1 and positive dur", i+1)
+		}
+		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || len(ev.To.Coords) != 2 || ev.Dur <= 0) {
+			return fmt.Errorf("event %d: walk needs target, to: [x, y] and positive dur", i+1)
+		}
+		if ev.Do != "zoom" && ev.To != nil && ev.To.Value != nil {
+			return fmt.Errorf("event %d: numeric to needs zoom", i+1)
+		}
 		pts := append([]Point{}, ev.Targets...)
 		for _, p := range []*Point{ev.Target, ev.From, ev.To} {
 			if p != nil {
@@ -163,8 +307,35 @@ func (sc *Scene) check() error {
 				return fmt.Errorf("event %d: unknown entity %q", i+1, p.ID)
 			}
 		}
+		for _, id := range ev.Into {
+			if !ids[id] {
+				return fmt.Errorf("event %d: unknown entity %q", i+1, id)
+			}
+			if ev.Do == "split" && hasAppear[id] {
+				return fmt.Errorf("event %d: split half %q must not have appear", i+1, id)
+			}
+		}
 	}
 	return nil
+}
+
+func elementTone(tone string) bool {
+	return tone == "" || tone == "ink" || tone == "accent" || tone == "ok" || tone == "error"
+}
+
+func (p *Place) UnmarshalJSON(b []byte) error {
+	if err := json.Unmarshal(b, &p.Name); err == nil && p.Name != "" {
+		return nil
+	}
+	type place Place
+	return json.Unmarshal(b, (*place)(p))
+}
+
+func (c *Color) UnmarshalJSON(b []byte) error {
+	if err := json.Unmarshal(b, &c.Name); err == nil && c.Name != "" {
+		return nil
+	}
+	return json.Unmarshal(b, &c.RGB)
 }
 
 func (a *At) UnmarshalJSON(b []byte) error {
@@ -226,6 +397,11 @@ func (a At) String() string {
 }
 
 func (p *Point) UnmarshalJSON(b []byte) error {
+	var f float64
+	if string(b) != "null" && json.Unmarshal(b, &f) == nil {
+		p.Value = &f
+		return nil
+	}
 	var s string
 	if err := json.Unmarshal(b, &s); err == nil {
 		p.Slot = -1

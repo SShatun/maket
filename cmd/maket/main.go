@@ -10,9 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
+	"strings"
 
 	"maket/internal/audio"
+	"maket/internal/charkit"
 	"maket/internal/render"
 	"maket/internal/scene"
 	"maket/internal/style"
@@ -32,14 +35,19 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
 maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
+maket styles [-root DIR]
 maket char list [-look L] [-root DIR]
 maket char grid NAME [STATE] [-i N] [-look L] [-root DIR]
 maket char build GRID.txt -o DRAFT
 maket char check DRAFT|NAME [-look L] [-root DIR]
 maket char sheet DRAFT|NAME -o sheet.png [-ref a,b] [-look L] [-root DIR]
-maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]`
+maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]
+maket stress scene.json [-voice NAME] [-root DIR]`
 
 func main() {
+	if len(os.Args) >= 2 && os.Args[1] == "styles" {
+		os.Exit(stylesMain(os.Args[2:]))
+	}
 	if len(os.Args) >= 3 && os.Args[1] == "char" {
 		os.Exit(charMain(os.Args[2], os.Args[3:]))
 	}
@@ -70,6 +78,8 @@ func main() {
 		err = stills(scenePath, *out, opt, fs.Args())
 	case "voice":
 		err = voiceTable(scenePath, opt)
+	case "stress":
+		err = stressTable(scenePath, opt)
 	default:
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
@@ -78,6 +88,52 @@ func main() {
 		fmt.Fprintln(os.Stderr, "maket:", err)
 		os.Exit(1)
 	}
+}
+
+func stylesMain(args []string) int {
+	fs := flag.NewFlagSet("styles", flag.ExitOnError)
+	root := fs.String("root", ".", "repository root with assets/")
+	fs.Parse(args)
+	if err := listStyles(*root); err != nil {
+		fmt.Fprintln(os.Stderr, "maket:", err)
+		return 1
+	}
+	return 0
+}
+
+func listStyles(root string) error {
+	fmt.Println("pixel")
+	looks := []string{""}
+	dirs, err := os.ReadDir(filepath.Join(root, "assets", "looks"))
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	for _, d := range dirs {
+		if d.IsDir() {
+			looks = append(looks, d.Name())
+		}
+	}
+	for _, name := range looks {
+		lk, err := charkit.ReadLook(charkit.Dir(root, name))
+		if err != nil {
+			return err
+		}
+		if name == "" {
+			name = "default (assets/live)"
+		}
+		var palette, backdrops []string
+		for key := range lk.Palette {
+			palette = append(palette, key)
+		}
+		for key := range lk.Backdrops {
+			backdrops = append(backdrops, key)
+		}
+		sort.Strings(palette)
+		sort.Strings(backdrops)
+		fmt.Printf("  %s\n    about: %s\n    palette: [%s]\n    backdrops: [%s]\n", name, lk.About, strings.Join(palette, ", "), strings.Join(backdrops, ", "))
+	}
+	fmt.Println("maket")
+	return nil
 }
 
 type options struct {
@@ -135,6 +191,9 @@ func prepare(scenePath string, opt options) (*job, error) {
 	}
 	if sc.Look != "" && name != "pixel" {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
+	}
+	if len(sc.Shots) > 0 && name != "pixel" {
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel", name)
 	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
@@ -216,6 +275,29 @@ func voiceTable(scenePath string, opt options) error {
 		fmt.Printf("%2d  %6.2f  %6.2f  %s\n", i+1, p.Start, p.End, sc.Phrases[i].Text)
 	}
 	fmt.Println(res.Track)
+	return nil
+}
+
+func stressTable(scenePath string, opt options) error {
+	sc, err := scene.Load(scenePath)
+	if err != nil {
+		return err
+	}
+	cfg, err := voice.LoadConfig(opt.root)
+	if err != nil {
+		return err
+	}
+	name := opt.voice
+	if name == "" {
+		name = sc.Voice
+	}
+	marked, err := voice.Mark(context.Background(), opt.root, cfg, sc, name)
+	if err != nil {
+		return err
+	}
+	for i, m := range marked {
+		fmt.Printf("%2d  %s\n", i+1, m)
+	}
 	return nil
 }
 

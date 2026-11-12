@@ -15,13 +15,18 @@ func (p *Pixel) sounds(sc *scene.Scene, tl *timeline.Timeline) []audio.Cue {
 		add(0.05, audio.ChipTitle)
 	}
 	for _, x := range p.ents {
-		add(x.appear, audio.ChipAppear)
+		if x.splitDur == 0 && !x.cut {
+			add(x.appear, audio.ChipAppear)
+		}
 		for _, s := range x.states {
-			if s.v == "happy" {
+			if s.v == "happy" && !s.silent && (!x.cut || s.t >= x.appear && s.t < x.gone) {
 				add(s.t, audio.ChipOK)
 			}
 		}
 		for _, r := range x.roles[1:] {
+			if x.cut && (r.t < x.appear || r.t >= x.gone) {
+				continue
+			}
 			switch r.v {
 			case "error":
 				add(r.t, audio.ChipBlock)
@@ -36,12 +41,19 @@ func (p *Pixel) sounds(sc *scene.Scene, tl *timeline.Timeline) []audio.Cue {
 	for _, s := range p.says {
 		add(s.t, audio.ChipSay)
 	}
-	for _, ev := range sc.Events {
+	events := append([]scene.Event{}, sc.Events...)
+	for _, s := range sc.Shots {
+		events = append(events, s.Do...)
+	}
+	for _, ev := range events {
 		if ev.Do == "number" {
 			add(tl.MustResolve(ev.At), audio.ChipQuestion)
 		}
+		if ev.Do == "split" {
+			add(tl.MustResolve(ev.At), audio.ChipMove)
+		}
 	}
-	if sc.Code != nil {
+	if sc.Code != nil && len(sc.Shots) == 0 {
 		for _, l := range sc.Code.Lines {
 			if l.Appear != nil {
 				add(tl.MustResolve(*l.Appear), audio.ChipTick)
@@ -50,6 +62,9 @@ func (p *Pixel) sounds(sc *scene.Scene, tl *timeline.Timeline) []audio.Cue {
 	}
 	if p.focus != nil {
 		add(p.focus.t, audio.ChipTick)
+	}
+	for _, f := range p.focuses {
+		add(f.t, audio.ChipTick)
 	}
 	if a := sc.Answer; a != nil && sc.Guess != nil {
 		t := tl.MustResolve(a.At)
