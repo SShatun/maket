@@ -1,0 +1,558 @@
+{
+  "style": "pixel",
+  "hold": 1.5,
+  "phrases": [
+    {
+      "text": "Ресинк сломан? Нажмём большую кнопку.",
+      "caption": "ресинк сломан?"
+    },
+    {
+      "text": "У товара пропала доставка. Он ждёт на полке.",
+      "caption": "пропала доставка"
+    },
+    {
+      "text": "Расчёт молча пропускает товар. Почему?",
+      "caption": "расчёт пропускает"
+    },
+    {
+      "text": "Методы расчёт берёт из шаблона продавца.",
+      "caption": "методы из шаблона"
+    },
+    {
+      "text": "В шаблоне ноль методов. Это видно в логе.",
+      "caption": "в шаблоне ноль"
+    },
+    {
+      "text": "Шаблон заполнен, но товар сам не пересчитал доставку.",
+      "caption": "товар ждёт"
+    },
+    {
+      "text": "Ресинк запущен ещё раз. Доставка вернулась за четыре минуты.",
+      "caption": "доставка вернулась"
+    }
+  ],
+  "shots": [
+    {
+      "at": "p1",
+      "place": {
+        "wall": [
+          19,
+          19,
+          31
+        ],
+        "ground": [
+          19,
+          19,
+          31
+        ],
+        "floor": 1500
+      },
+      "cast": [
+        {
+          "id": "P",
+          "kind": "person",
+          "at": [
+            850,
+            1460
+          ],
+          "size": 0.65,
+          "state": "idle"
+        }
+      ],
+      "do": [
+        {
+          "at": "p1",
+          "do": "panel",
+          "box": [
+            245,
+            760,
+            835,
+            1050
+          ],
+          "title": "РЕСИНК",
+          "fill": "error"
+        },
+        {
+          "at": "p1",
+          "do": "text",
+          "text": "?",
+          "pos": [
+            540,
+            520
+          ],
+          "size": 128,
+          "tone": "accent"
+        },
+        {
+          "at": "p1",
+          "do": "zoom",
+          "to": 1.08,
+          "dur": 1.2,
+          "pos": [
+            540,
+            960
+          ]
+        }
+      ]
+    },
+    {
+      "at": "p2",
+      "place": {
+        "wall": [
+          61,
+          48,
+          35
+        ],
+        "ground": [
+          96,
+          73,
+          48
+        ],
+        "floor": 1350
+      },
+      "cast": [
+        {
+          "id": "I",
+          "kind": "parcel",
+          "at": [
+            510,
+            1340
+          ],
+          "size": 1.15,
+          "state": "sad"
+        }
+      ],
+      "do": [
+        {
+          "at": "p2",
+          "do": "panel",
+          "box": [
+            625,
+            390,
+            1000,
+            580
+          ],
+          "title": "нет доставки",
+          "fill": "card",
+          "tone": "error"
+        },
+        {
+          "at": "p2",
+          "do": "line",
+          "from": [
+            60,
+            650
+          ],
+          "to": [
+            1020,
+            650
+          ],
+          "kind": "solid",
+          "tone": "accent"
+        },
+        {
+          "at": "p2",
+          "do": "line",
+          "from": [
+            60,
+            1360
+          ],
+          "to": [
+            1020,
+            1360
+          ],
+          "kind": "solid",
+          "tone": "ink"
+        },
+        {
+          "at": "p2",
+          "do": "text",
+          "text": "полка склада",
+          "pos": [
+            320,
+            570
+          ],
+          "size": 24,
+          "tone": "ink"
+        }
+      ]
+    },
+    {
+      "at": "p3",
+      "place": {
+        "wall": [
+          38,
+          42,
+          56
+        ],
+        "ground": [
+          31,
+          35,
+          45
+        ],
+        "floor": 1320
+      },
+      "cast": [
+        {
+          "id": "I",
+          "kind": "parcel",
+          "at": [
+            210,
+            1300
+          ],
+          "size": 0.65,
+          "state": "wait"
+        },
+        {
+          "id": "S",
+          "kind": "service",
+          "at": [
+            770,
+            1300
+          ],
+          "size": 1.25,
+          "state": "skip"
+        }
+      ],
+      "do": [
+        {
+          "at": "p3",
+          "do": "text",
+          "text": "молча пропускает",
+          "pos": [
+            540,
+            480
+          ],
+          "size": 28,
+          "tone": "ink"
+        },
+        {
+          "at": "p3",
+          "do": "line",
+          "from": [
+            365,
+            1070
+          ],
+          "to": [
+            540,
+            1070
+          ],
+          "kind": "arrow",
+          "tone": "ink"
+        },
+        {
+          "at": "p3",
+          "do": "text",
+          "text": "пропускает",
+          "pos": [
+            450,
+            990
+          ],
+          "size": 22,
+          "tone": "ink"
+        },
+        {
+          "at": "p3",
+          "do": "line",
+          "from": [
+            40,
+            1330
+          ],
+          "to": [
+            1040,
+            1330
+          ],
+          "kind": "solid",
+          "tone": "ink"
+        },
+        {
+          "at": "p3",
+          "do": "text",
+          "text": "кто пропустил?",
+          "pos": [
+            540,
+            650
+          ],
+          "size": 32,
+          "tone": "accent"
+        }
+      ]
+    },
+    {
+      "at": "p4",
+      "place": {
+        "wall": [
+          31,
+          45,
+          84
+        ],
+        "ground": [
+          31,
+          45,
+          84
+        ],
+        "floor": 1450
+      },
+      "cast": [
+        {
+          "id": "S",
+          "kind": "service",
+          "at": [
+            540,
+            560
+          ],
+          "size": 0.6,
+          "state": "idle"
+        },
+        {
+          "id": "T",
+          "kind": "template",
+          "at": [
+            540,
+            1470
+          ],
+          "size": 0.95,
+          "state": "full"
+        }
+      ],
+      "do": [
+        {
+          "at": "p4",
+          "do": "line",
+          "from": [
+            540,
+            650
+          ],
+          "to": [
+            540,
+            1030
+          ],
+          "kind": "dash",
+          "tone": "accent"
+        },
+        {
+          "at": "p4",
+          "do": "text",
+          "text": "методы из шаблона продавца",
+          "pos": [
+            540,
+            1580
+          ],
+          "size": 22,
+          "tone": "ink"
+        }
+      ]
+    },
+    {
+      "at": "p5",
+      "place": {
+        "wall": [
+          26,
+          26,
+          36
+        ],
+        "ground": [
+          26,
+          26,
+          36
+        ],
+        "floor": 1450
+      },
+      "cast": [
+        {
+          "id": "T",
+          "kind": "template",
+          "at": [
+            290,
+            1110
+          ],
+          "size": 1,
+          "state": "empty"
+        }
+      ],
+      "do": [
+        {
+          "at": "p5",
+          "do": "text",
+          "text": "0 методов",
+          "pos": [
+            540,
+            380
+          ],
+          "size": 56,
+          "tone": "accent"
+        },
+        {
+          "at": "p5",
+          "do": "panel",
+          "box": [
+            80,
+            1190,
+            1000,
+            1580
+          ],
+          "title": "Лог расчёта",
+          "fill": "card",
+          "lines": [
+            {
+              "text": "template/methods/get: 0",
+              "appear": "p5",
+              "tone": "error"
+            },
+            {
+              "text": "delivery: skipped (empty template)",
+              "appear": "p5+0.8",
+              "tone": "accent"
+            },
+            {
+              "text": "item: waiting for a new resync",
+              "appear": "p5+1.6",
+              "tone": "ink"
+            }
+          ]
+        },
+        {
+          "at": "p5",
+          "do": "text",
+          "text": "пусто",
+          "pos": [
+            800,
+            850
+          ],
+          "size": 40,
+          "tone": "error"
+        }
+      ]
+    },
+    {
+      "at": "p6",
+      "place": {
+        "wall": [
+          38,
+          53,
+          58
+        ],
+        "ground": [
+          29,
+          43,
+          47
+        ],
+        "floor": 1420
+      },
+      "cast": [
+        {
+          "id": "T",
+          "kind": "template",
+          "at": [
+            250,
+            1400
+          ],
+          "size": 0.8,
+          "state": "full"
+        },
+        {
+          "id": "I",
+          "kind": "parcel",
+          "at": [
+            790,
+            1400
+          ],
+          "size": 1.1,
+          "state": "wait"
+        }
+      ],
+      "do": [
+        {
+          "at": "p6",
+          "do": "say",
+          "target": "I",
+          "text": "а меня?",
+          "until": "p7"
+        },
+        {
+          "at": "p6",
+          "do": "panel",
+          "box": [
+            140,
+            430,
+            940,
+            680
+          ],
+          "title": "Методы появились",
+          "fill": "card",
+          "lines": [
+            {
+              "text": "template/methods/get: 3",
+              "tone": "ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "at": "p7",
+      "place": {
+        "wall": [
+          36,
+          67,
+          56
+        ],
+        "ground": [
+          29,
+          55,
+          45
+        ],
+        "floor": 1400
+      },
+      "cast": [
+        {
+          "id": "I",
+          "kind": "parcel",
+          "at": [
+            540,
+            1380
+          ],
+          "size": 1.45,
+          "state": "happy",
+          "badges": [
+            [
+              "p7",
+              "ok"
+            ]
+          ]
+        }
+      ],
+      "do": [
+        {
+          "at": "p7",
+          "do": "text",
+          "text": "4 МИН",
+          "pos": [
+            540,
+            420
+          ],
+          "size": 72,
+          "tone": "ok"
+        },
+        {
+          "at": "p7",
+          "do": "panel",
+          "box": [
+            120,
+            1470,
+            960,
+            1605
+          ],
+          "title": "доставка вернулась",
+          "fill": "card"
+        },
+        {
+          "at": "p7",
+          "do": "zoom",
+          "to": 1.04,
+          "dur": 1.3
+        }
+      ]
+    }
+  ]
+}
