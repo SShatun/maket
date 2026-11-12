@@ -12,7 +12,7 @@ import (
 	xdraw "golang.org/x/image/draw"
 )
 
-const scale = 0.75
+const scale = 1.0
 
 type stateSpec struct {
 	Frames int     `json:"frames"`

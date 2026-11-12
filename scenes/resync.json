@@ -13,28 +13,28 @@
   {"text": "ресинк не сломан. пустой был шаблон.", "caption": "пустой был шаблон"}
  ],
  "entities": [
-  {"id": "U", "kind": "person", "role": "external", "label": "ты", "at": [260, 640],
+  {"id": "U", "kind": "person", "role": "external", "label": "ты", "at": [250, 650],
    "status": [[0, "дежурный"]],
    "states": [[0, "idle"], ["p2:пропала", "surprised"], ["p2:ты", "idle"], ["p6:но", "wait"], ["p7:вернулась", "surprised"], ["p7:вернулась+0.4", "happy"]]},
-  {"id": "W", "kind": "service", "role": "producer", "label": "расчёт wl", "at": [760, 640],
+  {"id": "W", "kind": "service", "role": "producer", "label": "расчёт wl", "at": [830, 650],
    "status": [[0, "ждёт"], ["p2:жмёшь+0.6", "считает"], ["p3:пропускает", "Skipping"], ["p4", "ждёт"], ["p4:берёт", "читает шаблон"], ["p6", "ждёт"], ["p7:через", "считает 4 мин"], ["p7:вернулась", "готово"]],
    "roles": [["p3:пропускает", "error"], ["p4", "producer"]],
    "states": [[0, "idle"], ["p2:жмёшь+0.6", "catch"], ["p2:жмёшь+0.9", "count"], ["p3:пропускает", "skip", "hold"], ["p4", "wait"], ["p4:берёт", "count"], ["p5:ноль", "flinch"], ["p5:ноль+0.3", "wait"], ["p6", "idle"], ["p7:раз+0.6", "catch"], ["p7:раз+0.9", "count"], ["p7:вернулась", "idle"]]},
-  {"id": "I", "kind": "parcel", "role": "external", "label": "товар", "at": [260, 1010],
+  {"id": "I", "kind": "parcel", "role": "external", "label": "товар", "at": [250, 1180],
    "status": [[0, "нет доставки"], ["p7:вернулась", "доставка есть"]],
    "states": [[0, "idle"], ["p2:пропала", "sad"], ["p6:но", "wait"], ["p7:минуты+0.8", "catch"], ["p7:минуты+1.1", "happy"]]},
-  {"id": "T", "kind": "template", "role": "storage", "label": "шаблон", "at": [760, 1010],
+  {"id": "T", "kind": "template", "role": "storage", "label": "шаблон", "at": [830, 1180],
    "status": [[0, "продавца"], ["p5:ноль", "0 методов"], ["p6+0.7", "6 методов"]],
    "states": [[0, "idle"], ["p4:берёт+0.5", "catch"], ["p4:берёт+0.8", "idle"], ["p5:методов", "empty"], ["p6+0.7", "catch"], ["p6+1.0", "full", "hold"]]}
  ],
  "events": [
-  {"at": "p2:жмёшь", "do": "move", "from": [320, 560], "to": [680, 560], "label": "item", "dur": 0.6},
-  {"at": "p3:запускается", "do": "move", "from": [760, 700], "to": [760, 820], "label": "item", "dur": 0.5},
-  {"at": "p4:берёт", "do": "move", "from": [760, 700], "to": [760, 820], "label": "?", "dur": 0.5},
+  {"at": "p2:жмёшь", "do": "move", "from": [250, 470], "to": [830, 470], "label": "item", "dur": 0.6},
+  {"at": "p3:запускается", "do": "move", "from": [830, 470], "to": [830, 1000], "label": "item", "dur": 0.5},
+  {"at": "p4:берёт", "do": "move", "from": [830, 470], "to": [830, 1000], "label": "?", "dur": 0.5},
   {"at": "p5:ноль", "until": "p5.end", "do": "number", "text": "0", "sub": "методов в шаблоне"},
-  {"at": "p6", "do": "move", "from": [320, 560], "to": [700, 850], "label": "tpl", "dur": 0.7},
-  {"at": "p7:раз", "do": "move", "from": [320, 560], "to": [680, 560], "label": "item", "dur": 0.6},
-  {"at": "p7:минуты", "do": "move", "from": [700, 600], "to": [300, 860], "label": "item", "dur": 0.8}
+  {"at": "p6", "do": "move", "from": [250, 470], "to": [830, 1000], "label": "tpl", "dur": 0.7},
+  {"at": "p7:раз", "do": "move", "from": [250, 470], "to": [830, 470], "label": "item", "dur": 0.6},
+  {"at": "p7:минуты", "do": "move", "from": [830, 470], "to": [250, 1000], "label": "item", "dur": 0.8}
  ],
  "code": {
   "lines": [

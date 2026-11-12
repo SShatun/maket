@@ -7,21 +7,22 @@ import (
 
 	"github.com/fogleman/gg"
 	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 
 	"maket/internal/scene"
 	"maket/internal/timeline"
 )
 
 const (
-	W, H = 1080, 1920
-	FPS  = 30
+	W, H        = 1080, 1920
+	FPS         = 30
+	StageBottom = 1300
 
-	stageBottom    = 1100
-	captionY       = 1458
+	captionY       = 1690
 	captionH       = 84
 	captionX       = 510
 	codeX0, codeX1 = 70.0, 950.0
-	codeY0         = 1120.0
+	codeY0, codeY1 = 1330.0, 1600.0
 )
 
 type Tone struct {
@@ -131,7 +132,7 @@ func (o overlay) dim() {
 	}
 	c := o.th.BG
 	o.dc.SetRGBA255(int(c.R), int(c.G), int(c.B), int(255*k))
-	o.dc.DrawRectangle(0, 140, W, stageBottom-140)
+	o.dc.DrawRectangle(0, 140, W, StageBottom-140)
 	o.dc.Fill()
 }
 
@@ -247,15 +248,25 @@ func (o overlay) numbers() {
 			if k < 1 {
 				continue
 			}
-			o.text(Face(o.th.Fonts.Pixel, 200), ev.Text, 540, 570, o.th.Accent)
+			o.text(Face(o.th.Fonts.Pixel, numberSize(o.th.Fonts.Pixel, 200, 760, ev.Text, true)), ev.Text, 540, 570, o.th.Accent)
 			o.text(Face(o.th.Fonts.Pixel, 30), ev.Sub, 540, 740, o.th.Ink)
 			continue
 		}
-		o.text(Face(o.th.Fonts.Bold, 260*k), ev.Text, 540, 560, o.th.Ink)
+		o.text(Face(o.th.Fonts.Bold, numberSize(o.th.Fonts.Bold, 260, 960, ev.Text, false)*k), ev.Text, 540, 560, o.th.Ink)
 		if k == 1 {
 			o.text(Face(o.th.Fonts.Semi, 44), ev.Sub, 540, 730, o.th.Muted)
 		}
 	}
+}
+
+func numberSize(f *opentype.Font, base, limit float64, text string, pixel bool) float64 {
+	face := Face(f, base)
+	w := float64(font.MeasureString(face, text).Round())
+	base = math.Min(base, base*limit/w)
+	if pixel {
+		base = math.Floor(base/8) * 8
+	}
+	return base
 }
 
 func (o overlay) code() {
@@ -263,13 +274,11 @@ func (o overlay) code() {
 	if c == nil {
 		return
 	}
-	y1 := 1390.0
 	if o.th.Pixel {
-		FrameBox(o.dc, codeX0, codeY0, codeX1, y1, o.th.Ink, o.th.Card, 6)
+		FrameBox(o.dc, codeX0, codeY0, codeX1, codeY1, o.th.Ink, o.th.Card, 6)
 	} else {
-		y1 = 1380
 		o.dc.SetColor(o.th.Card)
-		o.dc.DrawRoundedRectangle(codeX0, codeY0, codeX1-codeX0, y1-codeY0, 22)
+		o.dc.DrawRoundedRectangle(codeX0, codeY0, codeX1-codeX0, codeY1-codeY0, 22)
 		o.dc.Fill()
 	}
 	tones := map[int]string{}
@@ -285,7 +294,7 @@ func (o overlay) code() {
 		}
 	}
 	n := len(c.Lines)
-	lh := math.Min(38, (y1-codeY0-40)/float64(max(1, n)))
+	lh := math.Min(38, (codeY1-codeY0-40)/float64(max(1, n)))
 	face := Face(o.th.Fonts.Mono, 25*math.Min(1, lh/38))
 	for row, i := range lines {
 		y := codeY0 + 22 + float64(row)*lh

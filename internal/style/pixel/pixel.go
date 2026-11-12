@@ -267,7 +267,7 @@ func (p *Pixel) point(pt scene.Point) ([2]float64, error) {
 	if !ok {
 		return [2]float64{}, fmt.Errorf("unknown entity %q", pt.ID)
 	}
-	return [2]float64{x.x, x.y - 135}, nil
+	return [2]float64{x.x, x.y - 180*scale}, nil
 }
 
 func background(bg color.RGBA) *image.RGBA {
@@ -296,7 +296,7 @@ func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 		k := clamp((t - f.t) / 0.6)
 		c := p.theme.BG
 		dc.SetRGBA255(int(c.R), int(c.G), int(c.B), int(255*0.6*k))
-		dc.DrawRectangle(0, 140, render.W, 960)
+		dc.DrawRectangle(0, 140, render.W, render.StageBottom-140)
 		dc.Fill()
 		for _, x := range p.ents {
 			if f.targets[x.id] {

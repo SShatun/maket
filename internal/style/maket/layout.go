@@ -231,9 +231,9 @@ func (s *Style) fit(code bool) {
 			}
 		}
 	}
-	top, bottom := 322.0, 1278.0
+	top, bottom := 322.0, 1510.0
 	if code {
-		bottom = 998
+		bottom = render.StageBottom - 92
 	}
 	s.cx, s.cy = 505, (top+bottom)/2
 	s.u = math.Min(math.Min(750/math.Max(1e-6, xmax-xmin), (bottom-top)/math.Max(1e-6, ymax-ymin)), 66) / (1 + (driftZoom+focusZoom)*0.6)
