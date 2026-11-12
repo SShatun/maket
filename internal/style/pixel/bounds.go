@@ -15,6 +15,8 @@ func (p *Pixel) warnBounds(shot int, events []scene.Event, end float64, tl *time
 	for i, ev := range events {
 		var box [4]float64
 		var bubble *say
+		var fromEnt, toEnt *ent
+		line := false
 		label := ev.Text
 		start, until := tl.MustResolve(ev.At), end
 		switch ev.Do {
@@ -26,6 +28,13 @@ func (p *Pixel) warnBounds(shot int, events []scene.Event, end float64, tl *time
 		case "say":
 			bubble = &say{t: start, who: p.byID[ev.Target.ID], text: ev.Text, dx: ev.Dx}
 			until = math.Min(until, start+2)
+		case "line":
+			if ev.Label == "" {
+				continue
+			}
+			label = ev.Label
+			line = true
+			fromEnt, toEnt = p.lineEnt(ev.From), p.lineEnt(ev.To)
 		default:
 			continue
 		}
@@ -34,6 +43,12 @@ func (p *Pixel) warnBounds(shot int, events []scene.Event, end float64, tl *time
 		}
 		if bubble != nil {
 			start, until = math.Max(start, bubble.who.appear), math.Min(until, bubble.who.gone)
+		}
+		if fromEnt != nil {
+			start, until = math.Max(start, fromEnt.appear), math.Min(until, fromEnt.gone)
+		}
+		if toEnt != nil {
+			start, until = math.Max(start, toEnt.appear), math.Min(until, toEnt.gone)
 		}
 		if until <= start {
 			continue
@@ -47,6 +62,13 @@ func (p *Pixel) warnBounds(shot int, events []scene.Event, end float64, tl *time
 			if bubble != nil {
 				box, _, _ = p.sayBox(*bubble, t, 0)
 				box[3] += 12
+			}
+			if line {
+				x0, y0, x1, y1, ok := p.placedLine(fromEnt, toEnt, ev.From, ev.To, t)
+				if !ok {
+					continue
+				}
+				box, _, _ = render.LineLabelBox(p.theme, ev.Label, x0, y0, x1, y1)
 			}
 			v := render.Camera(events, tl, t)
 			x0, y0 := box[0]*v[0]+v[1], box[1]*v[0]+v[2]

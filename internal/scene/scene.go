@@ -53,12 +53,17 @@ type Cast struct {
 }
 
 type Crowd struct {
+	ID    string    `json:"id"`
 	Kind  string    `json:"kind"`
 	Count int       `json:"count"`
 	Box   []float64 `json:"box"`
 	Size  []float64 `json:"size"`
 	Rows  int       `json:"rows"`
 	State string    `json:"state"`
+}
+
+func (c Crowd) FigureID(n int) string {
+	return c.ID + strconv.Itoa(n)
 }
 
 type Phrase struct {
@@ -91,9 +96,12 @@ type CodeLine struct {
 }
 
 type PanelLine struct {
-	Text   string `json:"text"`
-	Appear *At    `json:"appear"`
-	Tone   string `json:"tone"`
+	Text   string          `json:"text"`
+	Timed  []Timed[string] `json:"-"`
+	Appear *At             `json:"appear"`
+	Tone   string          `json:"tone"`
+	Size   float64         `json:"size"`
+	Field  string          `json:"field"`
 }
 
 type Highlight struct {
@@ -223,6 +231,16 @@ func (s Shot) check() error {
 			if x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1] {
 				return fmt.Errorf("cast %d: crowd needs kind, count, rows, box: [x0, y0, x1, y1] and size: [min, max] in 0.2..4", i+1)
 			}
+			if x.ID != "" {
+				for n := 1; n <= x.Count; n++ {
+					id := x.FigureID(n)
+					if ids[id] {
+						return fmt.Errorf("cast %d: duplicate id %q", i+1, id)
+					}
+					ids[id] = true
+					entities = append(entities, Entity{ID: id})
+				}
+			}
 			continue
 		}
 		if c.ID == "" || ids[c.ID] {
@@ -263,8 +281,8 @@ func checkEvents(entities []Entity, events []Event) error {
 			}
 			switch ev.Do {
 			case "line":
-				if ev.From == nil || len(ev.From.Coords) != 2 || ev.To == nil || len(ev.To.Coords) != 2 {
-					return fmt.Errorf("event %d: line needs from and to: [x, y]", i+1)
+				if err := lineEnds(ev.From, ev.To); err != nil {
+					return fmt.Errorf("event %d: %w", i+1, err)
 				}
 				if ev.Kind != "" && ev.Kind != "solid" && ev.Kind != "dash" && ev.Kind != "arrow" {
 					return fmt.Errorf("event %d: unknown line kind %q", i+1, ev.Kind)
@@ -280,9 +298,15 @@ func checkEvents(entities []Entity, events []Event) error {
 				if ev.Fill != "" && ev.Fill != "card" && ev.Fill != "accent" && ev.Fill != "error" {
 					return fmt.Errorf("event %d: unknown panel fill %q", i+1, ev.Fill)
 				}
+				if ev.Size < 0 {
+					return fmt.Errorf("event %d: panel size must be positive", i+1)
+				}
 				for j, l := range ev.Lines {
 					if !elementTone(l.Tone) {
 						return fmt.Errorf("event %d line %d: unknown panel tone %q", i+1, j+1, l.Tone)
+					}
+					if l.Size < 0 {
+						return fmt.Errorf("event %d line %d: panel size must be positive", i+1, j+1)
 					}
 				}
 			}
@@ -321,6 +345,18 @@ func checkEvents(entities []Entity, events []Event) error {
 
 func elementTone(tone string) bool {
 	return tone == "" || tone == "ink" || tone == "accent" || tone == "ok" || tone == "error"
+}
+
+func lineEnds(from, to *Point) error {
+	for _, p := range []*Point{from, to} {
+		if p == nil || p.Value != nil || (p.ID == "" && len(p.Coords) != 2) {
+			return errors.New("line needs from and to as [x, y] or a cast id")
+		}
+		if p.ID != "" && p.Slot >= 0 {
+			return errors.New("line from and to are [x, y] or a cast id, not a slot")
+		}
+	}
+	return nil
 }
 
 func (p *Place) UnmarshalJSON(b []byte) error {
@@ -440,6 +476,33 @@ func (t *Timed[T]) UnmarshalJSON(b []byte) error {
 		if err := json.Unmarshal(raw[2], &flag); err == nil && flag == "hold" {
 			t.Hold = true
 		}
+	}
+	return nil
+}
+
+func (l *PanelLine) UnmarshalJSON(b []byte) error {
+	var o struct {
+		Text   json.RawMessage `json:"text"`
+		Appear *At             `json:"appear"`
+		Tone   string          `json:"tone"`
+		Size   float64         `json:"size"`
+		Field  string          `json:"field"`
+	}
+	if err := json.Unmarshal(b, &o); err != nil {
+		return err
+	}
+	l.Appear, l.Tone, l.Size, l.Field = o.Appear, o.Tone, o.Size, o.Field
+	if len(o.Text) == 0 || string(o.Text) == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(o.Text, &l.Text); err == nil {
+		return nil
+	}
+	if err := json.Unmarshal(o.Text, &l.Timed); err != nil {
+		return fmt.Errorf("panel line text must be a string or timed values [moment, text]: %w", err)
+	}
+	if len(l.Timed) == 0 {
+		return errors.New("panel line text needs a timed value")
 	}
 	return nil
 }

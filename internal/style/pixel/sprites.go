@@ -39,6 +39,7 @@ type sprites struct {
 	dir    string
 	colors map[string]color.RGBA
 	specs  map[string]spriteSpec
+	opaque map[string][4]int
 	frames map[frameKey]*image.RGBA
 }
 
@@ -53,7 +54,7 @@ func loadSprites(dir string, colors map[string]color.RGBA) (*sprites, error) {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return nil, fmt.Errorf("sprites.json: %w", err)
 	}
-	return &sprites{dir: dir, colors: colors, specs: f.Sprites, frames: map[frameKey]*image.RGBA{}}, nil
+	return &sprites{dir: dir, colors: colors, specs: f.Sprites, opaque: map[string][4]int{}, frames: map[frameKey]*image.RGBA{}}, nil
 }
 
 func (s *sprites) prepare(name string, roles map[string]bool) error {
@@ -62,12 +63,14 @@ func (s *sprites) prepare(name string, roles map[string]bool) error {
 		return fmt.Errorf("no live character %q", name)
 	}
 	tint := spec.Tint == nil || *spec.Tint
+	ob := image.Rectangle{}
 	for state, st := range spec.States {
 		for i := 0; i < st.Frames; i++ {
 			src, err := charkit.ReadPNG(filepath.Join(s.dir, name, fmt.Sprintf("%s_%d.png", state, i)))
 			if err != nil {
 				return err
 			}
+			ob = ob.Union(opaqueBounds(src))
 			for role := range roles {
 				key := role
 				if !tint {
@@ -85,7 +88,21 @@ func (s *sprites) prepare(name string, roles map[string]bool) error {
 			}
 		}
 	}
+	s.opaque[name] = [4]int{ob.Min.X, ob.Min.Y, ob.Max.X, ob.Max.Y}
 	return nil
+}
+
+func opaqueBounds(src image.Image) image.Rectangle {
+	b := src.Bounds()
+	var r image.Rectangle
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if _, _, _, a := src.At(x, y).RGBA(); a > 0 {
+				r = r.Union(image.Rect(x, y, x+1, y+1))
+			}
+		}
+	}
+	return r
 }
 
 func (s *sprites) frame(name string, states []timedState, t float64, role string) *image.RGBA {

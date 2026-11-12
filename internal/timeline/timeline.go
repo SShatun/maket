@@ -183,6 +183,11 @@ func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 					return nil, fmt.Errorf("event %d line %d: %w", i+1, j+1, err)
 				}
 			}
+			for _, x := range l.Timed {
+				if err := add(x.At); err != nil {
+					return nil, fmt.Errorf("event %d line %d: %w", i+1, j+1, err)
+				}
+			}
 		}
 	}
 	for _, e := range sc.Entities {

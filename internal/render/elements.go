@@ -32,6 +32,9 @@ func ShotElements(dc *gg.Context, events []scene.Event, tl *timeline.Timeline, t
 					pixelLine(dc, x1, y1, x1-30*math.Cos(a)+side*18*math.Sin(a), y1-30*math.Sin(a)-side*18*math.Cos(a), false)
 				}
 			}
+			if ev.Label != "" {
+				o.lineLabel(ev.Label, x0, y0, x1, y1, o.tone(ev.Tone))
+			}
 		case "text":
 			o.text(elementFace(th, ev), ev.Text, ev.Pos[0], ev.Pos[1], o.tone(ev.Tone))
 		case "panel":
@@ -109,37 +112,189 @@ func (o overlay) panel(ev scene.Event) {
 		}
 		o.text(Face(o.th.Fonts.Pixel, math.Max(1, size)), ev.Title, (x0+x1)/2, cy, titleColor)
 	}
-	lh := math.Min(38, (y1-y0-40)/float64(max(1, len(ev.Lines))))
-	size := math.Max(1, 25*math.Min(1, lh/38))
-	for _, l := range ev.Lines {
-		size = math.Min(size, numberSize(o.th.Fonts.Mono, size, width, l.Text, false))
+	o.panelLines(ev, x0, y0, x1, y1, width, ink)
+}
+
+func LineLabelBox(th Theme, label string, x0, y0, x1, y1 float64) (box [4]float64, ax, ay float64) {
+	ax, ay = (x0+x1)/2, (y0+y1)/2
+	bounds := func(x, y float64) [4]float64 {
+		b := TextBounds(th, scene.Event{Text: label, Pos: []float64{x, y}, Size: 28})
+		return [4]float64{b[0] - 8, b[1] - 8, b[2] + 8, b[3] + 8}
 	}
-	face := Face(o.th.Fonts.Mono, size)
-	row := 0
+	box = bounds(ax, ay)
+	if math.Hypot(x1-x0, y1-y0) >= box[2]-box[0] {
+		return box, ax, ay
+	}
+	dx, dy := x1-x0, y1-y0
+	length := math.Hypot(dx, dy)
+	nx, ny := 0.0, -1.0
+	if length >= 1e-6 {
+		nx, ny = -dy/length, dx/length
+		if ny > 0 || ny == 0 && nx > 0 {
+			nx, ny = -nx, -ny
+		}
+	}
+	minProj := math.Inf(1)
+	for _, c := range [][2]float64{{box[0], box[1]}, {box[2], box[1]}, {box[0], box[3]}, {box[2], box[3]}} {
+		minProj = math.Min(minProj, (c[0]-ax)*nx+(c[1]-ay)*ny)
+	}
+	d := -minProj + 8
+	ax += nx * d
+	ay += ny * d
+	return bounds(ax, ay), ax, ay
+}
+
+func (o overlay) lineLabel(label string, x0, y0, x1, y1 float64, col color.RGBA) {
+	box, x, y := LineLabelBox(o.th, label, x0, y0, x1, y1)
+	FrameBox(o.dc, box[0], box[1], box[2], box[3], col, o.th.Card, 6)
+	o.text(Face(o.th.Fonts.Pixel, 28), label, x, y, col)
+}
+
+func (o overlay) panelLines(ev scene.Event, x0, y0, x1, y1, width float64, ink color.RGBA) {
+	mono := o.th.Fonts.Mono
+	n := max(1, len(ev.Lines))
+	lh := math.Min(38, (y1-y0-40)/float64(n))
+	size := math.Max(1, 25*math.Min(1, lh/38))
+	plain := size
 	for _, l := range ev.Lines {
+		if l.Text == "" {
+			continue
+		}
+		plain = math.Min(plain, numberSize(mono, plain, width, l.Text, false))
+	}
+	fit := func(base, limit float64, text string) float64 {
+		return numberSize(mono, base, limit, text, false)
+	}
+	rows := make([]panelRow, len(ev.Lines))
+	for i, l := range ev.Lines {
+		explicit := true
+		s := l.Size
+		if s == 0 {
+			s = ev.Size
+		}
+		if s == 0 {
+			s = plain
+			explicit = false
+		}
+		rows[i] = panelRow{size: s, lh: lh, shift: 7, explicit: explicit}
+	}
+	gap := 16.0
+	for i, l := range ev.Lines {
+		if l.Field == "" {
+			continue
+		}
+		rows[i].size = math.Max(1, fit(rows[i].size, width, l.Field))
+	}
+	fieldWidth := func() float64 {
+		w := 0.0
+		for i, l := range ev.Lines {
+			if l.Field == "" {
+				continue
+			}
+			if m := float64(font.MeasureString(Face(mono, rows[i].size), l.Field).Round()); m > w {
+				w = m
+			}
+		}
+		return w
+	}
+	fieldW := fieldWidth()
+	valueLimit := math.Max(1, width-fieldW-gap)
+	for i, l := range ev.Lines {
+		limit := width
+		if l.Field != "" {
+			limit = valueLimit
+		}
+		for _, text := range panelSamples(l) {
+			rows[i].size = fit(rows[i].size, limit, text)
+		}
+		rows[i].size = math.Max(1, rows[i].size)
+	}
+	for i := range rows {
+		if rows[i].explicit {
+			rows[i].lh, rows[i].shift = 38*rows[i].size/25, 7*rows[i].size/25
+		}
+	}
+	avail := math.Max(1, y1-y0-40)
+	var need float64
+	for _, r := range rows {
+		need += r.lh
+	}
+	if len(rows) > 0 && need > avail {
+		k := avail / need
+		for i := range rows {
+			rows[i].size = math.Max(1, rows[i].size*k)
+			rows[i].lh *= k
+			if rows[i].explicit {
+				rows[i].shift = 7 * rows[i].size / 25
+			}
+		}
+	}
+	fieldW = fieldWidth()
+	valueX := x0 + 26 + fieldW + gap
+	y := y0 + 22
+	for i, l := range ev.Lines {
 		if l.Appear != nil && o.t < o.tl.MustResolve(*l.Appear) {
 			continue
 		}
-		y := y0 + 22 + float64(row)*lh
-		row++
-		col := o.th.CodeDim
-		if ev.Fill == "accent" || ev.Fill == "error" {
-			col = ink
-		}
-		tone := l.Tone
-		if tone == "accent" {
-			tone = "yel"
-		}
-		if highlight, ok := o.th.Tones[tone]; ok {
-			o.dc.SetColor(highlight.BG)
-			o.dc.DrawRectangle(x0+12, y-4, x1-x0-24, lh-2)
-			o.dc.Fill()
-			col = highlight.FG
-		} else if l.Tone != "" {
-			col = o.tone(l.Tone)
-		}
-		o.dc.SetFontFace(face)
-		o.dc.SetColor(col)
-		o.dc.DrawStringAnchored(l.Text, x0+26, y+lh/2-7, 0, 0.5)
+		o.drawPanelRow(ev, l, x0, x1, y, rows[i].lh, rows[i].shift, valueX, ink, Face(mono, rows[i].size))
+		y += rows[i].lh
 	}
+}
+
+type panelRow struct {
+	size, lh, shift float64
+	explicit        bool
+}
+
+func (o overlay) drawPanelRow(ev scene.Event, l scene.PanelLine, x0, x1, y, lh, shift, valueX float64, ink color.RGBA, face font.Face) {
+	col := o.th.CodeDim
+	if ev.Fill == "accent" || ev.Fill == "error" {
+		col = ink
+	}
+	tone := l.Tone
+	if tone == "accent" {
+		tone = "yel"
+	}
+	if highlight, ok := o.th.Tones[tone]; ok {
+		o.dc.SetColor(highlight.BG)
+		o.dc.DrawRectangle(x0+12, y-4, x1-x0-24, lh-2)
+		o.dc.Fill()
+		col = highlight.FG
+	} else if l.Tone != "" {
+		col = o.tone(l.Tone)
+	}
+	o.dc.SetFontFace(face)
+	o.dc.SetColor(col)
+	baseline := y + lh/2 - shift
+	text := panelText(l, o.tl, o.t)
+	if l.Field != "" {
+		o.dc.DrawStringAnchored(l.Field, x0+26, baseline, 0, 0.5)
+		o.dc.DrawStringAnchored(text, valueX, baseline, 0, 0.5)
+		return
+	}
+	o.dc.DrawStringAnchored(text, x0+26, baseline, 0, 0.5)
+}
+
+func panelSamples(l scene.PanelLine) []string {
+	if len(l.Timed) == 0 {
+		return []string{l.Text}
+	}
+	out := make([]string, len(l.Timed))
+	for i, x := range l.Timed {
+		out[i] = x.V
+	}
+	return out
+}
+
+func panelText(l scene.PanelLine, tl *timeline.Timeline, t float64) string {
+	if len(l.Timed) == 0 {
+		return l.Text
+	}
+	v := ""
+	for _, x := range l.Timed {
+		if t >= tl.MustResolve(x.At) {
+			v = x.V
+		}
+	}
+	return v
 }

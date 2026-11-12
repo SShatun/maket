@@ -74,11 +74,16 @@ type walk struct {
 	from, to [2]float64
 }
 
+type link struct {
+	from, to *ent
+}
+
 type shot struct {
 	at, until float64
 	place     scene.Place
 	backdrop  image.Image
 	events    []scene.Event
+	links     []link
 }
 
 type move struct {
@@ -228,6 +233,13 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 				if err := p.event(j, ev, at(ev.At), end, tl); err != nil {
 					return fmt.Errorf("shot %d: %w", i+1, err)
 				}
+			}
+			sh := &p.shots[len(p.shots)-1]
+			for _, ev := range s.Do {
+				if ev.Do != "line" {
+					continue
+				}
+				sh.links = append(sh.links, link{p.lineEnt(ev.From), p.lineEnt(ev.To)})
 			}
 			p.warnBounds(i, s.Do, end, tl)
 		}
@@ -454,6 +466,7 @@ func (p *Pixel) point(pt scene.Point, t float64) ([2]float64, error) {
 
 func crowd(c *scene.Crowd, rng *rand.Rand) []scene.Cast {
 	var out []scene.Cast
+	nID := 0
 	for row := 0; row < c.Rows; row++ {
 		n := c.Count / c.Rows
 		if row < c.Count%c.Rows {
@@ -464,11 +477,97 @@ func crowd(c *scene.Crowd, rng *rand.Rand) []scene.Cast {
 		size := c.Size[0] + (c.Size[1]-c.Size[0])*depth
 		cell := (c.Box[2] - c.Box[0]) / float64(n)
 		for col := 0; col < n; col++ {
+			nID++
 			x := c.Box[0] + (float64(col)+0.5+(rng.Float64()-0.5)*0.2)*cell
-			out = append(out, scene.Cast{Entity: scene.Entity{Kind: c.Kind, At: []float64{x, y}}, Size: size, State: c.State})
+			id := ""
+			if c.ID != "" {
+				id = c.FigureID(nID)
+			}
+			out = append(out, scene.Cast{Entity: scene.Entity{ID: id, Kind: c.Kind, At: []float64{x, y}}, Size: size, State: c.State})
 		}
 	}
 	return out
+}
+
+func (p *Pixel) placeLines(s shot, t float64) []scene.Event {
+	out := make([]scene.Event, 0, len(s.events))
+	n := 0
+	for _, ev := range s.events {
+		if ev.Do != "line" {
+			out = append(out, ev)
+			continue
+		}
+		ln := s.links[n]
+		n++
+		x0, y0, x1, y1, ok := p.placedLine(ln.from, ln.to, ev.From, ev.To, t)
+		if !ok {
+			continue
+		}
+		ev.From = &scene.Point{Coords: []float64{x0, y0}}
+		ev.To = &scene.Point{Coords: []float64{x1, y1}}
+		out = append(out, ev)
+	}
+	return out
+}
+
+func (p *Pixel) lineEnt(pt *scene.Point) *ent {
+	if pt.ID == "" {
+		return nil
+	}
+	return p.byID[pt.ID]
+}
+
+func lineShown(x *ent, t float64) bool {
+	return x == nil || t >= x.appear && t < x.gone
+}
+
+func (p *Pixel) placedLine(fromEnt, toEnt *ent, from, to *scene.Point, t float64) (x0, y0, x1, y1 float64, ok bool) {
+	if !lineShown(fromEnt, t) || !lineShown(toEnt, t) {
+		return 0, 0, 0, 0, false
+	}
+	anchor := func(x *ent, pt *scene.Point) (float64, float64) {
+		if x == nil {
+			return pt.Coords[0], pt.Coords[1]
+		}
+		b := p.bodyBox(x, t)
+		return (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2
+	}
+	ax, ay := anchor(fromEnt, from)
+	bx, by := anchor(toEnt, to)
+	x0, y0, x1, y1 = ax, ay, bx, by
+	if fromEnt != nil {
+		x0, y0 = p.lineExit(fromEnt, t, bx, by)
+	}
+	if toEnt != nil {
+		x1, y1 = p.lineExit(toEnt, t, ax, ay)
+	}
+	return x0, y0, x1, y1, true
+}
+
+func (p *Pixel) bodyBox(x *ent, t float64) box {
+	px, py := x.position(t)
+	o := p.sprites.opaque[x.kind]
+	return spriteRect(p.sprites.specs[x.kind].Anchor, [4]int{o[0], o[1], o[2], o[3]}, px, py, scale*x.size)
+}
+
+func (p *Pixel) lineExit(x *ent, t, ox, oy float64) (float64, float64) {
+	b := p.bodyBox(x, t)
+	cx, cy := (b.x0+b.x1)/2, (b.y0+b.y1)/2
+	dx, dy := ox-cx, oy-cy
+	s := math.Min((b.x1-b.x0)/2/math.Abs(dx), (b.y1-b.y0)/2/math.Abs(dy))
+	if s >= 1 {
+		return ox, oy
+	}
+	return cx + s*dx, cy + s*dy
+}
+
+func spriteRect(anchor [2]int, r [4]int, px, py, k float64) box {
+	return box{
+		px - float64(anchor[0]-r[0])*k,
+		py - float64(anchor[1]-r[1])*k,
+		px + float64(r[2]-anchor[0])*k,
+		py + float64(r[3]-anchor[1])*k,
+	}
 }
 
 func (x *ent) position(t float64) (float64, float64) {
@@ -562,7 +661,7 @@ func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 	}
 	dc := gg.NewContextForRGBA(dst)
 	if current != nil {
-		render.ShotElements(dc, current.events, p.tl, p.theme, t, current.until)
+		render.ShotElements(dc, p.placeLines(*current, t), p.tl, p.theme, t, current.until)
 	}
 	sway := snap(-8 * math.Sin(t/p.dur*math.Pi))
 	ents := p.ents
@@ -777,13 +876,7 @@ func (p *Pixel) warnOverlap() {
 }
 
 func entBox(e *ent, spec spriteSpec, label, status font.Face) box {
-	k := scale * e.size
-	b := box{
-		e.x - float64(spec.Anchor[0])*k,
-		e.y - float64(spec.Anchor[1]-spec.Top[1])*k,
-		e.x + float64(spec.Size[0]-spec.Anchor[0])*k,
-		e.y + float64(spec.Size[1]-spec.Anchor[1])*k,
-	}
+	b := spriteRect(spec.Anchor, [4]int{0, spec.Top[1], spec.Size[0], spec.Size[1]}, e.x, e.y, scale*e.size)
 	if e.label != "" {
 		b = b.add(textBox(label, e.label, e.x, e.y+40))
 	}
