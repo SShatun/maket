@@ -18,6 +18,7 @@ type sceneWord struct {
 	text   string
 	phrase int
 	match  int
+	guess  bool
 	s, e   float64
 }
 
@@ -204,6 +205,12 @@ func similar(a, b string) bool {
 	return levenshtein(a, b)*3 <= n
 }
 
+func alike(a, b string) bool {
+	short := min(utf8.RuneCountInString(a), utf8.RuneCountInString(b))
+	n := max(utf8.RuneCountInString(a), utf8.RuneCountInString(b))
+	return short >= 4 && levenshtein(a, b)*2 <= n
+}
+
 func merged(first, second, heard string) bool {
 	f := []rune(first)
 	if len(f) < 3 || !strings.HasPrefix(heard, string(f[:3])) {
@@ -239,6 +246,7 @@ const (
 	stepNumber
 	stepSkipScene
 	stepSkipHeard
+	stepGuess
 )
 
 func align(words []sceneWord, got []heard, spell map[string]string) []int {
@@ -280,6 +288,10 @@ func align(words []sceneWord, got []heard, spell map[string]string) []int {
 				if c := cost[i-1][j-1]; c < best {
 					best, how = c, stepMatch
 				}
+			} else if alike(sw[i-1], hw[j-1]) {
+				if c := cost[i-1][j-1] + 1; c < best {
+					best, how = c, stepGuess
+				}
 			}
 			if i >= 2 && i < n && words[i-2].phrase == words[i-1].phrase && words[i].phrase == words[i-1].phrase && merged(sw[i-2], sw[i-1], hw[j-1]) {
 				if c := cost[i-2][j-1]; c < best {
@@ -299,14 +311,16 @@ func align(words []sceneWord, got []heard, spell map[string]string) []int {
 		}
 	}
 	for i := range words {
-		words[i].match, words[i].s, words[i].e = -1, 0, 0
+		words[i].match, words[i].guess, words[i].s, words[i].e = -1, false, 0, 0
 	}
 	i, j := n, m
 	for i > 0 || j > 0 {
 		switch step[i][j] {
-		case stepMatch:
-			words[i-1].match = j - 1
-			owner[j-1] = words[i-1].phrase
+		case stepMatch, stepGuess:
+			words[i-1].match, words[i-1].guess = j-1, step[i][j] == stepGuess
+			if step[i][j] == stepMatch {
+				owner[j-1] = words[i-1].phrase
+			}
 			i, j = i-1, j-1
 		case stepMerge, stepNumber:
 			size, heardSize := 2, 1

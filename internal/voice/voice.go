@@ -28,6 +28,8 @@ type Config struct {
 	RUAccentDir  string `json:"ruaccent_dir"`
 	RUAccent     bool   `json:"ruaccent"`
 	WhisperModel string `json:"whisper_model"`
+	ChecksPython string `json:"checks_python"`
+	ChecksModel  string `json:"checks_model"`
 }
 
 type Spec struct {
@@ -59,6 +61,11 @@ const (
 	takeTol      = 0.15
 	choppyMax    = 0.3
 	gapMin       = 0.5
+	flatFall     = -3.0
+	timbreRef    = 0.30
+	timbreNear   = 0.40
+	otherSpeaker = "voice sounds like another speaker"
+	flatShare    = 0.2
 	levelSnap    = 1.0
 	levelTries   = 2
 	peakMax      = 0.89
@@ -191,6 +198,7 @@ type take struct {
 	kept   map[int]*piece
 	spread float64
 	choppy float64
+	flat   int
 }
 
 func (r *run) synthesize(marked []string) (*Result, error) {
@@ -200,16 +208,20 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		if err != nil {
 			return nil, err
 		}
-		if best == nil || len(tk.lost) < len(best.lost) || len(tk.lost) == len(best.lost) && (tk.choppy < best.choppy || tk.choppy == best.choppy && tk.spread < best.spread) {
+		if best == nil || len(tk.lost) < len(best.lost) || len(tk.lost) == len(best.lost) && (tk.flat < best.flat || tk.flat == best.flat && (tk.choppy < best.choppy || tk.choppy == best.choppy && tk.spread < best.spread)) {
 			best = tk
 		}
-		if len(best.lost) == 0 && best.choppy <= choppyMax && best.spread <= takeTol {
+		if len(best.lost) == 0 && float64(best.flat) <= flatShare*float64(len(r.sc.Phrases)) && best.choppy <= choppyMax && best.spread <= takeTol {
 			break
 		}
 	}
 	r.words = best.words
 	pieces, lost, why, kept := best.pieces, best.lost, best.why, best.kept
 	var err error
+	keptWhy := map[int]string{}
+	for i := range kept {
+		keptWhy[i] = why[i]
+	}
 	for attempt := 0; len(lost) > 0 && attempt <= maxRetries; attempt++ {
 		lost, err = r.regenerate(marked, pieces, lost, attempt, why)
 		if err != nil {
@@ -221,7 +233,7 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	for _, i := range lost {
 		if kept[i] != nil {
 			pieces[i] = kept[i]
-			warnings = append(warnings, fmt.Sprintf("phrase %d: %s", i+1, raggedCut))
+			warnings = append(warnings, fmt.Sprintf("phrase %d: %s", i+1, keptWhy[i]))
 			continue
 		}
 		still = append(still, i)
@@ -294,8 +306,28 @@ func (r *run) record(marked []string, seed int) (*take, error) {
 		lost = append(lost, i)
 		why[i] = raggedCut
 	}
+	cs, err := r.checks(pieces)
+	if err != nil {
+		return nil, err
+	}
+	flat := 0
+	for i, c := range cs {
+		if c == nil {
+			continue
+		}
+		if c.otherVoice() {
+			kept[i] = pieces[i]
+			pieces[i] = nil
+			lost = append(lost, i)
+			why[i] = otherSpeaker
+			continue
+		}
+		if r.flat(i, c) {
+			flat++
+		}
+	}
 	sort.Ints(lost)
-	return &take{words: r.words, pieces: pieces, lost: lost, why: why, kept: kept, spread: r.spread(pieces), choppy: choppy(pieces)}, nil
+	return &take{words: r.words, pieces: pieces, lost: lost, why: why, kept: kept, spread: r.spread(pieces), choppy: choppy(pieces), flat: flat}, nil
 }
 
 func quietFrames(p *piece) []bool {
@@ -337,6 +369,73 @@ func choppy(pieces []*piece) float64 {
 		return 0
 	}
 	return float64(short) / (float64(speech) * frameSec)
+}
+
+type check struct {
+	Ref  float64  `json:"ref"`
+	Prev *float64 `json:"prev"`
+	Next *float64 `json:"next"`
+	Fall float64  `json:"fall"`
+}
+
+func (r *run) checks(pieces []*piece) ([]*check, error) {
+	out := make([]*check, len(pieces))
+	if r.cfg.ChecksPython == "" {
+		return out, nil
+	}
+	var idx []int
+	var wavs []string
+	for i, p := range pieces {
+		if p == nil {
+			continue
+		}
+		a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
+		wav := filepath.Join(r.dir, fmt.Sprintf("check%02d-%d-%d-%d-%d.wav", i+1, p.seed, a, b, len(p.pcm)))
+		if _, err := os.Stat(wav); err != nil {
+			if err := audio.Write(wav, p.pcm[a:b]); err != nil {
+				return nil, err
+			}
+		}
+		idx = append(idx, i)
+		wavs = append(wavs, wav)
+	}
+	if len(wavs) == 0 {
+		return out, nil
+	}
+	h := sha256.Sum256([]byte(strings.Join(wavs, "\n")))
+	res := filepath.Join(r.dir, "checks-"+hex.EncodeToString(h[:])[:16]+".json")
+	if _, err := os.Stat(res); err != nil {
+		job := map[string]any{"model": r.cfg.ChecksModel, "ref": r.ref, "wavs": wavs, "out": res}
+		if err := r.python(r.cfg.ChecksPython, "checks.py", job); err != nil {
+			return nil, err
+		}
+	}
+	b, err := os.ReadFile(res)
+	if err != nil {
+		return nil, err
+	}
+	var got []*check
+	if err := json.Unmarshal(b, &got); err != nil {
+		return nil, err
+	}
+	for k, i := range idx {
+		out[i] = got[k]
+	}
+	return out, nil
+}
+
+func (c *check) otherVoice() bool {
+	near := 0.0
+	for _, v := range []*float64{c.Prev, c.Next} {
+		if v != nil {
+			near = math.Max(near, *v)
+		}
+	}
+	return (c.Prev != nil || c.Next != nil) && c.Ref < timbreRef && near < timbreNear
+}
+
+func (r *run) flat(i int, c *check) bool {
+	return c != nil && c.Fall != 0 && strings.HasSuffix(strings.TrimSpace(r.sc.Phrases[i].Text), ".") && c.Fall > flatFall
 }
 
 func edgeQuiet(p *piece, tail bool) float64 {
@@ -736,6 +835,28 @@ func (r *run) evenPieces(pieces []*piece) ([]string, error) {
 		}
 		lines[i] = fmt.Sprintf("phrase %d: %s seed %d, %.1f → %.1f syl/s, atempo %.2f, target %.1f; speech %.1f → %.1f dB, target %.1f", i+1, src, p.seed, rate[i], rate[i]*k, k, target, db(was), db(speechLevel(p)), db(level))
 	}
+	final, err := r.checks(pieces)
+	if err != nil {
+		return nil, err
+	}
+	for i, p := range pieces {
+		if c := final[i]; c != nil {
+			lines[i] += fmt.Sprintf("; voice %.2f to sample", c.Ref)
+			if c.Prev != nil {
+				lines[i] += fmt.Sprintf(", %.2f to previous", *c.Prev)
+			}
+			lines[i] += fmt.Sprintf(", end fall %+.1f st", c.Fall)
+		}
+		if i+1 < len(pieces) {
+			lines[i] += fmt.Sprintf(", pause after %.2f s", edgeQuiet(p, true)+edgeQuiet(pieces[i+1], false))
+		}
+		if r.flat(i, final[i]) {
+			lines[i] += ", FLAT END"
+		}
+		if final[i] != nil && final[i].otherVoice() {
+			lines[i] += ", OTHER VOICE"
+		}
+	}
 	return lines, nil
 }
 
@@ -916,7 +1037,7 @@ func (r *run) place(pieces []*piece) (*Result, error) {
 		var unheard []string
 		for _, w := range p.words {
 			pt.Words = append(pt.Words, timeline.WordTime{Text: w.text, S: t + w.s - p.from, E: t + w.e - p.from})
-			if w.match < 0 {
+			if w.match < 0 || w.guess {
 				unheard = append(unheard, w.text)
 			}
 		}
