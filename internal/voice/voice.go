@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"maket/internal/audio"
 	"maket/internal/scene"
@@ -48,9 +49,13 @@ const (
 	silenceDB  = -38.0
 	frameSec   = 0.01
 	maxRetries = 1
+	edgeSec    = 0.08
+	nearCut    = 0.15
 	tempoTol   = 0.10
 	tempoMin   = 0.8
 	tempoMax   = 1.25
+	raggedCut  = "voice piece is cut mid-word or has extra sound at its edges"
+	repeatedAs = "voice repeated «%s»"
 )
 
 func LoadConfig(root string) (Config, error) {
@@ -189,11 +194,11 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	}
 	pieces := make([]*piece, len(r.sc.Phrases))
 	var lost []int
-	repeat := map[int]string{}
+	why := map[int]string{}
 	for i := range r.sc.Phrases {
 		if w := repeated(r.words, got, owner, r.spec.Spell, i); w != "" {
 			lost = append(lost, i)
-			repeat[i] = w
+			why[i] = fmt.Sprintf(repeatedAs, w)
 			continue
 		}
 		if missing(r.words, i) {
@@ -201,22 +206,50 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		}
 	}
 	r.cutMain(mainPCM, pieces, lost)
+	dirty, err := r.dirty(pieces)
+	if err != nil {
+		return nil, err
+	}
+	kept := map[int]*piece{}
+	for _, i := range dirty {
+		kept[i] = pieces[i]
+		pieces[i] = nil
+		lost = append(lost, i)
+		why[i] = raggedCut
+	}
+	sort.Ints(lost)
 	for attempt := 0; len(lost) > 0 && attempt <= maxRetries; attempt++ {
-		lost, err = r.regenerate(marked, pieces, lost, attempt, repeat)
+		lost, err = r.regenerate(marked, pieces, lost, attempt, why)
 		if err != nil {
 			return nil, err
 		}
 	}
+	var warnings []string
+	var still []int
+	for _, i := range lost {
+		if kept[i] != nil {
+			pieces[i] = kept[i]
+			warnings = append(warnings, fmt.Sprintf("phrase %d: %s", i+1, raggedCut))
+			continue
+		}
+		still = append(still, i)
+	}
+	lost = still
 	if len(lost) > 0 {
-		if w := repeat[lost[0]]; w != "" {
-			return nil, fmt.Errorf("phrase %d: voice repeated «%s»", lost[0]+1, w)
+		if w := why[lost[0]]; w != "" {
+			return nil, fmt.Errorf("phrase %d: %s", lost[0]+1, w)
 		}
 		return nil, fmt.Errorf("voice did not say phrase %d «%s»", lost[0]+1, r.sc.Phrases[lost[0]].Text)
 	}
 	if err := r.fitTempo(pieces); err != nil {
 		return nil, err
 	}
-	return r.place(pieces)
+	res, err := r.place(pieces)
+	if err != nil {
+		return nil, err
+	}
+	res.Warnings = append(res.Warnings, warnings...)
+	return res, nil
 }
 
 func (r *run) stress() ([]string, error) {
@@ -316,21 +349,39 @@ func (r *run) tts(items []ttsItem, seed int) error {
 }
 
 func (r *run) asr(wav string) ([]heard, error) {
-	out := strings.TrimSuffix(wav, ".wav") + ".words.json"
-	if b, err := os.ReadFile(out); err == nil {
-		var got []heard
-		return got, json.Unmarshal(b, &got)
-	}
-	job := map[string]any{"model": r.cfg.WhisperModel, "items": []map[string]string{{"wav": wav, "out": out}}}
-	if err := r.python(r.cfg.TTSPython, "asr.py", job); err != nil {
-		return nil, err
-	}
-	b, err := os.ReadFile(out)
+	got, err := r.asrAll([]string{wav})
 	if err != nil {
 		return nil, err
 	}
-	var got []heard
-	return got, json.Unmarshal(b, &got)
+	return got[0], nil
+}
+
+func (r *run) asrAll(wavs []string) ([][]heard, error) {
+	outs := make([]string, len(wavs))
+	var items []map[string]string
+	for k, wav := range wavs {
+		outs[k] = strings.TrimSuffix(wav, ".wav") + ".words.json"
+		if _, err := os.Stat(outs[k]); err != nil {
+			items = append(items, map[string]string{"wav": wav, "out": outs[k]})
+		}
+	}
+	if len(items) > 0 {
+		job := map[string]any{"model": r.cfg.WhisperModel, "items": items}
+		if err := r.python(r.cfg.TTSPython, "asr.py", job); err != nil {
+			return nil, err
+		}
+	}
+	all := make([][]heard, len(wavs))
+	for k, out := range outs {
+		b, err := os.ReadFile(out)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(b, &all[k]); err != nil {
+			return nil, err
+		}
+	}
+	return all, nil
 }
 
 func (r *run) python(py, script string, job any) error {
@@ -375,7 +426,7 @@ func (r *run) cutMain(pcm []float32, pieces []*piece, lost []int) {
 	cuts[len(present)] = length
 	for k := 1; k < len(present); k++ {
 		a, b := r.phraseWords(present[k-1]), r.phraseWords(present[k])
-		cuts[k] = pauseCut(pcm, a[len(a)-1].s, b[0].e, a[len(a)-1].e, b[0].s)
+		cuts[k] = pauseCut(pcm, a[len(a)-1].e-nearCut, b[0].e, a[len(a)-1].e, b[0].s)
 	}
 	for k, i := range present {
 		ws := r.phraseWords(i)
@@ -385,7 +436,98 @@ func (r *run) cutMain(pcm []float32, pieces []*piece, lost []int) {
 	}
 }
 
-func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int, repeat map[int]string) ([]int, error) {
+func (r *run) dirty(pieces []*piece) ([]int, error) {
+	var idx []int
+	var wavs []string
+	for i, p := range pieces {
+		if p == nil {
+			continue
+		}
+		a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
+		wav := filepath.Join(r.dir, fmt.Sprintf("piece%02d-%d-%d.wav", i+1, a, b))
+		if _, err := os.Stat(wav); err != nil {
+			if err := audio.Write(wav, p.pcm[a:b]); err != nil {
+				return nil, err
+			}
+		}
+		idx = append(idx, i)
+		wavs = append(wavs, wav)
+	}
+	got, err := r.asrAll(wavs)
+	if err != nil {
+		return nil, err
+	}
+	var out []int
+	for k, i := range idx {
+		p := pieces[i]
+		ws := r.sceneWords(i)
+		owner := align(ws, got[k], r.spec.Spell)
+		lostFirst := p.words[0].match >= 0 && ws[0].match < 0 && utf8.RuneCountInString(ws[0].text) > 2
+		if lostFirst || !quietEdges(p.pcm, p.from, p.to, p.words) || ragged(ws, owner) {
+			out = append(out, i)
+		}
+	}
+	return out, nil
+}
+
+func (r *run) sceneWords(i int) []sceneWord {
+	var ws []sceneWord
+	for _, w := range scene.Words(r.sc.Phrases[i].Text) {
+		ws = append(ws, sceneWord{text: w, phrase: i})
+	}
+	return ws
+}
+
+func quietEdges(pcm []float32, from, to float64, ws []sceneWord) bool {
+	s, e := ws[0].s, ws[len(ws)-1].e
+	if to < (ws[len(ws)-1].s+e)/2 {
+		return false
+	}
+	th := math.Pow(10, silenceDB/20)
+	level := func(a, b float64) float64 {
+		i, j := max(0, int(a*audio.Rate)), min(len(pcm), int(b*audio.Rate))
+		if j <= i {
+			return 0
+		}
+		sum := 0.0
+		for _, v := range pcm[i:j] {
+			sum += float64(v) * float64(v)
+		}
+		return math.Sqrt(sum / float64(j-i))
+	}
+	return level(from, math.Min(from+edgeSec, s)) < th && level(math.Max(to-edgeSec, e), to) < th
+}
+
+func ragged(ws []sceneWord, owner []int) bool {
+	first, last := -1, -1
+	for k, w := range ws {
+		if w.match < 0 {
+			continue
+		}
+		if first < 0 {
+			first = k
+		}
+		last = k
+	}
+	if first < 0 || ws[len(ws)-1].match < 0 {
+		return true
+	}
+	before, after := 0, 0
+	for j, o := range owner {
+		if o >= 0 {
+			continue
+		}
+		if j < ws[first].match {
+			before++
+		}
+		if j > ws[last].match {
+			after++
+		}
+	}
+	return before > first || after > len(ws)-1-last
+}
+
+func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt int, why map[int]string) ([]int, error) {
 	var items []ttsItem
 	for _, i := range lost {
 		items = append(items, ttsItem{Text: marked[i], Out: filepath.Join(r.dir, fmt.Sprintf("phrase%02d-%d.wav", i+1, attempt))})
@@ -399,17 +541,14 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 		if err != nil {
 			return nil, err
 		}
-		var ws []sceneWord
-		for _, w := range scene.Words(r.sc.Phrases[i].Text) {
-			ws = append(ws, sceneWord{text: w, phrase: i})
-		}
+		ws := r.sceneWords(i)
 		owner := align(ws, got, r.spec.Spell)
 		if w := repeated(ws, got, owner, r.spec.Spell, i); w != "" {
-			repeat[i] = w
+			why[i] = fmt.Sprintf(repeatedAs, w)
 			still = append(still, i)
 			continue
 		}
-		delete(repeat, i)
+		delete(why, i)
 		if missing(ws, i) {
 			still = append(still, i)
 			continue
@@ -420,7 +559,13 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 			return nil, err
 		}
 		length := float64(len(pcm)) / audio.Rate
-		pieces[i] = &piece{pcm: pcm, from: math.Max(0, ws[0].s-headroom), to: math.Min(length, ws[len(ws)-1].e+tailroom), words: ws, wav: items[k].Out}
+		from, to := math.Max(0, ws[0].s-headroom), math.Min(length, ws[len(ws)-1].e+tailroom)
+		if !quietEdges(pcm, from, to, ws) || ragged(ws, owner) {
+			why[i] = raggedCut
+			still = append(still, i)
+			continue
+		}
+		pieces[i] = &piece{pcm: pcm, from: from, to: to, words: ws, wav: items[k].Out}
 	}
 	return still, nil
 }
