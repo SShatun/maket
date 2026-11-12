@@ -152,9 +152,10 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
    "do": [{"at": "p1:Магнит", "do": "zoom", "to": 1.15, "dur": 1}]},
   {"at": "p1:280",
    "place": {"wall": [45, 40, 35], "floor": 1500, "ground": [70, 60, 48]},
-   "cast": [{"id": "M", "kind": "parcel", "at": [540, 1420], "size": 2.2, "state": "wait", "label": "280 заказов"}],
+   "cast": [{"id": "M", "kind": "parcel", "at": [540, 1420], "size": 2.2, "state": "idle", "label": "280 заказов"}],
    "do": [
-    {"at": "p1:280", "do": "number", "text": "280", "sub": "заказов", "pos": [540, 700], "tone": "accent"},
+    {"at": "p1:280", "do": "text", "text": "280", "pos": [540, 480], "size": 150, "tone": "accent"},
+    {"at": "p1:280", "do": "text", "text": "заказов", "pos": [540, 620], "size": 36},
     {"at": "p1:одно", "do": "walk", "target": "M", "to": [700, 1500], "dur": 1.2}]}
  ]}
 ```
