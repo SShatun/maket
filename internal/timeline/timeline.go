@@ -93,8 +93,73 @@ func (tl *Timeline) MustResolve(a scene.At) float64 {
 	return t
 }
 
+func (tl *Timeline) ShotStarts(sc *scene.Scene) ([]float64, error) {
+	var starts []float64
+	for i, shot := range sc.Shots {
+		t, err := tl.Resolve(shot.At)
+		if err != nil {
+			return nil, fmt.Errorf("shot %d: %w", i+1, err)
+		}
+		if i == 0 {
+			t = 0
+		} else if t <= starts[i-1] {
+			return nil, fmt.Errorf("shot %d: start %.3f must be after %.3f", i+1, t, starts[i-1])
+		}
+		starts = append(starts, t)
+	}
+	return starts, nil
+}
+
+func (tl *Timeline) ShotAt(sc *scene.Scene, t float64) (*scene.Shot, float64) {
+	for i := len(sc.Shots) - 1; i >= 0; i-- {
+		if i == 0 || t >= tl.MustResolve(sc.Shots[i].At) {
+			end := tl.Duration
+			if i+1 < len(sc.Shots) {
+				end = tl.MustResolve(sc.Shots[i+1].At)
+			}
+			return &sc.Shots[i], end
+		}
+	}
+	return nil, tl.Duration
+}
+
 func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 	var out []float64
+	starts, err := tl.ShotStarts(sc)
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, starts...)
+	for i, shot := range sc.Shots {
+		end := tl.Duration
+		if i+1 < len(starts) {
+			end = starts[i+1]
+		}
+		for j, ev := range shot.Do {
+			t, err := tl.Resolve(ev.At)
+			if err != nil {
+				return nil, fmt.Errorf("shot %d event %d: %w", i+1, j+1, err)
+			}
+			if t < starts[i] || t >= end {
+				return nil, fmt.Errorf("shot %d event %d: time %.3f outside shot [%.3f, %.3f)", i+1, j+1, t, starts[i], end)
+			}
+		}
+		sub := &scene.Scene{Events: shot.Do}
+		for _, c := range shot.Cast {
+			if c.Crowd == nil {
+				sub.Entities = append(sub.Entities, c.Entity)
+			}
+		}
+		moments, err := tl.Moments(sub)
+		if err != nil {
+			return nil, fmt.Errorf("shot %d: %w", i+1, err)
+		}
+		for _, t := range moments {
+			if t >= starts[i] && t <= end {
+				out = append(out, t)
+			}
+		}
+	}
 	add := func(a scene.At) error {
 		t, err := tl.Resolve(a)
 		if err != nil {
@@ -127,7 +192,7 @@ func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 			}
 		}
 	}
-	if c := sc.Code; c != nil {
+	if c := sc.Code; c != nil && len(sc.Shots) == 0 {
 		for _, h := range c.Highlight {
 			if err := add(h.At); err != nil {
 				return nil, fmt.Errorf("code highlight: %w", err)

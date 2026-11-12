@@ -136,6 +136,9 @@ func prepare(scenePath string, opt options) (*job, error) {
 	if sc.Look != "" && name != "pixel" {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
 	}
+	if len(sc.Shots) > 0 && name != "pixel" {
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel", name)
+	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
 		return nil, err

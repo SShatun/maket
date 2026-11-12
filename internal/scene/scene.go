@@ -22,7 +22,37 @@ type Scene struct {
 	Phrases  []Phrase `json:"phrases"`
 	Entities []Entity `json:"entities"`
 	Events   []Event  `json:"events"`
+	Shots    []Shot   `json:"shots"`
 	Code     *Code    `json:"code"`
+}
+
+type Shot struct {
+	At    At      `json:"at"`
+	Place Place   `json:"place"`
+	Cast  []Cast  `json:"cast"`
+	Do    []Event `json:"do"`
+}
+
+type Place struct {
+	Wall   []uint8  `json:"wall"`
+	Floor  *float64 `json:"floor"`
+	Ground []uint8  `json:"ground"`
+}
+
+type Cast struct {
+	Entity
+	Size  float64 `json:"size"`
+	State string  `json:"state"`
+	Crowd *Crowd  `json:"crowd"`
+}
+
+type Crowd struct {
+	Kind  string    `json:"kind"`
+	Count int       `json:"count"`
+	Box   []float64 `json:"box"`
+	Size  []float64 `json:"size"`
+	Rows  int       `json:"rows"`
+	State string    `json:"state"`
 }
 
 type Phrase struct {
@@ -78,25 +108,27 @@ type Entity struct {
 }
 
 type Event struct {
-	At      At       `json:"at"`
-	Until   *At      `json:"until"`
-	Do      string   `json:"do"`
-	Target  *Point   `json:"target"`
-	Targets []Point  `json:"targets"`
-	Into    []string `json:"into"`
-	From    *Point   `json:"from"`
-	To      *Point   `json:"to"`
-	Token   string   `json:"token"`
-	Label   string   `json:"label"`
-	State   string   `json:"state"`
-	Role    string   `json:"role"`
-	Text    string   `json:"text"`
-	Sub     string   `json:"sub"`
-	Dur     float64  `json:"dur"`
-	Zoom    float64  `json:"zoom"`
-	Dx      float64  `json:"dx"`
-	Consume bool     `json:"consume"`
-	Hold    bool     `json:"hold"`
+	At      At        `json:"at"`
+	Until   *At       `json:"until"`
+	Do      string    `json:"do"`
+	Target  *Point    `json:"target"`
+	Targets []Point   `json:"targets"`
+	Into    []string  `json:"into"`
+	From    *Point    `json:"from"`
+	To      *Point    `json:"to"`
+	Token   string    `json:"token"`
+	Label   string    `json:"label"`
+	State   string    `json:"state"`
+	Role    string    `json:"role"`
+	Text    string    `json:"text"`
+	Sub     string    `json:"sub"`
+	Dur     float64   `json:"dur"`
+	Zoom    float64   `json:"zoom"`
+	Dx      float64   `json:"dx"`
+	Pos     []float64 `json:"pos"`
+	Tone    string    `json:"tone"`
+	Consume bool      `json:"consume"`
+	Hold    bool      `json:"hold"`
 
 	Arc     *float64 `json:"arc"`
 	Waiting bool     `json:"waiting"`
@@ -115,6 +147,7 @@ type Point struct {
 	ID     string
 	Slot   int
 	Coords []float64
+	Value  *float64
 }
 
 type Timed[T any] struct {
@@ -145,16 +178,74 @@ func Load(path string) (*Scene, error) {
 }
 
 func (sc *Scene) check() error {
+	if len(sc.Shots) > 0 {
+		if len(sc.Entities) > 0 || len(sc.Events) > 0 {
+			return errors.New("shots use cast and do instead of entities and events")
+		}
+		for i, s := range sc.Shots {
+			if err := s.check(); err != nil {
+				return fmt.Errorf("shot %d: %w", i+1, err)
+			}
+		}
+	}
+	return checkEvents(sc.Entities, sc.Events)
+}
+
+func (s Shot) check() error {
+	if len(s.Place.Wall) != 3 || s.Place.Floor != nil && (len(s.Place.Ground) != 3 || *s.Place.Floor < 600 || *s.Place.Floor > 1900) {
+		return errors.New("place needs wall: [r, g, b], floor: 600..1900 or null and ground: [r, g, b]")
+	}
+	ids := map[string]bool{}
+	var entities []Entity
+	for i, c := range s.Cast {
+		if c.Crowd != nil {
+			x := c.Crowd
+			if x.Kind == "" || x.Count < 1 || x.Rows < 1 || x.Rows > x.Count || len(x.Box) != 4 || x.Box[0] >= x.Box[2] || x.Box[1] >= x.Box[3] || len(x.Size) != 2 || x.Size[0] < 0.2 || x.Size[1] > 4 || x.Size[0] > x.Size[1] {
+				return fmt.Errorf("cast %d: crowd needs kind, count, rows, box: [x0, y0, x1, y1] and size: [min, max] in 0.2..4", i+1)
+			}
+			continue
+		}
+		if c.ID == "" || ids[c.ID] {
+			return fmt.Errorf("cast %d: missing or duplicate id %q", i+1, c.ID)
+		}
+		if c.Kind == "" || len(c.At) != 2 || c.Size != 0 && (c.Size < 0.2 || c.Size > 4) {
+			return fmt.Errorf("cast %s: needs kind, at: [x, y] and size in 0.2..4", c.ID)
+		}
+		if c.Appear != nil {
+			return fmt.Errorf("cast %s: appears at the shot start", c.ID)
+		}
+		ids[c.ID] = true
+		entities = append(entities, c.Entity)
+	}
+	return checkEvents(entities, s.Do)
+}
+
+func checkEvents(entities []Entity, events []Event) error {
 	ids := map[string]bool{}
 	hasAppear := map[string]bool{}
-	for _, e := range sc.Entities {
+	for _, e := range entities {
 		if e.ID == "" {
 			return errors.New("entity without id")
 		}
 		ids[e.ID] = true
 		hasAppear[e.ID] = e.Appear != nil
 	}
-	for i, ev := range sc.Events {
+	for i, ev := range events {
+		if ev.Pos != nil && len(ev.Pos) != 2 {
+			return fmt.Errorf("event %d: pos wants [x, y] in px", i+1)
+		}
+		if ev.Do == "number" && ev.Tone != "" && ev.Tone != "accent" && ev.Tone != "ok" && ev.Tone != "error" {
+			return fmt.Errorf("event %d: unknown number tone %q", i+1, ev.Tone)
+		}
+		if ev.Do == "zoom" && (ev.To == nil || ev.To.Value == nil || *ev.To.Value < 1 || ev.Dur <= 0) {
+			return fmt.Errorf("event %d: zoom needs to >= 1 and positive dur", i+1)
+		}
+		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || len(ev.To.Coords) != 2 || ev.Dur <= 0) {
+			return fmt.Errorf("event %d: walk needs target, to: [x, y] and positive dur", i+1)
+		}
+		if ev.Do != "zoom" && ev.To != nil && ev.To.Value != nil {
+			return fmt.Errorf("event %d: numeric to needs zoom", i+1)
+		}
 		pts := append([]Point{}, ev.Targets...)
 		for _, p := range []*Point{ev.Target, ev.From, ev.To} {
 			if p != nil {
@@ -237,6 +328,11 @@ func (a At) String() string {
 }
 
 func (p *Point) UnmarshalJSON(b []byte) error {
+	var f float64
+	if string(b) != "null" && json.Unmarshal(b, &f) == nil {
+		p.Value = &f
+		return nil
+	}
 	var s string
 	if err := json.Unmarshal(b, &s); err == nil {
 		p.Slot = -1

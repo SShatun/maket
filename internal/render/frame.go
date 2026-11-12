@@ -3,11 +3,15 @@ package render
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
+	"sort"
 
 	"github.com/fogleman/gg"
+	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
+	"golang.org/x/image/math/f64"
 
 	"maket/internal/scene"
 	"maket/internal/timeline"
@@ -107,6 +111,15 @@ func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, 
 	dc := gg.NewContextForRGBA(dst)
 	o := overlay{dc: dc, sc: sc, tl: tl, th: th, t: t}
 	o.dim()
+	if len(sc.Shots) > 0 {
+		o.numbers()
+		o.camera(dst)
+		o.guess()
+		o.answer()
+		o.caption()
+		o.progress()
+		return
+	}
 	o.guess()
 	o.answer()
 	o.numbers()
@@ -121,6 +134,51 @@ type overlay struct {
 	tl *timeline.Timeline
 	th Theme
 	t  float64
+}
+
+func (o overlay) events() []scene.Event {
+	if shot, _ := o.tl.ShotAt(o.sc, o.t); shot != nil {
+		return shot.Do
+	}
+	return o.sc.Events
+}
+
+func (o overlay) camera(dst *image.RGBA) {
+	var events []scene.Event
+	for _, ev := range o.events() {
+		if ev.Do == "zoom" && o.t >= o.tl.MustResolve(ev.At) {
+			events = append(events, ev)
+		}
+	}
+	if len(events) == 0 {
+		return
+	}
+	sort.SliceStable(events, func(i, j int) bool { return o.tl.MustResolve(events[i].At) < o.tl.MustResolve(events[j].At) })
+	from, to := [3]float64{1, 0, 0}, [3]float64{1, 0, 0}
+	start, end := 0.0, 0.0
+	at := func(t float64) [3]float64 {
+		u := prog(t, start, end)
+		u = u * u * (3 - 2*u)
+		return [3]float64{from[0] + (to[0]-from[0])*u, from[1] + (to[1]-from[1])*u, from[2] + (to[2]-from[2])*u}
+	}
+	for _, ev := range events {
+		t := o.tl.MustResolve(ev.At)
+		from = at(t)
+		cx, cy := float64(W)/2, float64(H)/2
+		if len(ev.Pos) == 2 {
+			cx, cy = ev.Pos[0], ev.Pos[1]
+		}
+		z := *ev.To.Value
+		to = [3]float64{z, cx * (1 - z), cy * (1 - z)}
+		start, end = t, t+ev.Dur
+	}
+	v := at(o.t)
+	if v == [3]float64{1, 0, 0} {
+		return
+	}
+	src := image.NewRGBA(dst.Bounds())
+	draw.Draw(src, src.Bounds(), dst, image.Point{}, draw.Src)
+	xdraw.NearestNeighbor.Transform(dst, f64.Aff3{v[0], 0, v[1], 0, v[0], v[2]}, src, src.Bounds(), xdraw.Over, nil)
 }
 
 func (o overlay) guessEnd() float64 {
@@ -139,7 +197,7 @@ func (o overlay) dim() {
 		at := o.tl.MustResolve(a.At)
 		k = math.Max(k, 0.65*prog(o.t, at, at+0.3))
 	}
-	for _, ev := range o.sc.Events {
+	for _, ev := range o.events() {
 		if ev.Do != "number" {
 			continue
 		}
@@ -153,7 +211,11 @@ func (o overlay) dim() {
 	}
 	c := o.th.BG
 	o.dc.SetRGBA255(int(c.R), int(c.G), int(c.B), int(255*k))
-	o.dc.DrawRectangle(0, 140, W, StageBottom-140)
+	if len(o.sc.Shots) > 0 {
+		o.dc.DrawRectangle(0, 0, W, H)
+	} else {
+		o.dc.DrawRectangle(0, 140, W, StageBottom-140)
+	}
 	o.dc.Fill()
 }
 
@@ -162,6 +224,9 @@ func (o overlay) span(ev scene.Event) (float64, float64) {
 	b := a + 2
 	if ev.Until != nil {
 		b = o.tl.MustResolve(*ev.Until)
+	}
+	if shot, end := o.tl.ShotAt(o.sc, o.t); shot != nil {
+		b = math.Min(b, end)
 	}
 	return a, b
 }
@@ -251,7 +316,7 @@ func (o overlay) guessCard(text string, y, struck, k float64) {
 }
 
 func (o overlay) numbers() {
-	for _, ev := range o.sc.Events {
+	for _, ev := range o.events() {
 		if ev.Do != "number" {
 			continue
 		}
@@ -263,19 +328,33 @@ func (o overlay) numbers() {
 		if k <= 0 {
 			continue
 		}
+		x, y := 540.0, 620.0
+		if len(ev.Pos) == 2 {
+			x, y = ev.Pos[0], ev.Pos[1]
+		}
+		col := o.th.Accent
+		switch ev.Tone {
+		case "ok":
+			col = o.th.OK
+		case "error":
+			col = o.th.Error
+		}
 		if o.th.Pixel {
 			h := 400 * k
-			FrameBox(o.dc, 140, 620-h/2, 940, 620+h/2, o.th.Ink, o.th.BG, 8)
+			FrameBox(o.dc, x-400, y-h/2, x+400, y+h/2, o.th.Ink, o.th.BG, 8)
 			if k < 1 {
 				continue
 			}
-			o.text(Face(o.th.Fonts.Pixel, numberSize(o.th.Fonts.Pixel, 200, 760, ev.Text, true)), ev.Text, 540, 570, o.th.Accent)
-			o.text(Face(o.th.Fonts.Pixel, 30), ev.Sub, 540, 740, o.th.Ink)
+			o.text(Face(o.th.Fonts.Pixel, numberSize(o.th.Fonts.Pixel, 200, 760, ev.Text, true)), ev.Text, x, y-50, col)
+			o.text(Face(o.th.Fonts.Pixel, 30), ev.Sub, x, y+120, o.th.Ink)
 			continue
 		}
-		o.text(Face(o.th.Fonts.Bold, numberSize(o.th.Fonts.Bold, 260, 960, ev.Text, false)*k), ev.Text, 540, 560, o.th.Ink)
+		if ev.Tone == "" {
+			col = o.th.Ink
+		}
+		o.text(Face(o.th.Fonts.Bold, numberSize(o.th.Fonts.Bold, 260, 960, ev.Text, false)*k), ev.Text, x, y-60, col)
 		if k == 1 {
-			o.text(Face(o.th.Fonts.Semi, 44), ev.Sub, 540, 730, o.th.Muted)
+			o.text(Face(o.th.Fonts.Semi, 44), ev.Sub, x, y+110, o.th.Muted)
 		}
 	}
 }
