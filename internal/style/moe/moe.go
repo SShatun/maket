@@ -56,6 +56,7 @@ type shot struct {
 	titles      []title
 	shocks      []shock
 	cuts        []cut
+	moves       []move
 }
 
 type timedString struct {
@@ -70,6 +71,7 @@ type actor struct {
 	states           []sprites.Step
 	roles            []timedString
 	visuals          []visual
+	walks            []walk
 }
 
 type visual struct {
@@ -271,7 +273,6 @@ func (s *Style) layoutShot(input scene.Shot, start, end float64, meta map[string
 		byID[a.id] = a
 		sh.actors = append(sh.actors, a)
 	}
-	sort.SliceStable(sh.actors, func(i, j int) bool { return sh.actors[i].y < sh.actors[j].y })
 	events := append([]scene.Event(nil), input.Do...)
 	sort.SliceStable(events, func(i, j int) bool { return s.tl.MustResolve(events[i].At) < s.tl.MustResolve(events[j].At) })
 	panels := map[string]*panel{}
@@ -301,6 +302,24 @@ func (s *Style) layoutShot(input scene.Shot, start, end float64, meta map[string
 			return sh, err
 		}
 		switch ev.Do {
+		case "walk":
+			a := byID[ev.Target.ID]
+			x, y := a.position(t)
+			flip := a.facing(t)
+			if ev.To.Coords[0] != x {
+				flip = ev.To.Coords[0] < x
+			}
+			a.walks = append(a.walks, walk{at: t, dur: ev.Dur, from: [2]float64{x, y}, to: [2]float64{ev.To.Coords[0], ev.To.Coords[1]}, flip: flip})
+		case "move":
+			m, err := s.makeMove(ev, t, until, byID)
+			if err != nil {
+				return sh, fmt.Errorf("event %d: %w", i+1, err)
+			}
+			sh.moves = append(sh.moves, m)
+			s.cue(t, audio.Whoosh, 1, 0)
+			if t+m.dur < end {
+				s.cue(t+m.dur, audio.Land, 0.7, 0)
+			}
 		case "bg":
 			next, err := s.loadBackdrop(x.Name, meta)
 			if err != nil {

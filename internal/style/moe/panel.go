@@ -26,6 +26,8 @@ type panel struct {
 	at, until, entrance float64
 	rect                [4]float64
 	blink               int
+	size                float64
+	lineHeight          int
 	lines               []scene.PanelLine
 	rows                []panelRow
 	shell, dark, glow   *image.RGBA
@@ -43,11 +45,12 @@ func (s *Style) makePanel(ev scene.Event, at, until float64, previous map[string
 		Blink *int      `json:"blink"`
 		Title *string   `json:"title"`
 		Role  *string   `json:"role"`
+		Size  *float64  `json:"size"`
 	}
 	if err := raw(ev.Raw, &opt); err != nil {
 		return nil, err
 	}
-	p := &panel{id: opt.ID, at: at, until: until, entrance: at, title: ev.Title, role: ev.Role, blink: -1, lines: ev.Lines}
+	p := &panel{id: opt.ID, at: at, until: until, entrance: at, title: ev.Title, role: ev.Role, blink: -1, size: 25, lines: ev.Lines}
 	rect := opt.Rect
 	prev := previous[opt.ID]
 	if prev != nil && opt.ID != "" {
@@ -64,6 +67,7 @@ func (s *Style) makePanel(ev scene.Event, at, until float64, previous map[string
 			p.lines = prev.lines
 		}
 		p.blink = prev.blink
+		p.size = prev.size
 		if at < prev.until {
 			p.entrance = prev.entrance
 			prev.until = at
@@ -87,7 +91,14 @@ func (s *Style) makePanel(ev scene.Event, at, until float64, previous map[string
 		return nil, fmt.Errorf("holo blink is a zero-based line index, or -1 to stop blinking")
 	}
 	w, h := int(math.Ceil(rect[2]-rect[0])), int(math.Ceil(rect[3]-rect[1]))
-	if len(p.lines) > 0 && 84+(len(p.lines)-1)*40+25 > h-10 {
+	if opt.Size != nil {
+		p.size = *opt.Size
+	}
+	if p.size <= 0 || p.size > float64(h) {
+		return nil, fmt.Errorf("holo size must be positive and fit the panel height")
+	}
+	p.lineHeight = int(math.Ceil(p.size * 1.6))
+	if len(p.lines) > 0 && 69+len(p.lines)*p.lineHeight > h-10 {
 		return nil, fmt.Errorf("holo %q: %d lines do not fit height %d", p.id, len(p.lines), h)
 	}
 	const pad = 28
@@ -153,15 +164,15 @@ func (s *Style) makePanel(ev scene.Event, at, until float64, previous map[string
 				return nil, err
 			}
 		}
-		im := image.NewRGBA(image.Rect(0, 0, w-44, 40))
+		im := image.NewRGBA(image.Rect(0, 0, w-44, p.lineHeight))
 		row := gg.NewContextForRGBA(im)
-		face, err := fitFace(s.theme.Fonts.Mono, s.theme.Fonts.Semi, 25, float64(w-44), line.Text)
+		face, err := fitFace(s.theme.Fonts.Mono, s.theme.Fonts.Semi, p.size, float64(w-44), line.Text)
 		if err != nil {
 			return nil, fmt.Errorf("holo line: %w", err)
 		}
 		row.SetFontFace(face)
 		row.SetColor(c)
-		row.DrawStringAnchored(line.Text, 0, 20, 0, 0.35)
+		row.DrawStringAnchored(line.Text, 0, float64(p.lineHeight)/2, 0, 0.35)
 		face.Close()
 		p.rows = append(p.rows, panelRow{at: t, image: im})
 	}

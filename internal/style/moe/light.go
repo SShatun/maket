@@ -48,6 +48,9 @@ func (s *Style) prepareActor(sh *shot, a *actor, cache map[litKey]visual) error 
 	for _, r := range a.roles {
 		times = append(times, r.at)
 	}
+	for _, w := range a.walks {
+		times = append(times, w.at)
+	}
 	for i, st := range a.states {
 		end := sh.until
 		if i+1 < len(a.states) {
@@ -89,10 +92,10 @@ func (s *Style) prepareActor(sh *shot, a *actor, cache map[litKey]visual) error 
 		if src == nil {
 			return fmt.Errorf("missing sprite at %.3f", t)
 		}
-		key := litKey{source: src, light: bg.light, flip: a.flip}
+		key := litKey{source: src, light: bg.light, flip: a.facing(t + 1e-8)}
 		v, ok := cache[key]
 		if !ok {
-			v = illuminate(src, bg.light, a.flip)
+			v = illuminate(src, bg.light, key.flip)
 			cache[key] = v
 		}
 		v.at = t

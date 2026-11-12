@@ -39,43 +39,35 @@ func (s *Style) Draw(dst *image.RGBA, t float64) {
 		visual visual
 		matrix f64.Aff3
 		shadow f64.Aff3
+		ground float64
 	}
 	placedActors := make([]placed, 0, len(sh.actors))
 	for _, a := range sh.actors {
 		j := sort.Search(len(a.visuals), func(j int) bool { return a.visuals[j].at > t }) - 1
 		v := a.visuals[max(0, j)]
-		x, y := a.x, a.y
-		bob, breath, hop, squash := 0.0, 1.0, 0.0, 1.0
-		dt := t - sh.at
-		if a.motion != "none" {
-			bob = 3 * math.Sin(math.Pi*dt)
-			breath = 1 + 0.01*math.Sin(math.Pi*dt)
-		}
-		if a.motion == "jump" {
-			phase := math.Mod(math.Max(0, dt)*2, 1)
-			hop = 45 * math.Sin(math.Pi*phase)
-			squash = 1 - 0.06*math.Exp(-math.Pow(math.Min(phase, 1-phase)/0.08, 2))
-		}
-		sx, sy := a.size, a.size*breath*squash
+		pose := a.pose(sh.at, t)
+		sx, sy := a.size, pose.scaleY
 		spec := s.sprites.Specs[a.kind]
 		ax := float64(spec.Anchor[0])
-		if a.flip {
+		if a.facing(t) {
 			ax = float64(spec.Size[0]) - ax
 		}
-		m := compose(cam, f64.Aff3{sx, 0, x - ax*sx, 0, sy, y + bob - hop - float64(spec.Anchor[1])*sy})
-		shadowScale := a.size * (1 - 0.12*hop/45)
-		shadow := compose(cam, f64.Aff3{shadowScale, 0, x, 0, shadowScale, y})
-		placedActors = append(placedActors, placed{v, m, shadow})
+		m := compose(cam, f64.Aff3{sx, 0, pose.x - ax*sx, 0, sy, pose.y - float64(spec.Anchor[1])*sy})
+		shadowScale := a.size * (1 - 0.12*pose.hop/45)
+		shadow := compose(cam, f64.Aff3{shadowScale, 0, pose.x, 0, shadowScale, pose.ground})
+		placedActors = append(placedActors, placed{v, m, shadow, pose.ground})
 		if v.glow != nil {
 			addImage(dst, v.glow, compose(m, f64.Aff3{4, 0, 0, 0, 4, 0}), 1)
 		}
 	}
+	sort.SliceStable(placedActors, func(i, j int) bool { return placedActors[i].ground < placedActors[j].ground })
 	for _, p := range placedActors {
 		xdraw.ApproxBiLinear.Transform(dst, p.shadow, s.shadow, s.shadow.Bounds(), draw.Over, nil)
 	}
 	for _, p := range placedActors {
 		xdraw.ApproxBiLinear.Transform(dst, p.matrix, p.visual.body, p.visual.body.Bounds(), draw.Over, nil)
 	}
+	s.drawMoves(dst, sh, cam, t)
 	s.caption(dst, t)
 	for _, shot := range s.shots {
 		for _, c := range shot.cuts {
@@ -147,7 +139,7 @@ func drawPanel(dst *image.RGBA, p *panel, bright float64, cam f64.Aff3, t float6
 		if i == p.blink {
 			a = uint8(255 * (0.35 + 0.65*(0.5+0.5*math.Cos(2*math.Pi*2.4*(t-p.at)))))
 		}
-		r := l.image.Bounds().Add(image.Pt(28+22, 28+64+40*row))
+		r := l.image.Bounds().Add(image.Pt(28+22, 28+64+p.lineHeight*row))
 		draw.DrawMask(im, r, l.image, image.Point{}, image.NewUniform(color.Alpha{a}), image.Point{}, draw.Over)
 		row++
 	}
