@@ -31,7 +31,8 @@ var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, err
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
-maket voice scene.json [-voice NAME] [-seed N] [-root DIR]`
+maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
+maket stress scene.json [-voice NAME] [-root DIR]`
 
 func main() {
 	if len(os.Args) < 3 {
@@ -61,6 +62,8 @@ func main() {
 		err = stills(scenePath, *out, opt, fs.Args())
 	case "voice":
 		err = voiceTable(scenePath, opt)
+	case "stress":
+		err = stressTable(scenePath, opt)
 	default:
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
@@ -204,6 +207,29 @@ func voiceTable(scenePath string, opt options) error {
 		fmt.Printf("%2d  %6.2f  %6.2f  %s\n", i+1, p.Start, p.End, sc.Phrases[i].Text)
 	}
 	fmt.Println(res.Track)
+	return nil
+}
+
+func stressTable(scenePath string, opt options) error {
+	sc, err := scene.Load(scenePath)
+	if err != nil {
+		return err
+	}
+	cfg, err := voice.LoadConfig(opt.root)
+	if err != nil {
+		return err
+	}
+	name := opt.voice
+	if name == "" {
+		name = sc.Voice
+	}
+	marked, err := voice.Mark(context.Background(), opt.root, cfg, sc, name)
+	if err != nil {
+		return err
+	}
+	for i, m := range marked {
+		fmt.Printf("%2d  %s\n", i+1, m)
+	}
 	return nil
 }
 
