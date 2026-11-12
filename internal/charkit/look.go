@@ -12,6 +12,7 @@ var themeKeys = map[string]bool{"bg": true, "ink": true, "card": true, "muted": 
 
 type Look struct {
 	About     string
+	Voice     string
 	Theme     map[string]color.RGBA
 	Roles     map[string]color.RGBA
 	Palette   map[string]color.RGBA
@@ -35,6 +36,7 @@ func ReadLook(dir string) (Look, error) {
 	}
 	var f struct {
 		About     string              `json:"about"`
+		Voice     string              `json:"voice"`
 		Theme     map[string][3]uint8 `json:"theme"`
 		Roles     map[string][3]uint8 `json:"roles"`
 		Palette   map[string][3]uint8 `json:"palette"`
@@ -52,7 +54,7 @@ func ReadLook(dir string) (Look, error) {
 	for k, v := range f.Roles {
 		lk.Roles[k] = color.RGBA{v[0], v[1], v[2], 255}
 	}
-	lk.About, lk.Backdrops = f.About, f.Backdrops
+	lk.About, lk.Voice, lk.Backdrops = f.About, f.Voice, f.Backdrops
 	lk.Palette = map[string]color.RGBA{}
 	for k, v := range f.Palette {
 		lk.Palette[k] = color.RGBA{v[0], v[1], v[2], 255}

@@ -20,6 +20,16 @@ const (
 
 var baseGain = map[string]float64{
 	Rise: 0.35, Whoosh: 0.18, Land: 0.55, Thud: 0.75, Buzz: 0.35, Pop: 0.5, Chime: 0.45,
+	PadSunset: 0.12, PadNight: 0.12, PadIdea: 0.12, PadSakura: 0.12, Drone: 0.14, DroneLow: 0.14,
+	MusicBox: 0.35, Meow: 0.45, Heartbeat: 0.6, Purr: 0.25, Stab: 0.6, Blip: 0.3, Sparkle: 0.35,
+	Pluck: 0.4, Drums: 0.55, Horn: 0.4, Crackle: 0.25, Clunk: 0.6,
+}
+
+var pads = map[string][]float64{
+	PadSunset: {220, 277, 330, 440},
+	PadNight:  {196, 233, 294},
+	PadIdea:   {262, 330, 392, 523},
+	PadSakura: {294, 370, 440, 587},
 }
 
 func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
@@ -36,6 +46,9 @@ func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
 	rng := rand.New(rand.NewSource(7))
 	for _, c := range cues {
 		sig := synth(c.Kind, rng)
+		if sig == nil {
+			sig = long(c.Kind, c.Dur, rng)
+		}
 		g := c.Gain
 		if b, ok := baseGain[c.Kind]; ok {
 			g *= b
@@ -277,8 +290,143 @@ func synth(kind string, rng *rand.Rand) []float64 {
 		return x
 	case ChipStrike:
 		return add(fading(samples(0.2), 0.2, rng), square(200, 90, 0.15, 0.15), 1)
+	case MusicBox:
+		var x []float64
+		for i, f := range []float64{1047, 1319, 1568, 1319, 1175} {
+			x = at(x, float64(i)*0.2, bell(f, 0.9))
+		}
+		return x
+	case Meow:
+		n := samples(0.42)
+		x := make([]float64, n)
+		ph := 0.0
+		for i := range x {
+			t := float64(i) / Rate
+			u := t / 0.42
+			f := 520 + 520*math.Sin(math.Pi*u)
+			f *= 1 + 0.02*math.Sin(2*math.Pi*7*t)
+			ph += 2 * math.Pi * f / Rate
+			v := 0.0
+			for h := 1.0; h <= 4; h++ {
+				v += math.Sin(ph*h) / h
+			}
+			x[i] = v * math.Sin(math.Pi*u) * 0.6
+		}
+		return x
+	case Stab:
+		n := samples(0.5)
+		x := make([]float64, n)
+		for i := range x {
+			t := float64(i) / Rate
+			x[i] = (sgn(math.Sin(2*math.Pi*98*t)) + sgn(math.Sin(2*math.Pi*104*t)) + sgn(math.Sin(2*math.Pi*147*t))) / 3 * math.Exp(-t/0.15)
+		}
+		return add(lowpass(x, 0.12), synth(Thud, rng), 0.8)
+	case Blip:
+		return at(tone(1200, 1200, 0.08, 0.05, 0.002), 0.08, tone(1500, 1500, 0.08, 0.05, 0.002))
+	case Sparkle:
+		x := tone(1568, 1568, 0.5, 0.18, 0.003)
+		x = add(x, tone(2093, 2093, 0.5, 0.15, 0.003), 0.7)
+		return add(x, tone(2637, 2637, 0.5, 0.12, 0.003), 0.5)
+	case Pluck:
+		var x []float64
+		for i, f := range []float64{294, 330, 392, 440, 523} {
+			x = at(x, float64(i)*0.32, pluck(f))
+		}
+		return x
+	case Horn:
+		n := samples(1.7)
+		x := make([]float64, n)
+		for i := range x {
+			t := float64(i) / Rate
+			v := 1 + 0.01*math.Sin(2*math.Pi*5*t)
+			saw := func(f float64) float64 { p := f * v * t; return 2 * (p - math.Floor(p+0.5)) }
+			x[i] = (saw(110) + saw(98)) * 0.5 * math.Min(1, t/0.15) * math.Min(1, (1.7-t)/0.3)
+		}
+		return lowpass(x, 0.05)
+	case Clunk:
+		return add(synth(Thud, rng), tone(260, 180, 0.2, 0.08, 0.003), 0.6)
 	}
 	return nil
+}
+
+func long(kind string, dur float64, rng *rand.Rand) []float64 {
+	if dur <= 0 {
+		dur = 4
+	}
+	n := samples(dur)
+	fade := func(i int) float64 {
+		t := float64(i) / Rate
+		return math.Min(1, math.Min(t/0.5, (dur-t)/0.5))
+	}
+	switch kind {
+	case PadSunset, PadNight, PadIdea, PadSakura, Drone, DroneLow:
+		fs := pads[kind]
+		if kind == Drone {
+			fs = []float64{146.8, 220, 293.7}
+		}
+		if kind == DroneLow {
+			fs = []float64{73.4, 110, 146.8}
+		}
+		x := make([]float64, n)
+		for i := range x {
+			t := float64(i) / Rate
+			v := 0.0
+			for _, f := range fs {
+				v += math.Sin(2 * math.Pi * f * t)
+			}
+			x[i] = v / float64(len(fs)) * (0.75 + 0.25*math.Sin(2*math.Pi*0.3*t)) * fade(i)
+		}
+		return x
+	case Heartbeat:
+		var x []float64
+		for t := 0.0; t < dur; t += 0.42 {
+			x = at(x, t, tone(70, 45, 0.12, 0.05, 0.002))
+			x = at(x, t+0.16, tone(70, 45, 0.12, 0.05, 0.002))
+		}
+		return x
+	case Purr:
+		x := lowpass(noise(n, rng), 0.03)
+		for i := range x {
+			t := float64(i) / Rate
+			x[i] *= (0.5 + 0.5*math.Sin(2*math.Pi*24*t)) * fade(i) * 2
+		}
+		return x
+	case Drums:
+		var x []float64
+		gap, lo := 0.34, false
+		for t := 0.0; t < dur; t += gap {
+			f := 110.0
+			if lo {
+				f = 80
+			}
+			x = at(x, t, tone(f, f*0.6, 0.25, 0.09, 0.002))
+			lo = !lo
+			gap = math.Max(0.12, gap*0.93)
+		}
+		return x
+	case Crackle:
+		x := lowpass(noise(n, rng), 0.02)
+		for i := range x {
+			x[i] *= 0.4 * fade(i)
+			if rng.Float64() < 120.0/Rate {
+				x[i] += (rng.Float64()*2 - 1) * 0.9
+			}
+		}
+		return x
+	}
+	return nil
+}
+
+func bell(f, dur float64) []float64 {
+	x := tone(f, f, dur, 1/7.0, 0.002)
+	x = add(x, tone(f*2.76, f*2.76, dur, 1/7.0, 0.002), 0.4)
+	return add(x, tone(f*5.4, f*5.4, dur, 1/7.0, 0.002), 0.2)
+}
+
+func pluck(f float64) []float64 {
+	x := tone(f, f, 0.6, 1/6.0, 0.002)
+	x = add(x, tone(f*2, f*2, 0.6, 1/6.0, 0.002), 0.4)
+	return add(x, tone(f*3, f*3, 0.6, 1/6.0, 0.002), 0.2)
 }
 
 func sgn(v float64) float64 {

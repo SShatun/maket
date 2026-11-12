@@ -20,7 +20,9 @@ import (
 	"maket/internal/scene"
 	"maket/internal/style"
 	"maket/internal/style/maket"
+	"maket/internal/style/moe"
 	"maket/internal/style/pixel"
+	"maket/internal/style/rts"
 	"maket/internal/timeline"
 	"maket/internal/video"
 	"maket/internal/voice"
@@ -30,6 +32,31 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 	"maket": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
 	"none":  func(_, _ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
 	"pixel": func(root, look string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, look, fonts) },
+	"moe":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return moe.New(root, fonts) },
+	"rts":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return rts.New(root, fonts) },
+}
+
+var ownLooks = map[string]bool{"moe": true, "rts": true}
+
+func voiceName(sc *scene.Scene, opt options) string {
+	if opt.voice != "" {
+		return opt.voice
+	}
+	if sc.Voice != "" {
+		return sc.Voice
+	}
+	look := sc.Look
+	if ownLooks[sc.Style] {
+		look = sc.Style
+	}
+	if look == "" {
+		return ""
+	}
+	lk, err := charkit.ReadLook(charkit.Dir(opt.root, look))
+	if err != nil {
+		return ""
+	}
+	return lk.Voice
 }
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
@@ -109,7 +136,7 @@ func listStyles(root string) error {
 		return err
 	}
 	for _, d := range dirs {
-		if d.IsDir() {
+		if d.IsDir() && !ownLooks[d.Name()] {
 			looks = append(looks, d.Name())
 		}
 	}
@@ -131,6 +158,18 @@ func listStyles(root string) error {
 		sort.Strings(palette)
 		sort.Strings(backdrops)
 		fmt.Printf("  %s\n    about: %s\n    palette: [%s]\n    backdrops: [%s]\n", name, lk.About, strings.Join(palette, ", "), strings.Join(backdrops, ", "))
+	}
+	for _, name := range []string{"moe", "rts"} {
+		lk, err := charkit.ReadLook(charkit.Dir(root, name))
+		if err != nil {
+			return err
+		}
+		var backdrops []string
+		for key := range lk.Backdrops {
+			backdrops = append(backdrops, key)
+		}
+		sort.Strings(backdrops)
+		fmt.Printf("%s\n  about: %s\n  voice: %s\n  backdrops: [%s]\n", name, lk.About, lk.Voice, strings.Join(backdrops, ", "))
 	}
 	fmt.Println("maket")
 	return nil
@@ -154,10 +193,7 @@ func speak(sc *scene.Scene, opt options) (*voice.Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	name := opt.voice
-	if name == "" {
-		name = sc.Voice
-	}
+	name := voiceName(sc, opt)
 	if opt.seed != 0 {
 		sc.Seed = opt.seed
 	}
@@ -192,8 +228,8 @@ func prepare(scenePath string, opt options) (*job, error) {
 	if sc.Look != "" && name != "pixel" {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
 	}
-	if len(sc.Shots) > 0 && name != "pixel" {
-		return nil, fmt.Errorf("style %q has no shots, shots need style pixel", name)
+	if len(sc.Shots) > 0 && name != "pixel" && !ownLooks[name] {
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe or rts", name)
 	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
@@ -287,10 +323,7 @@ func stressTable(scenePath string, opt options) error {
 	if err != nil {
 		return err
 	}
-	name := opt.voice
-	if name == "" {
-		name = sc.Voice
-	}
+	name := voiceName(sc, opt)
 	marked, err := voice.Mark(context.Background(), opt.root, cfg, sc, name)
 	if err != nil {
 		return err

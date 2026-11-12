@@ -23,7 +23,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 | Поле | Что |
 |---|---|
-| `style` | `pixel` или `maket` |
+| `style` | `pixel`, `moe`, `rts` или `maket`; у `moe` и `rts` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в `docs/styles/moe.md` и `docs/styles/rts.md`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
 | `look` | стилистика Пикселей: папка `assets/looks/<look>/` со своими персонажами и необязательными `look.json` (фон, цвета, роли) и `badges/`; без поля — `assets/live`; с `maket` — ошибка |
 | `guess` | `{"text": "Ресинк сломан?"}` — неверная догадка крупно в начале |
 | `answer` | `{"at": момент, "card_at": момент, "text": "Шаблон пустой", "badge": "ok"\|"bad"\|"question"\|"wait", "size": 64}` — в `at` догадка зачёркивается, в `card_at` появляется ответ (без него через 0.7 с). Без `guess` ответ не рисуется. `size` по умолчанию 70. `badge` рисуется только в Пикселях |

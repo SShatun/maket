@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	_ "image/jpeg"
 	"image/png"
 	"io"
 	"os"
@@ -319,6 +320,19 @@ func opaque(c color.Color) color.NRGBA {
 		return color.NRGBA{}
 	}
 	return p
+}
+
+func ReadImage(path string) (image.Image, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	im, _, err := image.Decode(f)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	return im, nil
 }
 
 func ReadPNG(path string) (image.Image, error) {
