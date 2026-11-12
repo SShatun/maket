@@ -13,6 +13,7 @@ import (
 
 type Scene struct {
 	Style    string   `json:"style"`
+	Look     string   `json:"look"`
 	Voice    string   `json:"voice"`
 	Seed     int      `json:"seed"`
 	Hold     float64  `json:"hold"`

@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -89,30 +90,52 @@ type Pixel struct {
 	focus   *focus
 	cues    []audio.Cue
 	dur     float64
+	roles   map[string]color.RGBA
+	dot     color.RGBA
 }
 
-func RoleColors() map[string]color.RGBA {
-	out := make(map[string]color.RGBA, len(roleColor))
-	for k, v := range roleColor {
-		out[k] = v
+func Colors(dir string) (map[string]color.RGBA, map[string]color.RGBA, error) {
+	lk, err := charkit.ReadLook(dir)
+	if err != nil {
+		return nil, nil, err
 	}
-	return out
+	roles := make(map[string]color.RGBA, len(roleColor)+len(lk.Roles))
+	for k, v := range roleColor {
+		roles[k] = v
+	}
+	for k, v := range lk.Roles {
+		roles[k] = v
+	}
+	return roles, lk.Theme, nil
 }
 
-func New(root string, fonts *render.Fonts) (*Pixel, error) {
+func New(root, look string, fonts *render.Fonts) (*Pixel, error) {
+	dir := charkit.Dir(root, look)
+	roles, over, err := Colors(dir)
+	if err != nil {
+		return nil, err
+	}
 	badges := map[string]image.Image{}
 	for _, b := range []string{"wait", "ok", "bad", "question"} {
-		im, err := charkit.ReadPNG(filepath.Join(root, "assets", "pixel-static", "badge-"+b+".png"))
+		path := filepath.Join(dir, "badges", "badge-"+b+".png")
+		if _, err := os.Stat(path); err != nil {
+			path = filepath.Join(root, "assets", "pixel-static", "badge-"+b+".png")
+		}
+		im, err := charkit.ReadPNG(path)
 		if err != nil {
 			return nil, err
 		}
 		badges[b] = im
 	}
-	sp, err := loadSprites(filepath.Join(root, "assets", "live"))
+	sp, err := loadSprites(dir, roles)
 	if err != nil {
 		return nil, err
 	}
-	return &Pixel{theme: render.PixelTheme(fonts, badges), sprites: sp}, nil
+	d := dot
+	if c, ok := over["dot"]; ok {
+		d = c
+	}
+	return &Pixel{theme: render.PixelTheme(fonts, badges, over), sprites: sp, roles: roles, dot: d}, nil
 }
 
 func (p *Pixel) Theme() render.Theme { return p.theme }
@@ -162,7 +185,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 		sort.SliceStable(x.states, func(i, j int) bool { return x.states[i].t < x.states[j].t })
 		roles := map[string]bool{}
 		for _, r := range x.roles {
-			if _, ok := roleColor[r.v]; !ok {
+			if _, ok := p.roles[r.v]; !ok {
 				return fmt.Errorf("entity %s: unknown role %q", x.id, r.v)
 			}
 			roles[r.v] = true
@@ -181,7 +204,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 			}
 		}
 	}
-	p.bg = background(p.theme.BG)
+	p.bg = background(p.theme.BG, p.dot)
 	p.cues = p.sounds(sc, tl)
 	return nil
 }
@@ -279,7 +302,7 @@ func (p *Pixel) point(pt scene.Point) ([2]float64, error) {
 	return [2]float64{x.x, x.y - 135}, nil
 }
 
-func background(bg color.RGBA) *image.RGBA {
+func background(bg, dot color.RGBA) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, render.W, render.H))
 	draw.Draw(im, im.Bounds(), image.NewUniform(bg), image.Point{}, draw.Src)
 	for y := 12; y < render.H; y += 36 {

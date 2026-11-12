@@ -23,10 +23,10 @@ import (
 	"maket/internal/voice"
 )
 
-var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, error){
-	"maket": func(root string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
-	"none":  func(_ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
-	"pixel": func(root string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, fonts) },
+var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Style, error){
+	"maket": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return maket.New(root, fonts) },
+	"none":  func(_, _ string, fonts *render.Fonts) (style.Style, error) { return style.NewNone(fonts), nil },
+	"pixel": func(root, look string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, look, fonts) },
 }
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
@@ -133,7 +133,10 @@ func prepare(scenePath string, opt options) (*job, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown style %q", name)
 	}
-	st, err := mk(root, fonts)
+	if sc.Look != "" && name != "pixel" {
+		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
+	}
+	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
 		return nil, err
 	}

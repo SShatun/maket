@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
+	"image/color"
 	"os"
 	"path/filepath"
 
@@ -36,11 +37,12 @@ type frameKey struct {
 
 type sprites struct {
 	dir    string
+	colors map[string]color.RGBA
 	specs  map[string]spriteSpec
 	frames map[frameKey]*image.RGBA
 }
 
-func loadSprites(dir string) (*sprites, error) {
+func loadSprites(dir string, colors map[string]color.RGBA) (*sprites, error) {
 	b, err := os.ReadFile(filepath.Join(dir, "sprites.json"))
 	if err != nil {
 		return nil, err
@@ -51,7 +53,7 @@ func loadSprites(dir string) (*sprites, error) {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return nil, fmt.Errorf("sprites.json: %w", err)
 	}
-	return &sprites{dir: dir, specs: f.Sprites, frames: map[frameKey]*image.RGBA{}}, nil
+	return &sprites{dir: dir, colors: colors, specs: f.Sprites, frames: map[frameKey]*image.RGBA{}}, nil
 }
 
 func (s *sprites) prepare(name string, roles map[string]bool) error {
@@ -77,7 +79,7 @@ func (s *sprites) prepare(name string, roles map[string]bool) error {
 				}
 				im := src
 				if tint {
-					im = charkit.Tint(src, roleColor[role])
+					im = charkit.Tint(src, s.colors[role])
 				}
 				s.frames[k] = scaled(im)
 			}

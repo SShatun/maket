@@ -183,8 +183,11 @@ func charSheet(dir, arg, out, refList string) error {
 			}
 		}
 	}
-	roles := pixel.RoleColors()
-	theme := render.PixelTheme(nil, nil)
+	roles, over, err := pixel.Colors(dir)
+	if err != nil {
+		return err
+	}
+	theme := render.PixelTheme(nil, nil, over)
 	im, err := charkit.Sheet(e, frames, c, refs, []color.RGBA{roles["consumer"], roles["storage"]}, theme.BG)
 	if err != nil {
 		return err
