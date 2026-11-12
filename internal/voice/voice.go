@@ -202,6 +202,13 @@ type take struct {
 }
 
 func (r *run) synthesize(marked []string) (*Result, error) {
+	if r.cfg.ChecksPython != "" {
+		for _, p := range []string{r.cfg.ChecksPython, r.cfg.ChecksModel} {
+			if _, err := os.Stat(p); err != nil {
+				return nil, fmt.Errorf("voice checks in maket.json (checks_python, checks_model): %w", err)
+			}
+		}
+	}
 	var best *take
 	for t := 0; t < takes; t++ {
 		tk, err := r.record(marked, r.sc.Seed+t*takeSeedStep)
@@ -254,6 +261,14 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		return nil, err
 	}
 	res.Warnings = append(res.Warnings, warnings...)
+	for i, p := range pieces {
+		if p.wav != "" {
+			res.Warnings = append(res.Warnings, fmt.Sprintf("phrase %d: recorded apart from the main take (seed %d), may sound like another voice", i+1, p.seed))
+		}
+	}
+	if r.cfg.ChecksPython == "" {
+		res.Warnings = append(res.Warnings, "voice checks are off: set checks_python and checks_model in maket.json")
+	}
 	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, tempo spread %.0f%%", best.choppy, best.spread*100)}, tempo...)
 	return res, nil
 }
