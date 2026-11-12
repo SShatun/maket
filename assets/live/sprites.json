@@ -4,8 +4,18 @@
  "files": "<name>/<state>_<i>.png, all frames of one object share size, anchor and top",
  "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
  "fixed_colour": "sprites with tint=false are drawn as is: the material colour (cardboard) carries meaning; state is shown by face, stickers and badges",
+ "rules": "assets/design/live-pixels.md",
  "sprites": {
   "person": {
+   "label": "человек",
+   "aliases": [
+    "пользователь",
+    "дежурный",
+    "клиент",
+    "user",
+    "person"
+   ],
+   "origin": "designer",
    "dir": "person/",
    "size": [
     384,
@@ -56,6 +66,16 @@
    }
   },
   "service": {
+   "label": "сервис",
+   "aliases": [
+    "расчёт",
+    "джоба",
+    "воркер",
+    "обработчик",
+    "service",
+    "worker"
+   ],
+   "origin": "designer",
    "dir": "service/",
    "size": [
     384,
@@ -111,6 +131,15 @@
    }
   },
   "session": {
+   "label": "сессия",
+   "aliases": [
+    "терминал",
+    "агент",
+    "консоль",
+    "session",
+    "terminal"
+   ],
+   "origin": "designer",
    "dir": "session/",
    "size": [
     384,
@@ -161,6 +190,15 @@
    }
   },
   "dialog": {
+   "label": "окошко",
+   "aliases": [
+    "диалог",
+    "вопрос",
+    "подтверждение",
+    "dialog",
+    "prompt"
+   ],
+   "origin": "designer",
    "dir": "dialog/",
    "size": [
     384,
@@ -206,6 +244,15 @@
    }
   },
   "queue": {
+   "label": "очередь",
+   "aliases": [
+    "конвейер",
+    "буфер",
+    "очередь задач",
+    "queue",
+    "buffer"
+   ],
+   "origin": "designer",
    "dir": "queue/",
    "size": [
     384,
@@ -251,6 +298,13 @@
    }
   },
   "branch": {
+   "label": "ветка",
+   "aliases": [
+    "git",
+    "коммит",
+    "branch"
+   ],
+   "origin": "designer",
    "dir": "branch/",
    "size": [
     384,
@@ -296,6 +350,16 @@
    }
   },
   "db": {
+   "label": "база",
+   "aliases": [
+    "картотека",
+    "таблица",
+    "хранилище",
+    "postgres",
+    "db",
+    "database"
+   ],
+   "origin": "designer",
    "dir": "db/",
    "size": [
     384,
@@ -341,6 +405,14 @@
    }
   },
   "cache": {
+   "label": "кэш",
+   "aliases": [
+    "рюкзак",
+    "готовые ответы",
+    "cache",
+    "redis"
+   ],
+   "origin": "designer",
    "dir": "cache/",
    "size": [
     384,
@@ -386,6 +458,14 @@
    }
   },
   "topic": {
+   "label": "топик",
+   "aliases": [
+    "лента",
+    "kafka",
+    "сообщения",
+    "topic"
+   ],
+   "origin": "designer",
    "dir": "topic/",
    "size": [
     384,
@@ -431,6 +511,15 @@
    }
   },
   "external": {
+   "label": "чужой сервис",
+   "aliases": [
+    "внешняя система",
+    "партнёр",
+    "апи",
+    "external",
+    "api"
+   ],
+   "origin": "designer",
    "dir": "external/",
    "size": [
     384,
@@ -476,6 +565,16 @@
    }
   },
   "lock": {
+   "label": "замок",
+   "aliases": [
+    "вахтёр",
+    "проверка",
+    "хук",
+    "доступ",
+    "lock",
+    "guard"
+   ],
+   "origin": "designer",
    "dir": "lock/",
    "size": [
     384,
@@ -526,6 +625,15 @@
    }
   },
   "parcel": {
+   "label": "посылка",
+   "aliases": [
+    "товар",
+    "заказ",
+    "коробка",
+    "parcel",
+    "item"
+   ],
+   "origin": "designer",
    "dir": "parcel/",
    "size": [
     384,
@@ -576,6 +684,14 @@
    }
   },
   "template": {
+   "label": "шаблон",
+   "aliases": [
+    "папка",
+    "настройки продавца",
+    "способы доставки",
+    "template"
+   ],
+   "origin": "designer",
    "dir": "template/",
    "size": [
     384,

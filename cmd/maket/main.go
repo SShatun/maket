@@ -31,9 +31,13 @@ var styles = map[string]func(root string, fonts *render.Fonts) (style.Style, err
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
-maket voice scene.json [-voice NAME] [-seed N] [-root DIR]`
+maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
+maket char list [-look L] [-root DIR]`
 
 func main() {
+	if len(os.Args) >= 3 && os.Args[1] == "char" {
+		os.Exit(charMain(os.Args[2], os.Args[3:]))
+	}
 	if len(os.Args) < 3 {
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
