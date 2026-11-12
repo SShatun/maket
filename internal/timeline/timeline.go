@@ -177,6 +177,13 @@ func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 				return nil, fmt.Errorf("event %d: %w", i+1, err)
 			}
 		}
+		for j, l := range ev.Lines {
+			if l.Appear != nil {
+				if err := add(*l.Appear); err != nil {
+					return nil, fmt.Errorf("event %d line %d: %w", i+1, j+1, err)
+				}
+			}
+		}
 	}
 	for _, e := range sc.Entities {
 		for _, l := range [][]scene.Timed[string]{e.Roles, e.Status, e.States, e.Badges} {

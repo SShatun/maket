@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/fogleman/gg"
 	xdraw "golang.org/x/image/draw"
@@ -76,6 +77,8 @@ type walk struct {
 type shot struct {
 	at, until float64
 	place     scene.Place
+	backdrop  image.Image
+	events    []scene.Event
 }
 
 type move struct {
@@ -114,6 +117,8 @@ type Pixel struct {
 	dur     float64
 	roles   map[string]color.RGBA
 	dot     color.RGBA
+	look    charkit.Look
+	tl      *timeline.Timeline
 }
 
 func Colors(dir string) (map[string]color.RGBA, map[string]color.RGBA, error) {
@@ -121,6 +126,10 @@ func Colors(dir string) (map[string]color.RGBA, map[string]color.RGBA, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	return lookRoles(lk), lk.Theme, nil
+}
+
+func lookRoles(lk charkit.Look) map[string]color.RGBA {
 	roles := make(map[string]color.RGBA, len(roleColor)+len(lk.Roles))
 	for k, v := range roleColor {
 		roles[k] = v
@@ -128,15 +137,16 @@ func Colors(dir string) (map[string]color.RGBA, map[string]color.RGBA, error) {
 	for k, v := range lk.Roles {
 		roles[k] = v
 	}
-	return roles, lk.Theme, nil
+	return roles
 }
 
 func New(root, look string, fonts *render.Fonts) (*Pixel, error) {
 	dir := charkit.Dir(root, look)
-	roles, over, err := Colors(dir)
+	lk, err := charkit.ReadLook(dir)
 	if err != nil {
 		return nil, err
 	}
+	roles, over := lookRoles(lk), lk.Theme
 	badges := map[string]image.Image{}
 	for _, b := range []string{"wait", "ok", "bad", "question"} {
 		path := filepath.Join(dir, "badges", "badge-"+b+".png")
@@ -157,7 +167,7 @@ func New(root, look string, fonts *render.Fonts) (*Pixel, error) {
 	if c, ok := over["dot"]; ok {
 		d = c
 	}
-	return &Pixel{theme: render.PixelTheme(fonts, badges, over), sprites: sp, roles: roles, dot: d}, nil
+	return &Pixel{theme: render.PixelTheme(fonts, badges, over), sprites: sp, roles: roles, dot: d, look: lk}, nil
 }
 
 func (p *Pixel) Theme() render.Theme { return p.theme }
@@ -166,6 +176,7 @@ func (p *Pixel) Sounds() []audio.Cue { return p.cues }
 
 func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 	p.dur = tl.Duration
+	p.tl = tl
 	p.byID = map[string]*ent{}
 	at := tl.MustResolve
 	if len(sc.Shots) == 0 {
@@ -190,7 +201,11 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 			if i+1 < len(starts) {
 				end = starts[i+1]
 			}
-			p.shots = append(p.shots, shot{starts[i], end, s.Place})
+			place, backdrop, err := p.place(s.Place)
+			if err != nil {
+				return fmt.Errorf("shot %d: %w", i+1, err)
+			}
+			p.shots = append(p.shots, shot{at: starts[i], until: end, place: place, backdrop: backdrop, events: s.Do})
 			p.byID = map[string]*ent{}
 			for _, c := range s.Cast {
 				cast := []scene.Cast{c}
@@ -214,6 +229,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 					return fmt.Errorf("shot %d: %w", i+1, err)
 				}
 			}
+			p.warnBounds(i, s.Do, end, tl)
 		}
 	}
 	for _, x := range p.ents {
@@ -332,9 +348,9 @@ func (p *Pixel) event(i int, ev scene.Event, t, end float64, tl *timeline.Timeli
 		}
 		px, py := x.position(t)
 		x.walks = append(x.walks, walk{t: t, dur: ev.Dur, from: [2]float64{px, py}, to: [2]float64{ev.To.Coords[0], ev.To.Coords[1]}})
-	case "zoom":
+	case "zoom", "line", "text", "panel":
 		if len(p.shots) == 0 {
-			return fmt.Errorf("event %d: zoom needs shots", i+1)
+			return fmt.Errorf("event %d: %s needs shots", i+1, ev.Do)
 		}
 	case "say":
 		who, err := target()
@@ -487,20 +503,67 @@ func background(bg, dot color.RGBA) *image.RGBA {
 	return im
 }
 
+func (p *Pixel) place(place scene.Place) (scene.Place, image.Image, error) {
+	if place.Name != "" {
+		b, ok := p.look.Backdrops[place.Name]
+		if !ok {
+			var names []string
+			for name := range p.look.Backdrops {
+				names = append(names, name)
+			}
+			sort.Strings(names)
+			return place, nil, fmt.Errorf("unknown backdrop %q; known backdrops: [%s]", place.Name, strings.Join(names, ", "))
+		}
+		im, err := charkit.ReadPNG(filepath.Join(p.sprites.dir, b.File))
+		if err != nil {
+			return place, nil, err
+		}
+		place.Floor = b.Floor
+		bg := image.NewRGBA(image.Rect(0, 0, render.W, render.H))
+		xdraw.NearestNeighbor.Scale(bg, bg.Bounds(), im, im.Bounds(), xdraw.Src, nil)
+		return place, bg, nil
+	}
+	for _, c := range []*scene.Color{&place.Wall, &place.Ground} {
+		if c.Name == "" {
+			continue
+		}
+		v, ok := p.look.Palette[c.Name]
+		if !ok {
+			var names []string
+			for name := range p.look.Palette {
+				names = append(names, name)
+			}
+			sort.Strings(names)
+			return place, nil, fmt.Errorf("unknown colour %q; known palette: [%s]", c.Name, strings.Join(names, ", "))
+		}
+		c.RGB = []uint8{v.R, v.G, v.B}
+	}
+	return place, nil, nil
+}
+
 func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 	draw.Draw(dst, dst.Bounds(), p.bg, image.Point{}, draw.Src)
+	var current *shot
 	for _, s := range p.shots {
 		if t >= s.at && t < s.until {
-			c := s.place.Wall
+			current = &s
+			if s.backdrop != nil {
+				draw.Draw(dst, dst.Bounds(), s.backdrop, image.Point{}, draw.Src)
+				break
+			}
+			c := s.place.Wall.RGB
 			draw.Draw(dst, dst.Bounds(), image.NewUniform(color.RGBA{c[0], c[1], c[2], 255}), image.Point{}, draw.Src)
 			if s.place.Floor != nil {
-				c = s.place.Ground
+				c = s.place.Ground.RGB
 				draw.Draw(dst, image.Rect(0, int(*s.place.Floor), render.W, render.H), image.NewUniform(color.RGBA{c[0], c[1], c[2], 255}), image.Point{}, draw.Src)
 			}
 			break
 		}
 	}
 	dc := gg.NewContextForRGBA(dst)
+	if current != nil {
+		render.ShotElements(dc, current.events, p.tl, p.theme, t, current.until)
+	}
 	sway := snap(-8 * math.Sin(t/p.dur*math.Pi))
 	ents := p.ents
 	if len(p.shots) > 0 {
@@ -644,6 +707,31 @@ func (p *Pixel) drawMoves(dc *gg.Context, t, sway float64) {
 	}
 }
 
+func (p *Pixel) sayBox(s say, t, sway float64) (box [4]float64, cx, textY float64) {
+	k := render.Pop(true, t-s.t)
+	spec := p.sprites.specs[s.who.kind]
+	px, py := s.who.x, s.who.y
+	size := 1.0
+	if s.who.cut {
+		px, py = s.who.position(t)
+		size = s.who.size
+	}
+	cx = px + s.dx
+	by := py + sway - float64(spec.Anchor[1]-spec.Top[1])*scale*size - 40
+	face := render.Face(p.theme.Fonts.Pixel, 28*k)
+	tw := float64(font.MeasureString(face, s.text) >> 6)
+	bw, bh := tw+56, 92*k
+	w := snap(bw)
+	x0, y0 := snap(cx-bw/2), snap(by-bh)
+	if x0 < 24 {
+		x0 = 24
+	}
+	if x0+w > float64(render.W)-24 {
+		x0 = float64(render.W) - 24 - w
+	}
+	return [4]float64{x0, y0, x0 + w, by}, cx, y0 + bh/2
+}
+
 func (p *Pixel) drawSays(dc *gg.Context, t, sway float64) {
 	for _, s := range p.says {
 		if t < s.t || t >= s.until {
@@ -653,36 +741,17 @@ func (p *Pixel) drawSays(dc *gg.Context, t, sway float64) {
 			continue
 		}
 		k := render.Pop(true, t-s.t)
-		spec := p.sprites.specs[s.who.kind]
-		px, py := s.who.x, s.who.y
-		size := 1.0
-		if s.who.cut {
-			px, py = s.who.position(t)
-			size = s.who.size
-		}
-		cx := px + s.dx
-		by := py + sway - float64(spec.Anchor[1]-spec.Top[1])*scale*size - 40
-		face := render.Face(p.theme.Fonts.Pixel, 28*k)
-		dc.SetFontFace(face)
-		tw, _ := dc.MeasureString(s.text)
-		bw, bh := tw+56, 92*k
-		w := snap(bw)
-		x0, y0 := snap(cx-bw/2), snap(by-bh)
-		if x0 < 24 {
-			x0 = 24
-		}
-		if x0+w > float64(render.W)-24 {
-			x0 = float64(render.W) - 24 - w
-		}
-		render.FrameBox(dc, x0, y0, x0+w, by, p.theme.Ink, p.theme.Card, 6)
+		box, cx, textY := p.sayBox(s, t, sway)
+		dc.SetFontFace(render.Face(p.theme.Fonts.Pixel, 28*k))
+		render.FrameBox(dc, box[0], box[1], box[2], box[3], p.theme.Ink, p.theme.Card, 6)
 		dc.SetColor(p.theme.Ink)
 		for i := 0; i < 4; i++ {
-			dc.DrawRectangle(snap(cx)-18+float64(i)*6, by-6, 12, 18-float64(i)*6)
+			dc.DrawRectangle(snap(cx)-18+float64(i)*6, box[3]-6, 12, 18-float64(i)*6)
 		}
 		dc.Fill()
 		if k == 1 {
 			dc.SetColor(p.theme.Accent)
-			dc.DrawStringAnchored(s.text, x0+bw/2, y0+bh/2, 0.5, 0.5)
+			dc.DrawStringAnchored(s.text, (box[0]+box[2])/2, textY, 0.5, 0.5)
 		}
 	}
 }

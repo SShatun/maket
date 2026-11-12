@@ -143,17 +143,17 @@ func (o overlay) events() []scene.Event {
 	return o.sc.Events
 }
 
-func (o overlay) camera(dst *image.RGBA) {
+func Camera(all []scene.Event, tl *timeline.Timeline, t float64) [3]float64 {
 	var events []scene.Event
-	for _, ev := range o.events() {
-		if ev.Do == "zoom" && o.t >= o.tl.MustResolve(ev.At) {
+	for _, ev := range all {
+		if ev.Do == "zoom" && t >= tl.MustResolve(ev.At) {
 			events = append(events, ev)
 		}
 	}
 	if len(events) == 0 {
-		return
+		return [3]float64{1, 0, 0}
 	}
-	sort.SliceStable(events, func(i, j int) bool { return o.tl.MustResolve(events[i].At) < o.tl.MustResolve(events[j].At) })
+	sort.SliceStable(events, func(i, j int) bool { return tl.MustResolve(events[i].At) < tl.MustResolve(events[j].At) })
 	from, to := [3]float64{1, 0, 0}, [3]float64{1, 0, 0}
 	start, end := 0.0, 0.0
 	at := func(t float64) [3]float64 {
@@ -162,7 +162,7 @@ func (o overlay) camera(dst *image.RGBA) {
 		return [3]float64{from[0] + (to[0]-from[0])*u, from[1] + (to[1]-from[1])*u, from[2] + (to[2]-from[2])*u}
 	}
 	for _, ev := range events {
-		t := o.tl.MustResolve(ev.At)
+		t := tl.MustResolve(ev.At)
 		from = at(t)
 		cx, cy := float64(W)/2, float64(H)/2
 		if len(ev.Pos) == 2 {
@@ -172,7 +172,11 @@ func (o overlay) camera(dst *image.RGBA) {
 		to = [3]float64{z, cx * (1 - z), cy * (1 - z)}
 		start, end = t, t+ev.Dur
 	}
-	v := at(o.t)
+	return at(t)
+}
+
+func (o overlay) camera(dst *image.RGBA) {
+	v := Camera(o.events(), o.tl, o.t)
 	if v == [3]float64{1, 0, 0} {
 		return
 	}
