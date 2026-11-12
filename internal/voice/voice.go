@@ -62,6 +62,9 @@ const (
 	takeTol      = 0.15
 	choppyMax    = 0.3
 	gapMin       = 0.5
+	sentenceMin  = 0.55
+	clauseMin    = 0.5
+	padFrom      = 0.06
 	flatFall     = -3.0
 	timbreRef    = 0.30
 	timbreNear   = 0.40
@@ -256,6 +259,14 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
+	if r.sc.ClausePauses == nil || *r.sc.ClausePauses {
+		for i, p := range pieces {
+			if notes := p.clausePauses(clauseEnds(r.sc.Phrases[i].Text)); len(notes) > 0 {
+				tempo[i] += ", padded " + strings.Join(notes, ", ")
+			}
+		}
+	}
+	short := choppy(pieces)
 	res, err := r.place(pieces)
 	if err != nil {
 		return nil, err
@@ -272,10 +283,10 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	for i, g := range res.gaps {
 		tempo[i] += fmt.Sprintf(", pause after %.2f s", g)
 	}
-	if best.choppy > choppyMax {
-		res.Warnings = append(res.Warnings, fmt.Sprintf("take has %.2f short pauses per second of speech (at most %.2f): sentences may sound joined by commas", best.choppy, choppyMax))
+	if short > choppyMax {
+		res.Warnings = append(res.Warnings, fmt.Sprintf("take has %.2f short pauses per second of speech (at most %.2f): sentences may sound joined by commas", short, choppyMax))
 	}
-	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, tempo spread %.0f%%", best.choppy, best.spread*100)}, tempo...)
+	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, tempo spread %.0f%%", short, best.spread*100)}, tempo...)
 	return res, nil
 }
 
@@ -940,6 +951,82 @@ func peak(p *piece) float64 {
 
 func db(v float64) float64 {
 	return 20 * math.Log10(v)
+}
+
+func clauseEnds(text string) map[int]float64 {
+	ends := map[int]float64{}
+	k := 0
+	for _, f := range strings.Fields(text) {
+		if len(scene.Words(f)) == 0 {
+			if (f == "—" || f == "–") && k > 0 {
+				ends[k-1] = math.Max(ends[k-1], clauseMin)
+			}
+			continue
+		}
+		k += len(scene.Words(f))
+		t := strings.TrimRight(f, "»\")")
+		switch {
+		case strings.HasSuffix(t, ".") || strings.HasSuffix(t, "?") || strings.HasSuffix(t, "!"):
+			ends[k-1] = sentenceMin
+		case strings.HasSuffix(t, ":") || strings.HasSuffix(t, "—"):
+			ends[k-1] = math.Max(ends[k-1], clauseMin)
+		}
+	}
+	return ends
+}
+
+func (p *piece) clausePauses(ends map[int]float64) []string {
+	var notes []string
+	for k := 0; k+1 < len(p.words); k++ {
+		need := ends[k]
+		if need == 0 {
+			continue
+		}
+		q := quietFrames(p)
+		idx := func(t float64) int { return int((t - p.from) / frameSec) }
+		lo, hi, next := max(0, idx(p.words[k].e-nearCut)), min(len(q)-1, idx(p.words[k+1].s+nearCut)), idx(p.words[k+1].s)
+		bestA, bestB := -1, -1
+		for f := lo; f <= hi; f++ {
+			if !q[f] {
+				continue
+			}
+			a, b := f, f
+			for a > 0 && q[a-1] {
+				a--
+			}
+			for b+1 < len(q) && q[b+1] {
+				b++
+			}
+			if a <= next && b-a > bestB-bestA {
+				bestA, bestB = a, b
+			}
+			f = b
+		}
+		have := float64(bestB-bestA+1) * frameSec
+		if bestA < 0 || have < padFrom || have >= need {
+			continue
+		}
+		add := need - have
+		at := int(p.from*audio.Rate) + (bestA+bestB+1)/2*int(frameSec*audio.Rate)
+		pcm := make([]float32, 0, len(p.pcm)+int(add*audio.Rate))
+		pcm = append(pcm, p.pcm[:at]...)
+		pcm = append(pcm, make([]float32, int(add*audio.Rate))...)
+		pcm = append(pcm, p.pcm[at:]...)
+		cut := float64(at) / audio.Rate
+		if p.words[k].e > cut {
+			p.words[k].e += add
+		}
+		for j := k + 1; j < len(p.words); j++ {
+			p.words[j].s += add
+			p.words[j].e += add
+		}
+		if p.to > cut {
+			p.to += add
+		}
+		p.pcm = pcm
+		notes = append(notes, fmt.Sprintf("«%s» %.2f → %.2f s", p.words[k].text, have, need))
+	}
+	return notes
 }
 
 func (p *piece) gain(g float64) {

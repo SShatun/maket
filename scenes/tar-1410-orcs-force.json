@@ -1,6 +1,7 @@
 {
  "style": "rts",
  "seed": 7,
+ "clause_pauses": false,
  "caption": {
   "size": 56,
   "y": 1330,
