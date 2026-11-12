@@ -18,7 +18,7 @@ import (
 
 type CaptionStyle struct {
 	Y, Size, Stroke, Center float64
-	Ink, Dim, Edge          color.RGBA
+	Ink, Dim, Edge, Plate   color.RGBA
 	Karaoke                 bool
 }
 
@@ -84,6 +84,21 @@ func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th T
 	lh := cs.Size * 1.25
 	y := cs.Y - lh*float64(len(lines)-1)/2
 	space := float64(font.MeasureString(face, " ").Round())
+	if cs.Plate.A > 0 {
+		wide := 0.0
+		for _, line := range lines {
+			w := -space
+			for _, m := range line {
+				w += float64(font.MeasureString(face, m.text).Round()) + space
+			}
+			wide = math.Max(wide, w)
+		}
+		pad := cs.Size * 0.45
+		dc := gg.NewContextForRGBA(dst)
+		dc.SetColor(cs.Plate)
+		dc.DrawRoundedRectangle(center-wide/2-pad, y-lh/2-pad*0.4, wide+2*pad, lh*float64(len(lines))+pad*0.8, pad*0.6)
+		dc.Fill()
+	}
 	for _, line := range lines {
 		width := -space
 		for _, m := range line {
