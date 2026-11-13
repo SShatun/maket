@@ -26,16 +26,11 @@ type Entry struct {
 	Anchor  [2]int           `json:"anchor"`
 	Top     [2]int           `json:"top"`
 	Pixel   int              `json:"pixel,omitempty"`
+	Scale   float64          `json:"scale,omitempty"`
+	Source  string           `json:"source,omitempty"`
 	Rest    string           `json:"rest"`
 	Tint    *bool            `json:"tint,omitempty"`
 	States  map[string]State `json:"states"`
-}
-
-func (e Entry) Cell() int {
-	if e.Pixel > 0 {
-		return e.Pixel
-	}
-	return defaultPixel
 }
 
 func (e Entry) StateNames() []string {

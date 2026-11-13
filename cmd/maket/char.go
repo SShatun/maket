@@ -88,23 +88,46 @@ func charGrid(dir, name, state string, frame int) error {
 	return nil
 }
 
-func charBuild(gridPath, draft string) error {
+func charBuild(source, draft string) error {
 	if draft == "" {
 		return fmt.Errorf("char build: -o is required")
 	}
-	f, err := os.Open(gridPath)
+	if filepath.Ext(source) == ".json" {
+		b, err := os.ReadFile(source)
+		if err != nil {
+			return err
+		}
+		var e charkit.Entry
+		if err := json.Unmarshal(b, &e); err != nil {
+			return fmt.Errorf("%s: %w", source, err)
+		}
+		if e.Source == "" {
+			return fmt.Errorf("%s: source must name the drawing file next to entry.json", source)
+		}
+		files, err := draftFiles(e, filepath.Dir(source))
+		if err != nil {
+			return err
+		}
+		files["entry.json"] = b
+		if err := writeDraft(draft, files); err != nil {
+			return err
+		}
+		fmt.Println(draft)
+		return nil
+	}
+	f, err := os.Open(source)
 	if err != nil {
 		return err
 	}
 	g, err := charkit.ParseGrid(f)
 	f.Close()
 	if err != nil {
-		return fmt.Errorf("%s: %w", gridPath, err)
+		return fmt.Errorf("%s: %w", source, err)
 	}
 	if err := g.Write(draft); err != nil {
 		return err
 	}
-	src, err := os.ReadFile(gridPath)
+	src, err := os.ReadFile(source)
 	if err != nil {
 		return err
 	}
@@ -188,8 +211,11 @@ func charSheet(dir, arg, out, refList string) error {
 		return err
 	}
 	theme := render.PixelTheme(nil, nil, over)
-	im, err := charkit.Sheet(e, frames, c, refs, []color.RGBA{roles["consumer"], roles["storage"]}, theme.BG)
+	im, err := charkit.Sheet(e, frames, c, refs, map[string]color.RGBA{"producer": roles["producer"], "consumer": roles["consumer"]}, theme.BG)
 	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
 		return err
 	}
 	f, err := os.Create(out)
@@ -233,22 +259,60 @@ func charAdd(dir, draft, name, label, alias string) error {
 			e.Aliases = append(e.Aliases, a)
 		}
 	}
-	files := map[string][]byte{}
-	for _, st := range e.StateNames() {
-		for i := 0; i < e.States[st].Frames; i++ {
-			f := fmt.Sprintf("%s_%d.png", st, i)
-			if files[f], err = os.ReadFile(filepath.Join(draft, f)); err != nil {
-				return err
-			}
-		}
+	files, err := draftFiles(e, draft)
+	if err != nil {
+		return err
 	}
-	if g, err := os.ReadFile(filepath.Join(draft, "grid.txt")); err == nil {
-		files["grid.txt"] = g
+	b, err := json.MarshalIndent(e, "", " ")
+	if err != nil {
+		return err
 	}
+	files["entry.json"] = append(b, '\n')
 	dst := filepath.Join(c.Dir, name)
 	if err := os.RemoveAll(dst); err != nil {
 		return err
 	}
+	if err := writeDraft(dst, files); err != nil {
+		return err
+	}
+	if err := c.Put(name, b); err != nil {
+		return err
+	}
+	fmt.Println(dst)
+	return nil
+}
+
+func draftFiles(e charkit.Entry, draft string) (map[string][]byte, error) {
+	files := map[string][]byte{}
+	for _, st := range e.StateNames() {
+		if !validName.MatchString(st) {
+			return nil, fmt.Errorf("invalid state name %q", st)
+		}
+		for i := 0; i < e.States[st].Frames; i++ {
+			f := fmt.Sprintf("%s_%d.png", st, i)
+			b, err := os.ReadFile(filepath.Join(draft, f))
+			if err != nil {
+				return nil, err
+			}
+			files[f] = b
+		}
+	}
+	if e.Source != "" {
+		if filepath.Base(e.Source) != e.Source || e.Source == "." || e.Source == ".." || e.Source == "entry.json" {
+			return nil, fmt.Errorf("source %q must be a drawing filename next to entry.json", e.Source)
+		}
+		b, err := os.ReadFile(filepath.Join(draft, e.Source))
+		if err != nil {
+			return nil, err
+		}
+		files[e.Source] = b
+	} else if g, err := os.ReadFile(filepath.Join(draft, "grid.txt")); err == nil {
+		files["grid.txt"] = g
+	}
+	return files, nil
+}
+
+func writeDraft(dst string, files map[string][]byte) error {
 	if err := os.MkdirAll(dst, 0o755); err != nil {
 		return err
 	}
@@ -257,13 +321,5 @@ func charAdd(dir, draft, name, label, alias string) error {
 			return err
 		}
 	}
-	b, err := json.Marshal(e)
-	if err != nil {
-		return err
-	}
-	if err := c.Put(name, b); err != nil {
-		return err
-	}
-	fmt.Println(dst)
 	return nil
 }

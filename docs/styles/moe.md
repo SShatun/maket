@@ -87,3 +87,9 @@
 go run ./cmd/maket stills scenes/moe-tariff-cache.json -o out/moe-stills -silent <моменты>
 go run ./cmd/maket render scenes/moe-tariff-cache.json -o out/moe.mp4 -silent
 ```
+
+## Добавленные образы
+
+| kind | кто | состояния |
+|---|---|---|
+| `painter` | художница с кистью и палитрой | idle, paint, wait, happy, catch, flinch |

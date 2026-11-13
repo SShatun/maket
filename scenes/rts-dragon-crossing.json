@@ -1,0 +1,157 @@
+{
+  "style": "rts",
+  "seed": 17,
+  "phrases": [
+    {
+      "text": "Драконы ждут у ворот.",
+      "caption": "Три дракона"
+    },
+    {
+      "text": "Страж пропускает по одному.",
+      "caption": "По одному"
+    },
+    {
+      "text": "Очередь стала короче.",
+      "caption": "Очередь тает"
+    }
+  ],
+  "hold": 1,
+  "shots": [
+    {
+      "at": 0,
+      "map": {
+        "seed": 17,
+        "forest": [
+          {
+            "rect": [
+              6,
+              30,
+              35,
+              90
+            ],
+            "count": 9
+          },
+          {
+            "rect": [
+              145,
+              35,
+              173,
+              110
+            ],
+            "count": 9
+          }
+        ],
+        "path": [
+          [
+            90,
+            35
+          ],
+          [
+            90,
+            180
+          ]
+        ],
+        "wall": {
+          "gate": "GATE",
+          "x": [
+            16,
+            164
+          ]
+        }
+      },
+      "hud": {
+        "res": [
+          {
+            "key": "conn",
+            "text": "проход: 1"
+          }
+        ],
+        "buttons": [
+          "move",
+          "wait",
+          "stop"
+        ]
+      },
+      "cast": [
+        {
+          "id": "GATE",
+          "kind": "lock",
+          "at": [
+            90,
+            100
+          ],
+          "state": "deny",
+          "label": "Переправа",
+          "role": "storage"
+        },
+        {
+          "id": "SCOUT",
+          "kind": "warrior",
+          "at": [
+            125,
+            70
+          ],
+          "role": "storage"
+        },
+        {
+          "id": "DRAGONS",
+          "kind": "dragon",
+          "label": "Драконы",
+          "select": true,
+          "status": [
+            [
+              0,
+              "ждут прохода"
+            ],
+            [
+              "p2",
+              "идут по одному"
+            ]
+          ],
+          "role": "producer",
+          "crowd": {
+            "kind": "dragon",
+            "behavior": "formation",
+            "at": [
+              90,
+              176
+            ],
+            "count": 3,
+            "cols": 3,
+            "rows": 1,
+            "step": [
+              45,
+              40
+            ],
+            "speed": 38
+          }
+        }
+      ],
+      "do": [
+        {
+          "at": "p2",
+          "do": "admit",
+          "gate": "GATE",
+          "from": "DRAGONS",
+          "rate": 0.65,
+          "to": [
+            90,
+            54
+          ]
+        },
+        {
+          "at": "p2",
+          "do": "message",
+          "text": "По одному через ворота"
+        },
+        {
+          "at": "p3",
+          "do": "select",
+          "target": "GATE",
+          "status": "пропускает по одному",
+          "tone": "ok"
+        }
+      ]
+    }
+  ]
+}

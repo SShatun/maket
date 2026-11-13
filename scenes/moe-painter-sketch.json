@@ -1,0 +1,173 @@
+{
+  "style": "moe",
+  "seed": 23,
+  "phrases": [
+    {
+      "text": "Подруга ждала синюю вывеску.",
+      "caption": "Синюю вывеску"
+    },
+    {
+      "text": "Художница услышала зелёную.",
+      "caption": "Но услышала зелёную"
+    },
+    {
+      "text": "Они сверили эскиз.",
+      "caption": "Теперь понятно"
+    }
+  ],
+  "hold": 1,
+  "shots": [
+    {
+      "at": 0,
+      "place": "sunset",
+      "cast": [
+        {
+          "id": "PAINTER",
+          "kind": "painter",
+          "at": [
+            315,
+            1610
+          ],
+          "size": 0.85,
+          "state": "paint",
+          "role": "producer"
+        },
+        {
+          "id": "FRIEND",
+          "kind": "topic",
+          "at": [
+            740,
+            1610
+          ],
+          "size": 0.85,
+          "role": "storage"
+        }
+      ],
+      "do": [
+        {
+          "at": 0,
+          "do": "holo",
+          "id": "wish",
+          "rect": [
+            100,
+            260,
+            900,
+            470
+          ],
+          "title": "ПРОСЬБА ПОДРУГИ",
+          "role": "storage",
+          "lines": [
+            [
+              "Синяя вывеска",
+              "ink"
+            ]
+          ],
+          "size": 48
+        }
+      ]
+    },
+    {
+      "at": "p2",
+      "place": "moe",
+      "cast": [
+        {
+          "id": "PAINTER",
+          "kind": "painter",
+          "at": [
+            315,
+            1610
+          ],
+          "size": 0.85,
+          "state": "wait",
+          "role": "producer"
+        },
+        {
+          "id": "FRIEND",
+          "kind": "topic",
+          "at": [
+            740,
+            1610
+          ],
+          "size": 0.85,
+          "state": "flinch",
+          "role": "storage"
+        }
+      ],
+      "do": [
+        {
+          "at": "p2",
+          "do": "holo",
+          "id": "heard",
+          "rect": [
+            100,
+            260,
+            900,
+            520
+          ],
+          "title": "КАК ПОНЯЛА ХУДОЖНИЦА",
+          "role": "producer",
+          "lines": [
+            [
+              "Зелёная вывеска",
+              "ink"
+            ],
+            [
+              "Нужно уточнить цвет",
+              "hi"
+            ]
+          ],
+          "size": 48
+        }
+      ]
+    },
+    {
+      "at": "p3",
+      "place": "sakura",
+      "cast": [
+        {
+          "id": "PAINTER",
+          "kind": "painter",
+          "at": [
+            315,
+            1610
+          ],
+          "size": 0.85,
+          "state": "happy",
+          "role": "storage"
+        },
+        {
+          "id": "FRIEND",
+          "kind": "topic",
+          "at": [
+            740,
+            1610
+          ],
+          "size": 0.85,
+          "role": "storage"
+        }
+      ],
+      "do": [
+        {
+          "at": "p3",
+          "do": "holo",
+          "id": "sketch",
+          "rect": [
+            100,
+            260,
+            900,
+            470
+          ],
+          "title": "ОБЩИЙ ЭСКИЗ",
+          "role": "storage",
+          "lines": [
+            [
+              "Цвет: синий",
+              "ok"
+            ]
+          ],
+          "size": 48
+        }
+      ]
+    }
+  ]
+}

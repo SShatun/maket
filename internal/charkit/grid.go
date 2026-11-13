@@ -201,7 +201,7 @@ func parseState(f []string) (*gridState, error) {
 func (g *Grid) Entry() Entry {
 	e := Entry{
 		Size: [2]int{g.w * g.pixel, g.h * g.pixel}, Anchor: g.anchor, Top: g.top, Pixel: g.pixel,
-		Rest: g.rest, Tint: &g.tint, States: map[string]State{},
+		Rest: g.rest, Tint: &g.tint, States: map[string]State{}, Source: "grid.txt",
 	}
 	for _, s := range g.states {
 		e.States[s.name] = s.spec
@@ -244,12 +244,21 @@ func GridFile(c *Catalog, name string, only string, frame int) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("no character %q", name)
 	}
-	px := e.Cell()
+	px := e.Pixel
+	if px == 0 {
+		return "", fmt.Errorf("%s uses smooth drawing, not a pixel grid: use its PNG frames as references and build entry.json with size, anchor, top, rest, states and source", name)
+	}
+	if frame >= 0 && only == "" {
+		return "", fmt.Errorf("-i requires a state")
+	}
 	w, h := e.Size[0]/px, e.Size[1]/px
 	names := e.StateNames()
 	if only != "" {
 		if _, ok := e.States[only]; !ok {
 			return "", fmt.Errorf("%s has no state %q", name, only)
+		}
+		if frame >= e.States[only].Frames {
+			return "", fmt.Errorf("%s %s has %d frames", name, only, e.States[only].Frames)
 		}
 		names = []string{only}
 	}

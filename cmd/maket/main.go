@@ -65,7 +65,7 @@ maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
 maket styles [-root DIR]
 maket char list [-look L] [-root DIR]
 maket char grid NAME [STATE] [-i N] [-look L] [-root DIR]
-maket char build GRID.txt -o DRAFT
+maket char build GRID.txt|entry.json -o DRAFT [-look L] [-root DIR]
 maket char check DRAFT|NAME [-look L] [-root DIR]
 maket char sheet DRAFT|NAME -o sheet.png [-ref a,b] [-look L] [-root DIR]
 maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]
