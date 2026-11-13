@@ -1,0 +1,15 @@
+{
+  "style": "pixel",
+  "phrases": [{"text": "Сервис отправляет сообщение через очередь.", "caption": "сообщение"}],
+  "hold": 2,
+  "shots": [{
+    "at": 0,
+    "place": {"wall": [24, 31, 53]},
+    "cast": [
+      {"id": "A", "kind": "service", "at": [210, 1040], "size": 0.65, "label": "отправитель", "role": "producer"},
+      {"id": "B", "kind": "service", "at": [840, 1040], "size": 0.65, "label": "получатель", "role": "consumer"},
+      {"crowd": {"id": "Q", "kind": "service", "count": 3, "rows": 1, "box": [420, 1100, 660, 1101], "size": [0.7, 0.7], "state": "wait"}}
+    ],
+    "do": [{"at": 0, "do": "line", "from": "A", "to": "B", "kind": "arrow", "label": "сообщение", "tone": "accent"}]
+  }]
+}

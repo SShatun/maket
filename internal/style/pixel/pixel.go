@@ -733,8 +733,10 @@ func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 		}
 	}
 	dc := gg.NewContextForRGBA(dst)
+	var elements []scene.Event
 	if current != nil {
-		render.ShotElements(dc, p.placeLines(*current, t), p.tl, p.theme, t, current.until)
+		elements = p.placeLines(*current, t)
+		render.ShotElements(dc, elements, p.tl, p.theme, t, current.until)
 	}
 	sway := snap(-8 * math.Sin(t/p.dur*math.Pi))
 	ents := p.ents
@@ -780,6 +782,9 @@ func (p *Pixel) Draw(dst *image.RGBA, t float64) {
 				p.drawEnt(dst, dc, x, t, sway, label, status)
 			}
 		}
+	}
+	if current != nil {
+		render.ShotLineLabels(dc, elements, p.tl, p.theme, t, current.until)
 	}
 }
 

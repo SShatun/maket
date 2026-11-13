@@ -32,14 +32,28 @@ func ShotElements(dc *gg.Context, events []scene.Event, tl *timeline.Timeline, t
 					pixelLine(dc, x1, y1, x1-30*math.Cos(a)+side*18*math.Sin(a), y1-30*math.Sin(a)-side*18*math.Cos(a), false)
 				}
 			}
-			if ev.Label != "" {
-				o.lineLabel(ev.Label, x0, y0, x1, y1, o.tone(ev.Tone))
-			}
 		case "text":
 			o.text(elementFace(th, ev), ev.Text, ev.Pos[0], ev.Pos[1], o.tone(ev.Tone))
 		case "panel":
 			o.panel(ev)
 		}
+	}
+}
+
+func ShotLineLabels(dc *gg.Context, events []scene.Event, tl *timeline.Timeline, th Theme, t, end float64) {
+	o := overlay{dc: dc, tl: tl, th: th, t: t}
+	for _, ev := range events {
+		if ev.Do != "line" || ev.Label == "" {
+			continue
+		}
+		until := end
+		if ev.Until != nil {
+			until = math.Min(until, tl.MustResolve(*ev.Until))
+		}
+		if t < tl.MustResolve(ev.At) || t >= until {
+			continue
+		}
+		o.lineLabel(ev.Label, ev.From.Coords[0], ev.From.Coords[1], ev.To.Coords[0], ev.To.Coords[1], o.tone(ev.Tone))
 	}
 }
 
