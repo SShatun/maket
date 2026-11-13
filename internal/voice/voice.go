@@ -86,6 +86,14 @@ func LoadConfig(root string) (Config, error) {
 	if err := json.Unmarshal(b, &c); err != nil {
 		return c, fmt.Errorf("maket.json: %w", err)
 	}
+	b, err = os.ReadFile(filepath.Join(root, "maket.local.json"))
+	if err == nil {
+		if err := json.Unmarshal(b, &c); err != nil {
+			return c, fmt.Errorf("maket.local.json: %w", err)
+		}
+	} else if !os.IsNotExist(err) {
+		return c, fmt.Errorf("maket.local.json: %w", err)
+	}
 	return c, nil
 }
 
@@ -208,7 +216,7 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	if r.cfg.ChecksPython != "" {
 		for _, p := range []string{r.cfg.ChecksPython, r.cfg.ChecksModel} {
 			if _, err := os.Stat(p); err != nil {
-				return nil, fmt.Errorf("voice checks in maket.json (checks_python, checks_model): %w", err)
+				return nil, fmt.Errorf("voice checks in maket.local.json (checks_python, checks_model): %w", err)
 			}
 		}
 	}
@@ -278,7 +286,7 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 		}
 	}
 	if r.cfg.ChecksPython == "" {
-		res.Warnings = append(res.Warnings, "voice checks are off: set checks_python and checks_model in maket.json")
+		res.Warnings = append(res.Warnings, "voice checks are off: set checks_python and checks_model in maket.local.json")
 	}
 	for i, g := range res.gaps {
 		tempo[i] += fmt.Sprintf(", pause after %.2f s", g)

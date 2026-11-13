@@ -1,11 +1,4 @@
 {
- "voice": "dima",
- "tts_python": "/Users/georgy.kulikov/qwen-tts-benchmark/.venv/bin/python",
- "stress_python": "/Users/georgy.kulikov/qwen-tts-benchmark/ruaccent-env/bin/python",
- "tts_model": "/Users/georgy.kulikov/qwen-tts-benchmark/stress-model-full-bf16",
- "ruaccent_dir": "/Users/georgy.kulikov/qwen-tts-benchmark/full_stress_test/ruaccent_models",
- "whisper_model": "/Users/georgy.kulikov/.codex/skills/obs-transcribe/models/whisper-large-v3-mlx",
- "ruaccent": true,
- "checks_python": "/Users/georgy.kulikov/.local/share/maket-voice-checks/venv/bin/python",
- "checks_model": "/Users/georgy.kulikov/.local/share/maket-voice-checks/models/ecapa"
+  "voice": "dima",
+  "ruaccent": true
 }
