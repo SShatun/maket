@@ -1,6 +1,7 @@
 package voice
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -137,9 +138,8 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 		shared[k] = v
 	}
 	spec.Stress = shared
-	specBytes = append(specBytes, sharedBytes...)
 	r := &run{ctx: ctx, root: root, cfg: cfg, sc: sc, spec: spec, ref: filepath.Join(vdir, spec.RefAudio)}
-	key, err := r.key(specBytes, nil)
+	key, err := r.key(append(bytes.Clone(specBytes), sharedBytes...), nil)
 	if err != nil {
 		return nil, nil, err
 	}
