@@ -592,7 +592,7 @@ func restress(text string, maps ...map[string]string) string {
 		core := strings.TrimFunc(f, func(c rune) bool { return !unicode.IsLetter(c) && c != '\u0301' })
 		plain := scene.Fold(strings.ReplaceAll(core, "\u0301", ""))
 		for _, m := range maps {
-			if v, ok := m[plain]; ok && core != "" {
+			if v, ok := stressOf(m, plain); ok && core != "" {
 				if c, _ := utf8.DecodeRuneInString(core); unicode.IsUpper(c) {
 					first, n := utf8.DecodeRuneInString(v)
 					v = string(unicode.ToUpper(first)) + v[n:]
@@ -602,6 +602,30 @@ func restress(text string, maps ...map[string]string) string {
 		}
 	}
 	return strings.Join(fields, " ")
+}
+
+var caseEndings = []string{"ами", "ями", "ом", "ем", "ов", "ев", "ей", "ой", "ам", "ям", "ах", "ях", "ью", "а", "у", "е", "ы", "и", "ю", "я"}
+
+func stressOf(m map[string]string, word string) (string, bool) {
+	if v, ok := m[word]; ok {
+		return v, true
+	}
+	for _, end := range caseEndings {
+		stem, ok := strings.CutSuffix(word, end)
+		if !ok || utf8.RuneCountInString(stem) < 4 {
+			continue
+		}
+		if v, ok := m[stem]; ok {
+			return v + end, true
+		}
+		for _, last := range []string{"а", "я", "й", "ь"} {
+			if v, ok := m[stem+last]; ok {
+				_, n := utf8.DecodeLastRuneInString(v)
+				return v[:len(v)-n] + end, true
+			}
+		}
+	}
+	return "", false
 }
 
 type ttsItem struct {
