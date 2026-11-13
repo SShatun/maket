@@ -41,8 +41,8 @@ func (p *Pixel) syncCrowd(st *behavior.Stage) {
 		for _, r := range a.Roles {
 			x.roles = append(x.roles, timedStr{r.T, r.V})
 		}
-		for _, s := range a.Steps {
-			x.states = append(x.states, timedState{t: s.T, v: s.V, hold: s.Hold, silent: true})
+		for i, s := range a.Steps {
+			x.states = append(x.states, timedState{t: s.T, v: s.V, hold: s.Hold, silent: i == 0})
 		}
 		for _, b := range a.Badges {
 			x.badges = append(x.badges, timedStr{b.T, b.V})
@@ -91,7 +91,7 @@ func (p *Pixel) crowdFrame(a *behavior.Actor, t float64) (*image.RGBA, bool) {
 	steps := a.Steps
 	if state != "" {
 		steps = []spr.Step{{T: since, V: state}}
-	} else {
+	} else if a.Unit {
 		steps = append([]spr.Step(nil), steps...)
 		for i := range steps {
 			if steps[i].V != "catch" && steps[i].V != "flinch" {

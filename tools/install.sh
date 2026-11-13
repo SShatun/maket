@@ -235,7 +235,9 @@ import os
 from pathlib import Path
 prefix = Path(os.environ['MAKET_PREFIX'])
 root = Path(os.environ['MAKET_ROOT'])
-config = {
+target = root / 'maket.local.json'
+config = json.loads(target.read_text()) if target.exists() else {}
+config.update({
     'tts_python': str(prefix / 'tts/bin/python'),
     'stress_python': str(prefix / 'stress/bin/python'),
     'tts_model': str(prefix / 'models/stress-model-full-bf16'),
@@ -243,8 +245,7 @@ config = {
     'whisper_model': str(prefix / 'models/whisper-large-v3-mlx'),
     'checks_python': str(prefix / 'checks/bin/python'),
     'checks_model': str(prefix / 'models/ecapa'),
-}
-target = root / 'maket.local.json'
+})
 temporary = root / 'maket.local.json.tmp'
 temporary.write_text(json.dumps(config, ensure_ascii=False, indent=2) + '\n')
 temporary.replace(target)

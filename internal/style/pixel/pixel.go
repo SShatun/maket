@@ -375,7 +375,7 @@ func (p *Pixel) event(i int, ev scene.Event, t, end float64, tl *timeline.Timeli
 	if len(p.shots) > 0 {
 		if stage := p.shots[len(p.shots)-1].stage; stage != nil {
 			switch ev.Do {
-			case "state", "role", "badge", "walk", "admit", "tries":
+			case "state", "role", "badge", "admit", "tries":
 				return stage.Event(ev, t)
 			}
 		}

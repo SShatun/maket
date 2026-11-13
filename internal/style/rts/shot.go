@@ -316,30 +316,6 @@ func groupPick(p pick, cr *crowd, part bool, units []*actor) pick {
 	return p
 }
 
-func (s *Style) targets(sh *shot, ev scene.Event, re rawEvent) ([]*actor, error) {
-	if ev.Target == nil {
-		return nil, fmt.Errorf("needs target: id of a cast entity or crowd in this shot")
-	}
-	id := ev.Target.ID
-	if a := sh.byID[id]; a != nil {
-		if re.Part {
-			return nil, fmt.Errorf("part is for crowds, %s is one entity", id)
-		}
-		return []*actor{a}, nil
-	}
-	cr := sh.crowdByID[id]
-	if cr == nil {
-		return nil, fmt.Errorf("target %q is not a cast entity or crowd of this shot", id)
-	}
-	if !re.Part {
-		return cr.Units, nil
-	}
-	if len(cr.Part) == 0 {
-		return nil, fmt.Errorf("crowd %s has no part", id)
-	}
-	return cr.Part, nil
-}
-
 func parseFade(raw json.RawMessage, first bool) (fade, error) {
 	f := fade{color: "black", dur: 0.2}
 	if first {
@@ -560,7 +536,7 @@ func (s *Style) selectEvent(sh *shot, ev scene.Event, re rawEvent, t float64) er
 				p.name, p.status, p.fixed, p.hp, p.tone = a.Title(), "", false, 1, "ok"
 			}
 		} else if cr := sh.crowdByID[ev.Target.ID]; cr != nil {
-			us, err := s.targets(sh, ev, re)
+			us, err := sh.behavior.Targets(ev)
 			if err != nil {
 				return err
 			}

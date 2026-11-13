@@ -27,7 +27,6 @@ type Stage struct {
 	CrowdByID map[string]*Crowd
 	Gate      *Actor
 	Passes    []float64
-	Denies    []float64
 	Tallies   []*Tally
 }
 
@@ -111,7 +110,7 @@ func (s *Stage) Event(ev scene.Event, t float64) error {
 	}
 	switch ev.Do {
 	case "state":
-		us, err := s.targets(ev)
+		us, err := s.Targets(ev)
 		if err != nil {
 			return err
 		}
@@ -132,11 +131,8 @@ func (s *Stage) Event(ev scene.Event, t float64) error {
 			}
 			a.Steps = append(a.Steps, spr.Step{T: at, V: state, Hold: ev.Hold})
 		}
-		if ev.State == "deny" {
-			s.Denies = append(s.Denies, t)
-		}
 	case "role":
-		us, err := s.targets(ev)
+		us, err := s.Targets(ev)
 		if err != nil {
 			return err
 		}
@@ -154,7 +150,7 @@ func (s *Stage) Event(ev scene.Event, t float64) error {
 			}
 		}
 	case "badge":
-		us, err := s.targets(ev)
+		us, err := s.Targets(ev)
 		if err != nil {
 			return err
 		}
@@ -208,7 +204,7 @@ func (s *Stage) Event(ev scene.Event, t float64) error {
 	return nil
 }
 
-func (s *Stage) targets(ev scene.Event) ([]*Actor, error) {
+func (s *Stage) Targets(ev scene.Event) ([]*Actor, error) {
 	if ev.Target == nil {
 		return nil, fmt.Errorf("needs target: id of a cast entity or crowd in this shot")
 	}
