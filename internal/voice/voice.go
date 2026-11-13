@@ -125,6 +125,19 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 	if err := json.Unmarshal(specBytes, &spec); err != nil {
 		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
+	sharedBytes, err := os.ReadFile(filepath.Join(root, "voices", "stress.json"))
+	if err != nil {
+		return nil, nil, err
+	}
+	shared := map[string]string{}
+	if err := json.Unmarshal(sharedBytes, &shared); err != nil {
+		return nil, nil, fmt.Errorf("voices/stress.json: %w", err)
+	}
+	for k, v := range spec.Stress {
+		shared[k] = v
+	}
+	spec.Stress = shared
+	specBytes = append(specBytes, sharedBytes...)
 	r := &run{ctx: ctx, root: root, cfg: cfg, sc: sc, spec: spec, ref: filepath.Join(vdir, spec.RefAudio)}
 	key, err := r.key(specBytes, nil)
 	if err != nil {
