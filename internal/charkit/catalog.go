@@ -81,6 +81,28 @@ func (c *Catalog) Names() []string {
 	return append([]string(nil), sp.keys...)
 }
 
+func (c *Catalog) Table() string {
+	var names []string
+	for name := range c.Entries {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var b strings.Builder
+	b.WriteString("| kind | кто | синонимы | состояния | происхождение |\n|---|---|---|---|---|\n")
+	escape := strings.NewReplacer("|", "\\|", "\n", " ", "\r", " ")
+	for _, name := range names {
+		e := c.Entries[name]
+		origin := e.Origin
+		if origin == "designer" {
+			origin = "дизайнер"
+		} else if origin == "generated" {
+			origin = "добавлен"
+		}
+		fmt.Fprintf(&b, "| `%s` | %s | %s | %s | %s |\n", name, escape.Replace(e.Label), escape.Replace(strings.Join(e.Aliases, ", ")), strings.Join(e.StateNames(), ", "), origin)
+	}
+	return b.String()
+}
+
 func (c *Catalog) Put(name string, entry json.RawMessage) error {
 	n, err := parse(entry)
 	if err != nil {

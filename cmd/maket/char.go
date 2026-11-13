@@ -32,12 +32,13 @@ func charMain(cmd string, args []string) int {
 	label := fs.String("label", "", "what the character is, in Russian")
 	alias := fs.String("alias", "", "other words for it, comma separated")
 	refs := fs.String("ref", "", "designer characters to compare with, comma separated")
+	markdown := fs.Bool("markdown", false, "print the catalog as a Markdown table")
 	fs.Parse(args)
 	dir := charkit.Dir(*root, *look)
 	var err error
 	switch {
 	case cmd == "list" && len(pos) == 0:
-		err = charList(dir)
+		err = charList(dir, *markdown)
 	case cmd == "grid" && (len(pos) == 1 || len(pos) == 2):
 		state := ""
 		if len(pos) == 2 {
@@ -51,7 +52,7 @@ func charMain(cmd string, args []string) int {
 	case cmd == "sheet" && len(pos) == 1:
 		err = charSheet(dir, pos[0], *out, *refs)
 	case cmd == "add" && len(pos) == 1:
-		err = charAdd(dir, pos[0], *name, *label, *alias)
+		err = charAdd(*root, *look, pos[0], *name, *label, *alias)
 	default:
 		fmt.Fprintln(os.Stderr, usage)
 		return 2
@@ -63,10 +64,14 @@ func charMain(cmd string, args []string) int {
 	return 0
 }
 
-func charList(dir string) error {
+func charList(dir string, markdown bool) error {
 	c, err := charkit.Load(dir)
 	if err != nil {
 		return err
+	}
+	if markdown {
+		fmt.Print(c.Table())
+		return nil
 	}
 	for _, name := range c.Names() {
 		e := c.Entries[name]
@@ -232,7 +237,8 @@ func charSheet(dir, arg, out, refList string) error {
 	return err
 }
 
-func charAdd(dir, draft, name, label, alias string) error {
+func charAdd(root, look, draft, name, label, alias string) error {
+	dir := charkit.Dir(root, look)
 	if !validName.MatchString(name) || label == "" {
 		return fmt.Errorf("char add: -name of lowercase letters, digits, - and _ and -label are required")
 	}
@@ -259,6 +265,14 @@ func charAdd(dir, draft, name, label, alias string) error {
 			e.Aliases = append(e.Aliases, a)
 		}
 	}
+	if len(e.Aliases) == 0 {
+		return fmt.Errorf("char add: -alias must contain at least one synonym")
+	}
+	c.Entries[name] = e
+	docPath, doc, err := charDocument(root, look, c)
+	if err != nil {
+		return err
+	}
 	files, err := draftFiles(e, draft)
 	if err != nil {
 		return err
@@ -278,8 +292,35 @@ func charAdd(dir, draft, name, label, alias string) error {
 	if err := c.Put(name, b); err != nil {
 		return err
 	}
+	if err := os.WriteFile(docPath, doc, 0o644); err != nil {
+		return fmt.Errorf("character %s added, but catalog table was not saved: %w", name, err)
+	}
 	fmt.Println(dst)
 	return nil
+}
+
+func charDocument(root, look string, c *charkit.Catalog) (string, []byte, error) {
+	path := filepath.Join(root, "docs", "scene.md")
+	if look != "" {
+		path = filepath.Join(root, "docs", "styles", look+".md")
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", nil, fmt.Errorf("catalog document: %w", err)
+	}
+	const begin = "<!-- characters:start -->"
+	const end = "<!-- characters:end -->"
+	s := string(b)
+	i, j := strings.Index(s, begin), strings.Index(s, end)
+	if i < 0 && j < 0 {
+		s += "\n## Каталог персонажей\n\n" + begin + "\n" + end + "\n"
+		i, j = strings.Index(s, begin), strings.Index(s, end)
+	}
+	if i < 0 || j < i {
+		return "", nil, fmt.Errorf("%s: incomplete character table markers", path)
+	}
+	s = s[:i+len(begin)] + "\n" + c.Table() + s[j:]
+	return path, []byte(s), nil
 }
 
 func draftFiles(e charkit.Entry, draft string) (map[string][]byte, error) {

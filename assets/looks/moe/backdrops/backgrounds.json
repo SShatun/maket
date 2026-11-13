@@ -27,7 +27,8 @@
      1,
      -1
     ]
-   }
+   },
+   "bright": 0
   },
   "night": {
    "file": "bg/night.jpg",
@@ -56,7 +57,8 @@
      170,
      255
     ]
-   }
+   },
+   "bright": 0
   },
   "rain": {
    "file": "bg/rain.jpg",
@@ -79,7 +81,8 @@
      -1,
      -1
     ]
-   }
+   },
+   "bright": 0
   },
   "sakura": {
    "file": "bg/sakura.jpg",
@@ -92,13 +95,15 @@
      244
     ],
     "amb_k": 0.08
-   }
+   },
+   "bright": 1
   },
   "flash": {
    "file": "bg/flash.jpg",
    "floor_y": null,
    "use": "шок, резкий поворот",
-   "light": {}
+   "light": {},
+   "bright": 1
   },
   "idea": {
    "file": "bg/idea.jpg",
@@ -127,7 +132,8 @@
      70,
      255
     ]
-   }
+   },
+   "bright": 1
   },
   "alert": {
    "file": "bg/alert.jpg",
@@ -150,7 +156,8 @@
      1,
      -1
     ]
-   }
+   },
+   "bright": 0
   },
   "moe": {
    "file": "bg/moe.jpg",
@@ -179,7 +186,8 @@
      210,
      255
     ]
-   }
+   },
+   "bright": 1
   }
  }
 }

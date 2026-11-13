@@ -63,12 +63,12 @@ const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-sile
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
 maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
 maket styles [-root DIR]
-maket char list [-look L] [-root DIR]
+maket char list [-markdown] [-look L] [-root DIR]
 maket char grid NAME [STATE] [-i N] [-look L] [-root DIR]
 maket char build GRID.txt|entry.json -o DRAFT [-look L] [-root DIR]
 maket char check DRAFT|NAME [-look L] [-root DIR]
 maket char sheet DRAFT|NAME -o sheet.png [-ref a,b] [-look L] [-root DIR]
-maket char add DRAFT -name N -label L [-alias a,b] [-look L] [-root DIR]
+maket char add DRAFT -name N -label L -alias a,b [-look L] [-root DIR]
 maket stress scene.json [-voice NAME] [-root DIR]`
 
 func main() {
@@ -158,6 +158,7 @@ func listStyles(root string) error {
 		sort.Strings(palette)
 		sort.Strings(backdrops)
 		fmt.Printf("  %s\n    about: %s\n    palette: [%s]\n    backdrops: [%s]\n", name, lk.About, strings.Join(palette, ", "), strings.Join(backdrops, ", "))
+		printBackdrops(lk, backdrops, "    ")
 	}
 	for _, name := range []string{"moe", "rts"} {
 		lk, err := charkit.ReadLook(charkit.Dir(root, name))
@@ -170,9 +171,21 @@ func listStyles(root string) error {
 		}
 		sort.Strings(backdrops)
 		fmt.Printf("%s\n  about: %s\n  voice: %s\n  backdrops: [%s]\n", name, lk.About, lk.Voice, strings.Join(backdrops, ", "))
+		printBackdrops(lk, backdrops, "  ")
 	}
 	fmt.Println("maket")
 	return nil
+}
+
+func printBackdrops(lk charkit.Look, names []string, indent string) {
+	for _, name := range names {
+		b := lk.Backdrops[name]
+		floor := "none"
+		if b.Floor != nil {
+			floor = strconv.FormatFloat(*b.Floor, 'f', -1, 64)
+		}
+		fmt.Printf("%s%s | %s | %s | %s | floor %s\n", indent, name, b.Label, strings.Join(b.Aliases, ", "), b.Origin, floor)
+	}
 }
 
 type options struct {

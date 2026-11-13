@@ -12,6 +12,8 @@
 
 Ролик строится из `shots` с полями `at`, `place`, `cast`, `do` (формат в `docs/scene.md`, раздел «Последовательность кадров»). Каждый кадр длится до начала следующего. Время событий абсолютное: секунды, `p2`, `p2:слово`, `p2.end`; допустимы смещения вроде `p2+0.4`.
 
+Новые места добавляются по `docs/characters.md`: имя, подпись и синонимы в `look.json`, свет и `bright` в `backdrops/backgrounds.json`. Светлому фону нужен `bright: 1`, чтобы текст голограммы оставался на тёмной подложке.
+
 `place` выбирает настроение: `sunset` для начала, `night` для ожидания, `rain` для потери, `sakura` для успеха, `flash` для шока, `idea` для озарения, `alert` для ошибки, `moe` для смущения. Свет персонажей подстраивается под фон.
 
 - Два персонажа рядом: `size` около 0.85; крупный план: до 1.3.
@@ -21,7 +23,26 @@
 
 ## Персонажи
 
-Образы и состояния: `go run ./cmd/maket char list -look moe`.
+Каталог: `go run ./cmd/maket char list -look moe`. Таблицу ниже обновляет `char add`; подписи и синонимы помогают найти уже нарисованное.
+
+<!-- characters:start -->
+| kind | кто | синонимы | состояния | происхождение |
+|---|---|---|---|---|
+| `branch` | дриада с ростком в горшке | дриада, росток, горшок, ветка, копия ветки, git, branch | catch, flinch, grow, idle, pushed | дизайнер |
+| `cache` | лисичка с рюкзаком | лисичка, рюкзак, дередере, кэш, готовые ответы, cache | catch, flinch, give, idle, miss | дизайнер |
+| `db` | библиотекарь в очках у картотеки | библиотекарь, очки, картотека, база, хранилище, склад, db, database | catch, empty, flinch, give, idle | дизайнер |
+| `dialog` | девочка-зайка с табличками Yes/No | зайка, девочка с табличками, диалог, вопрос, подтверждение, dialog, prompt | catch, closed, flinch, idle, impatient | дизайнер |
+| `external` | девушка в очках за стойкой | девушка за стойкой, очки, onee-san, внешний сервис, партнёр, приёмная, external, api | answer, catch, closed, flinch, idle | дизайнер |
+| `lock` | вахтёрша со списком и шлагбаумом | вахтёрша, список, шлагбаум, пропуск, проверка, доступ, lock, guard | allow, catch, check, deny, flinch, idle | дизайнер |
+| `painter` | художница с кистью и палитрой | художник, иллюстратор, рисование, artist, painter | catch, flinch, happy, idle, paint, wait | добавлен |
+| `parcel` | картонная коробка с кошачьими ушками | коробка, кошачьи ушки, картон, посылка, товар, заказ, parcel, item | catch, flinch, happy, idle, sad, wait | дизайнер |
+| `person` | человек с телефоном | человек, телефон, пользователь, зритель, клиент, person, user | catch, flinch, happy, idle, surprised, wait | дизайнер |
+| `queue` | девочка в худи у конвейера | худи, конвейер, кудере, очередь, буфер, queue, buffer | catch, flinch, full, run, stop | дизайнер |
+| `service` | горничная со счётами | горничная, счёты, сервис, расчёт, обработчик, service | bad, catch, count, flinch, idle, skip, wait | дизайнер |
+| `session` | кошкодевочка с хвостиками и бубенчиком | кошкодевочка, сессия-тян, цундере, сессия, терминал, session | baka, catch, dere, flinch, happy, idle, love, sad, shock, sleep, smug, tsun, type, wait | дизайнер |
+| `template` | девочка с папкой карточек | девочка с папкой, карточки, шаблон, настройки, способы доставки, template | catch, empty, flinch, full, idle | дизайнер |
+| `topic` | почтальонка с сумкой | почтальонка, сумка, письма, почта, топик, сообщения, kafka, topic | catch, flinch, flow, idle, lag | дизайнер |
+<!-- characters:end -->
 
 ```json
 {"id": "CACHE", "kind": "cache", "role": "buffer", "at": [300, 1640],
@@ -87,9 +108,3 @@
 go run ./cmd/maket stills scenes/moe-tariff-cache.json -o out/moe-stills -silent <моменты>
 go run ./cmd/maket render scenes/moe-tariff-cache.json -o out/moe.mp4 -silent
 ```
-
-## Добавленные образы
-
-| kind | кто | состояния |
-|---|---|---|
-| `painter` | художница с кистью и палитрой | idle, paint, wait, happy, catch, flinch |

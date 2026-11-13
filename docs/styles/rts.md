@@ -24,7 +24,28 @@
 
 Все `at`, точки троп и стен — в пикселях карты 180×229, `[0, 0]` — левый верх. `at` персонажа — точка его ног. Спрайты смотрят вправо.
 
-Персонажи, их состояния и что они значат — `go run ./cmd/maket char list -look rts`. Здания и предметы: `service` (крепость), `db` (шахта), `lock` (ворота со стражем), `queue`, `cache`, `topic`, `external` и др. Юниты: `worker` (батрак: запрос, горутина), `warrior` (воин орды: нагрузка, retry).
+Каталог: `go run ./cmd/maket char list -look rts`. Таблицу ниже обновляет `char add`; подписи и синонимы помогают найти уже нарисованное.
+
+<!-- characters:start -->
+| kind | кто | синонимы | состояния | происхождение |
+|---|---|---|---|---|
+| `branch` | саженец в загоне | саженец, росток, дерево, ветка, копия ветки, git, branch | catch, flinch, grow, idle, pushed | дизайнер |
+| `cache` | сундук с обручами | сундук, запас, кэш, готовые ответы, cache | catch, flinch, give, idle, miss | дизайнер |
+| `db` | шахта с золотыми жилами | шахта, золото, база, хранилище, склад, db, database | catch, empty, flinch, give, idle | дизайнер |
+| `dialog` | глашатай с флагами Yes/No | глашатай, флаг, диалог, подтверждение, вопрос, dialog, prompt | catch, closed, flinch, idle, impatient | дизайнер |
+| `dragon` | дракон с крыльями и огненным дыханием | дракон, крылатый зверь, огнедышащий, dragon | attack, catch, flinch, idle, walk | добавлен |
+| `external` | замок людей | замок, люди, внешний сервис, партнёр, склад, external, api | answer, catch, closed, flinch, idle | дизайнер |
+| `lock` | ворота в частоколе со стражем | ворота, страж, частокол, пропуск, лимит, блокировка, доступ, lock, gate | allow, catch, check, deny, flinch, idle | дизайнер |
+| `parcel` | деревянный ящик груза | ящик, груз, дерево, посылка, товар, заказ, parcel, item | catch, flinch, happy, idle, sad, wait | дизайнер |
+| `person` | вождь орков в рогатом шлеме | вождь, орк, пользователь, клиент, person, user | catch, flinch, happy, idle, surprised, wait | дизайнер |
+| `queue` | помост на катках с ящиками | помост, телега, ящики, очередь, буфер, queue, buffer | catch, flinch, full, run, stop | дизайнер |
+| `service` | крепость с частоколом и знамёнами | крепость, длинный дом, сервис, обработчик, service | bad, catch, count, flinch, idle, skip, wait | дизайнер |
+| `session` | шаман с посохом и кристаллом | шаман, маг, кристалл, сессия, терминал, session | catch, flinch, idle, sleep, type, wait | дизайнер |
+| `template` | доска чертежей на мольберте | доска, чертёж, мольберт, шаблон, план, настройка, template | catch, empty, flinch, full, idle | дизайнер |
+| `topic` | воронятня на сваях | воронятня, вороны, свитки, почта, топик, сообщения, kafka, topic | catch, flinch, flow, idle, lag | дизайнер |
+| `warrior` | воин орды со щитом и топором | воин, орда, щит, топор, нагрузка, атака, повтор, retry storm, warrior | attack, catch, flinch, idle, walk | дизайнер |
+| `worker` | батрак с киркой | батрак, кирка, добытчик, горутина, запрос, воркер, worker | carry, catch, flinch, idle, mine, wait, walk | дизайнер |
+<!-- characters:end -->
 
 ## Поля кадра
 
@@ -115,9 +136,3 @@
 ## Повторяемость
 
 Вся случайность (трава, деревья, толпы, дрожание, тряска) — от `map.seed` и номера кадра, два рендера одной сцены дают одинаковые кадры.
-
-## Добавленные образы
-
-| kind | кто | состояния |
-|---|---|---|
-| `dragon` | дракон с крыльями и огненным дыханием | idle, walk, attack, catch, flinch |

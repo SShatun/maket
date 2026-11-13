@@ -37,8 +37,9 @@ type light struct {
 }
 
 type backdrop struct {
-	Light light `json:"light"`
-	image *image.RGBA
+	Light  light   `json:"light"`
+	Bright float64 `json:"bright"`
+	image  *image.RGBA
 }
 
 type backgroundStep struct {
@@ -193,7 +194,10 @@ func (s *Style) loadBackdrop(name string, meta map[string]backdrop) (backdrop, e
 	b, ok := meta[name]
 	asset, exists := s.look.Backdrops[name]
 	if !ok || !exists {
-		return b, fmt.Errorf("unknown backdrop %q; use sunset, night, rain, sakura, flash, idea, alert or moe", name)
+		return b, fmt.Errorf("backdrop %q needs entries in look.json backdrops and backdrops/backgrounds.json", name)
+	}
+	if b.Bright < 0 || b.Bright > 1 {
+		return b, fmt.Errorf("backdrop %s: bright must be between 0 and 1", name)
 	}
 	im, err := charkit.ReadImage(filepath.Join(s.dir, asset.File))
 	if err != nil {
@@ -217,7 +221,7 @@ func (s *Style) layoutShot(input scene.Shot, start, end float64, meta map[string
 	if err != nil {
 		return sh, err
 	}
-	sh.backgrounds = []backgroundStep{{at: start, image: bg.image, light: bg.Light, bright: brightness(name)}}
+	sh.backgrounds = []backgroundStep{{at: start, image: bg.image, light: bg.Light, bright: bg.Bright}}
 	byID := map[string]*actor{}
 	for _, c := range input.Cast {
 		if c.Crowd != nil {
@@ -341,7 +345,7 @@ func (s *Style) layoutShot(input scene.Shot, start, end float64, meta map[string
 				if t+k*dur >= end {
 					break
 				}
-				sh.backgrounds = append(sh.backgrounds, backgroundStep{at: t + k*dur, image: mixImage(prev.image, next.image, k), light: mixLight(prev.light, next.Light, k), bright: lerp(prev.bright, brightness(x.Name), k)})
+				sh.backgrounds = append(sh.backgrounds, backgroundStep{at: t + k*dur, image: mixImage(prev.image, next.image, k), light: mixLight(prev.light, next.Light, k), bright: lerp(prev.bright, next.Bright, k)})
 			}
 			s.pad(padAt, t, padName)
 			padAt, padName = t, x.Name
@@ -433,14 +437,6 @@ func roleAt(a *actor, t float64) string {
 func backgroundAt(sh *shot, t float64) backgroundStep {
 	i := sort.Search(len(sh.backgrounds), func(i int) bool { return sh.backgrounds[i].at > t }) - 1
 	return sh.backgrounds[max(0, i)]
-}
-
-func brightness(name string) float64 {
-	switch name {
-	case "sakura", "moe", "idea", "flash":
-		return 1
-	}
-	return 0
 }
 
 func clamp(v float64) float64      { return math.Max(0, math.Min(1, v)) }

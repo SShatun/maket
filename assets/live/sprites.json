@@ -7,13 +7,14 @@
  "rules": "assets/design/live-pixels.md",
  "sprites": {
   "person": {
-   "label": "человек",
+   "label": "человек с телефоном",
    "aliases": [
     "пользователь",
     "дежурный",
     "клиент",
     "user",
-    "person"
+    "person",
+    "человек"
    ],
    "origin": "designer",
    "dir": "person/",
@@ -66,14 +67,15 @@
    }
   },
   "service": {
-   "label": "сервис",
+   "label": "машинка с экраном-лицом и счётами",
    "aliases": [
     "расчёт",
     "джоба",
     "воркер",
     "обработчик",
     "service",
-    "worker"
+    "worker",
+    "сервис"
    ],
    "origin": "designer",
    "dir": "service/",
@@ -131,13 +133,14 @@
    }
   },
   "session": {
-   "label": "сессия",
+   "label": "терминал с глазами-курсорами",
    "aliases": [
     "терминал",
     "агент",
     "консоль",
     "session",
-    "terminal"
+    "terminal",
+    "сессия"
    ],
    "origin": "designer",
    "dir": "session/",
@@ -190,13 +193,14 @@
    }
   },
   "dialog": {
-   "label": "окошко",
+   "label": "окошко Yes/No",
    "aliases": [
     "диалог",
     "вопрос",
     "подтверждение",
     "dialog",
-    "prompt"
+    "prompt",
+    "окошко"
    ],
    "origin": "designer",
    "dir": "dialog/",
@@ -244,13 +248,14 @@
    }
   },
   "queue": {
-   "label": "очередь",
+   "label": "конвейер с головой-мотором",
    "aliases": [
     "конвейер",
     "буфер",
     "очередь задач",
     "queue",
-    "buffer"
+    "buffer",
+    "очередь"
    ],
    "origin": "designer",
    "dir": "queue/",
@@ -298,11 +303,12 @@
    }
   },
   "branch": {
-   "label": "ветка",
+   "label": "росток в горшке",
    "aliases": [
     "git",
     "коммит",
-    "branch"
+    "branch",
+    "ветка"
    ],
    "origin": "designer",
    "dir": "branch/",
@@ -350,14 +356,15 @@
    }
   },
   "db": {
-   "label": "база",
+   "label": "шкаф-картотека",
    "aliases": [
     "картотека",
     "таблица",
     "хранилище",
     "postgres",
     "db",
-    "database"
+    "database",
+    "база"
    ],
    "origin": "designer",
    "dir": "db/",
@@ -405,12 +412,13 @@
    }
   },
   "cache": {
-   "label": "кэш",
+   "label": "рюкзак с карманом",
    "aliases": [
     "рюкзак",
     "готовые ответы",
     "cache",
-    "redis"
+    "redis",
+    "кэш"
    ],
    "origin": "designer",
    "dir": "cache/",
@@ -458,12 +466,13 @@
    }
   },
   "topic": {
-   "label": "топик",
+   "label": "лента писем с читателем",
    "aliases": [
     "лента",
     "kafka",
     "сообщения",
-    "topic"
+    "topic",
+    "топик"
    ],
    "origin": "designer",
    "dir": "topic/",
@@ -511,13 +520,14 @@
    }
   },
   "external": {
-   "label": "чужой сервис",
+   "label": "здание чужого сервиса",
    "aliases": [
     "внешняя система",
     "партнёр",
     "апи",
     "external",
-    "api"
+    "api",
+    "чужой сервис"
    ],
    "origin": "designer",
    "dir": "external/",
@@ -565,14 +575,15 @@
    }
   },
   "lock": {
-   "label": "замок",
+   "label": "вахтёр со списком и шлагбаумом",
    "aliases": [
     "вахтёр",
     "проверка",
     "хук",
     "доступ",
     "lock",
-    "guard"
+    "guard",
+    "замок"
    ],
    "origin": "designer",
    "dir": "lock/",
@@ -625,13 +636,14 @@
    }
   },
   "parcel": {
-   "label": "посылка",
+   "label": "картонная посылка с лицом",
    "aliases": [
     "товар",
     "заказ",
     "коробка",
     "parcel",
-    "item"
+    "item",
+    "посылка"
    ],
    "origin": "designer",
    "dir": "parcel/",
@@ -684,12 +696,13 @@
    }
   },
   "template": {
-   "label": "шаблон",
+   "label": "папка с карточками",
    "aliases": [
     "папка",
     "настройки продавца",
     "способы доставки",
-    "template"
+    "template",
+    "шаблон"
    ],
    "origin": "designer",
    "dir": "template/",
@@ -737,7 +750,7 @@
    }
   },
   "tariff": {
-   "label": "тариф",
+   "label": "ценник со знаком рубля",
    "aliases": [
     "цена",
     "прайс",
@@ -745,7 +758,8 @@
     "ценник",
     "тарификация",
     "price",
-    "tariff"
+    "tariff",
+    "тариф"
    ],
    "origin": "generated",
    "dir": "tariff/",
@@ -788,7 +802,7 @@
    }
   },
   "developer": {
-   "label": "разработчик",
+   "label": "человек за ноутбуком",
    "aliases": [
     "разработчик",
     "сотрудник",

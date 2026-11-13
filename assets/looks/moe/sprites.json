@@ -5,6 +5,7 @@
  "shadow": "not baked: engine draws a soft contact shadow ellipse at anchor (w = 260*scale, h = 48*scale, black 30%)",
  "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
  "fixed_colour": "parcel is cardboard: tint=false, drawn as is",
+ "rules": "assets/looks/moe/rules.md",
  "sprites": {
   "person": {
    "dir": "person/",
@@ -54,7 +55,18 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "человек с телефоном",
+   "aliases": [
+    "человек",
+    "телефон",
+    "пользователь",
+    "зритель",
+    "клиент",
+    "person",
+    "user"
+   ],
+   "origin": "designer"
   },
   "service": {
    "dir": "service/",
@@ -109,7 +121,17 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "горничная со счётами",
+   "aliases": [
+    "горничная",
+    "счёты",
+    "сервис",
+    "расчёт",
+    "обработчик",
+    "service"
+   ],
+   "origin": "designer"
   },
   "session": {
    "dir": "session/",
@@ -200,7 +222,17 @@
      "loop": true
     }
    },
-   "note": "extra emotion states (tsun, baka, dere, happy, love, shock, sad, smug) exist only for session"
+   "note": "extra emotion states (tsun, baka, dere, happy, love, shock, sad, smug) exist only for session",
+   "label": "кошкодевочка с хвостиками и бубенчиком",
+   "aliases": [
+    "кошкодевочка",
+    "сессия-тян",
+    "цундере",
+    "сессия",
+    "терминал",
+    "session"
+   ],
+   "origin": "designer"
   },
   "dialog": {
    "dir": "dialog/",
@@ -245,7 +277,18 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "девочка-зайка с табличками Yes/No",
+   "aliases": [
+    "зайка",
+    "девочка с табличками",
+    "диалог",
+    "вопрос",
+    "подтверждение",
+    "dialog",
+    "prompt"
+   ],
+   "origin": "designer"
   },
   "queue": {
    "dir": "queue/",
@@ -290,7 +333,18 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "девочка в худи у конвейера",
+   "aliases": [
+    "худи",
+    "конвейер",
+    "кудере",
+    "очередь",
+    "буфер",
+    "queue",
+    "buffer"
+   ],
+   "origin": "designer"
   },
   "branch": {
    "dir": "branch/",
@@ -335,7 +389,18 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "дриада с ростком в горшке",
+   "aliases": [
+    "дриада",
+    "росток",
+    "горшок",
+    "ветка",
+    "копия ветки",
+    "git",
+    "branch"
+   ],
+   "origin": "designer"
   },
   "db": {
    "dir": "db/",
@@ -380,7 +445,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "библиотекарь в очках у картотеки",
+   "aliases": [
+    "библиотекарь",
+    "очки",
+    "картотека",
+    "база",
+    "хранилище",
+    "склад",
+    "db",
+    "database"
+   ],
+   "origin": "designer"
   },
   "cache": {
    "dir": "cache/",
@@ -425,7 +502,17 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "лисичка с рюкзаком",
+   "aliases": [
+    "лисичка",
+    "рюкзак",
+    "дередере",
+    "кэш",
+    "готовые ответы",
+    "cache"
+   ],
+   "origin": "designer"
   },
   "topic": {
    "dir": "topic/",
@@ -470,7 +557,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "почтальонка с сумкой",
+   "aliases": [
+    "почтальонка",
+    "сумка",
+    "письма",
+    "почта",
+    "топик",
+    "сообщения",
+    "kafka",
+    "topic"
+   ],
+   "origin": "designer"
   },
   "external": {
    "dir": "external/",
@@ -515,7 +614,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "девушка в очках за стойкой",
+   "aliases": [
+    "девушка за стойкой",
+    "очки",
+    "onee-san",
+    "внешний сервис",
+    "партнёр",
+    "приёмная",
+    "external",
+    "api"
+   ],
+   "origin": "designer"
   },
   "lock": {
    "dir": "lock/",
@@ -565,7 +676,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "вахтёрша со списком и шлагбаумом",
+   "aliases": [
+    "вахтёрша",
+    "список",
+    "шлагбаум",
+    "пропуск",
+    "проверка",
+    "доступ",
+    "lock",
+    "guard"
+   ],
+   "origin": "designer"
   },
   "parcel": {
    "dir": "parcel/",
@@ -615,7 +738,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "картонная коробка с кошачьими ушками",
+   "aliases": [
+    "коробка",
+    "кошачьи ушки",
+    "картон",
+    "посылка",
+    "товар",
+    "заказ",
+    "parcel",
+    "item"
+   ],
+   "origin": "designer"
   },
   "template": {
    "dir": "template/",
@@ -660,7 +795,17 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "label": "девочка с папкой карточек",
+   "aliases": [
+    "девочка с папкой",
+    "карточки",
+    "шаблон",
+    "настройки",
+    "способы доставки",
+    "template"
+   ],
+   "origin": "designer"
   },
   "painter": {
    "label": "художница с кистью и палитрой",

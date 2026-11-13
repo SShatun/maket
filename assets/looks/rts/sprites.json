@@ -5,10 +5,11 @@
  "generic_states": "catch (squash-stretch) and flinch (shake) exist for every object",
  "crowd": "worker and warrior exist only in this mode: many copies on the map, they carry tokens (gold sack = value) or form the horde (load)",
  "fixed_colour": "parcel is a wooden crate: tint=false",
+ "rules": "assets/looks/rts/rules.md",
  "sprites": {
   "person": {
    "dir": "person/",
-   "label": "вождь орков (пользователь)",
+   "label": "вождь орков в рогатом шлеме",
    "size": [
     384,
     432
@@ -56,11 +57,20 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "вождь",
+    "орк",
+    "пользователь",
+    "клиент",
+    "person",
+    "user"
+   ],
+   "origin": "designer"
   },
   "service": {
    "dir": "service/",
-   "label": "крепость (сервис)",
+   "label": "крепость с частоколом и знамёнами",
    "size": [
     768,
     768
@@ -113,11 +123,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "крепость",
+    "длинный дом",
+    "сервис",
+    "обработчик",
+    "service"
+   ],
+   "origin": "designer"
   },
   "session": {
    "dir": "session/",
-   "label": "шаман у кристалла (сессия)",
+   "label": "шаман с посохом и кристаллом",
    "size": [
     480,
     432
@@ -165,7 +183,16 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "шаман",
+    "маг",
+    "кристалл",
+    "сессия",
+    "терминал",
+    "session"
+   ],
+   "origin": "designer"
   },
   "dialog": {
    "dir": "dialog/",
@@ -212,11 +239,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "глашатай",
+    "флаг",
+    "диалог",
+    "подтверждение",
+    "вопрос",
+    "dialog",
+    "prompt"
+   ],
+   "origin": "designer"
   },
   "queue": {
    "dir": "queue/",
-   "label": "помост с ящиками (очередь)",
+   "label": "помост на катках с ящиками",
    "size": [
     768,
     480
@@ -259,11 +296,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "помост",
+    "телега",
+    "ящики",
+    "очередь",
+    "буфер",
+    "queue",
+    "buffer"
+   ],
+   "origin": "designer"
   },
   "branch": {
    "dir": "branch/",
-   "label": "саженец в загоне (копия ветки)",
+   "label": "саженец в загоне",
    "size": [
     576,
     672
@@ -306,11 +353,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "саженец",
+    "росток",
+    "дерево",
+    "ветка",
+    "копия ветки",
+    "git",
+    "branch"
+   ],
+   "origin": "designer"
   },
   "db": {
    "dir": "db/",
-   "label": "шахта (база)",
+   "label": "шахта с золотыми жилами",
    "size": [
     768,
     672
@@ -353,11 +410,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "шахта",
+    "золото",
+    "база",
+    "хранилище",
+    "склад",
+    "db",
+    "database"
+   ],
+   "origin": "designer"
   },
   "cache": {
    "dir": "cache/",
-   "label": "сундук (кэш)",
+   "label": "сундук с обручами",
    "size": [
     480,
     480
@@ -400,11 +467,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "сундук",
+    "запас",
+    "кэш",
+    "готовые ответы",
+    "cache"
+   ],
+   "origin": "designer"
   },
   "topic": {
    "dir": "topic/",
-   "label": "воронятня (топик Kafka)",
+   "label": "воронятня на сваях",
    "size": [
     672,
     768
@@ -447,11 +522,22 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "воронятня",
+    "вороны",
+    "свитки",
+    "почта",
+    "топик",
+    "сообщения",
+    "kafka",
+    "topic"
+   ],
+   "origin": "designer"
   },
   "external": {
    "dir": "external/",
-   "label": "замок людей (внешний сервис)",
+   "label": "замок людей",
    "size": [
     768,
     768
@@ -494,11 +580,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "замок",
+    "люди",
+    "внешний сервис",
+    "партнёр",
+    "склад",
+    "external",
+    "api"
+   ],
+   "origin": "designer"
   },
   "lock": {
    "dir": "lock/",
-   "label": "ворота со стражем (замок)",
+   "label": "ворота в частоколе со стражем",
    "size": [
     768,
     576
@@ -546,11 +642,23 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "ворота",
+    "страж",
+    "частокол",
+    "пропуск",
+    "лимит",
+    "блокировка",
+    "доступ",
+    "lock",
+    "gate"
+   ],
+   "origin": "designer"
   },
   "parcel": {
    "dir": "parcel/",
-   "label": "ящик груза",
+   "label": "деревянный ящик груза",
    "size": [
     336,
     336
@@ -598,11 +706,22 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "ящик",
+    "груз",
+    "дерево",
+    "посылка",
+    "товар",
+    "заказ",
+    "parcel",
+    "item"
+   ],
+   "origin": "designer"
   },
   "template": {
    "dir": "template/",
-   "label": "доска чертежей (шаблон)",
+   "label": "доска чертежей на мольберте",
    "size": [
     480,
     528
@@ -645,11 +764,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "доска",
+    "чертёж",
+    "мольберт",
+    "шаблон",
+    "план",
+    "настройка",
+    "template"
+   ],
+   "origin": "designer"
   },
   "worker": {
    "dir": "worker/",
-   "label": "батрак (горутина, запрос, воркер)",
+   "label": "батрак с киркой",
    "size": [
     336,
     384
@@ -702,11 +831,21 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "батрак",
+    "кирка",
+    "добытчик",
+    "горутина",
+    "запрос",
+    "воркер",
+    "worker"
+   ],
+   "origin": "designer"
   },
   "warrior": {
    "dir": "warrior/",
-   "label": "воин орды (нагрузка, атака, retry storm)",
+   "label": "воин орды со щитом и топором",
    "size": [
     336,
     384
@@ -749,7 +888,19 @@
      "fps": 12,
      "loop": false
     }
-   }
+   },
+   "aliases": [
+    "воин",
+    "орда",
+    "щит",
+    "топор",
+    "нагрузка",
+    "атака",
+    "повтор",
+    "retry storm",
+    "warrior"
+   ],
+   "origin": "designer"
   },
   "dragon": {
    "label": "дракон с крыльями и огненным дыханием",

@@ -133,25 +133,29 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 - `role`: `external` (белый), `producer` (тёмно-зелёный), `consumer` (сиреневый), `buffer` (оранжевый), `storage` (голубой), `error` (красный), `ok` (ярко-зелёный). Красное появляется в ролике один раз — там, где ломается.
 - `status` — подпись под персонажем, `badges` — значок над головой: `bad`, `ok`, `question`, `wait`, `null` убирает значок.
 
-Персонажи (`kind`) и их состояния. У всех есть ещё `catch` (ловит прилетевшее) и `flinch` (вздрагивает от отказа):
+Персонажи (`kind`), их синонимы и состояния. `catch` ловит прилетевшее, `flinch` вздрагивает от отказа. Таблица обновляется командой `char add` из каталога:
 
-| kind | кто | состояния |
-|---|---|---|
-| `person` | человек с телефоном; только когда в истории важен телефон | `idle`, `wait`, `surprised`, `happy` |
-| `developer` | человек за ноутбуком; обычный человек ролика: разработчик, дежурный, сотрудник | `idle`, `wait`, `surprised`, `happy` |
-| `service` | сервис, работник | `idle`, `count`, `wait`, `skip`, `bad` |
-| `session` | терминал | `idle`, `type`, `wait`, `sleep` |
-| `dialog` | окошко Yes/No | `idle`, `impatient`, `closed` |
-| `queue` | конвейер | `run`, `stop`, `full` |
-| `branch` | ветка-росток | `idle`, `grow`, `pushed` |
-| `db` | картотека | `idle`, `give`, `empty` |
-| `cache` | карман с ответами | `idle`, `give`, `miss` |
-| `topic` | лента писем | `idle`, `flow`, `lag` |
-| `external` | чужой сервис | `idle`, `answer`, `closed` |
-| `lock` | вахтёр со списком | `idle`, `check`, `deny`, `allow` |
-| `parcel` | товар-посылка, картонная, не перекрашивается | `idle`, `sad`, `wait`, `happy` |
-| `template` | папка с карточками | `idle`, `full`, `empty` |
-| `tariff` | ценник с ₽, нарисован сервисом | `idle`, `happy` |
+Обычный человек ролика, разработчик, дежурный или сотрудник, это `developer` за ноутбуком. `person` выбирают, только когда в истории важен телефон.
+
+<!-- characters:start -->
+| kind | кто | синонимы | состояния | происхождение |
+|---|---|---|---|---|
+| `branch` | росток в горшке | git, коммит, branch, ветка | catch, flinch, grow, idle, pushed | дизайнер |
+| `cache` | рюкзак с карманом | рюкзак, готовые ответы, cache, redis, кэш | catch, flinch, give, idle, miss | дизайнер |
+| `db` | шкаф-картотека | картотека, таблица, хранилище, postgres, db, database, база | catch, empty, flinch, give, idle | дизайнер |
+| `developer` | человек за ноутбуком | разработчик, сотрудник, инженер, developer, человек за ноутбуком | catch, flinch, happy, idle, surprised, wait | добавлен |
+| `dialog` | окошко Yes/No | диалог, вопрос, подтверждение, dialog, prompt, окошко | catch, closed, flinch, idle, impatient | дизайнер |
+| `external` | здание чужого сервиса | внешняя система, партнёр, апи, external, api, чужой сервис | answer, catch, closed, flinch, idle | дизайнер |
+| `lock` | вахтёр со списком и шлагбаумом | вахтёр, проверка, хук, доступ, lock, guard, замок | allow, catch, check, deny, flinch, idle | дизайнер |
+| `parcel` | картонная посылка с лицом | товар, заказ, коробка, parcel, item, посылка | catch, flinch, happy, idle, sad, wait | дизайнер |
+| `person` | человек с телефоном | пользователь, дежурный, клиент, user, person, человек | catch, flinch, happy, idle, surprised, wait | дизайнер |
+| `queue` | конвейер с головой-мотором | конвейер, буфер, очередь задач, queue, buffer, очередь | catch, flinch, full, run, stop | дизайнер |
+| `service` | машинка с экраном-лицом и счётами | расчёт, джоба, воркер, обработчик, service, worker, сервис | bad, catch, count, flinch, idle, skip, wait | дизайнер |
+| `session` | терминал с глазами-курсорами | терминал, агент, консоль, session, terminal, сессия | catch, flinch, idle, sleep, type, wait | дизайнер |
+| `tariff` | ценник со знаком рубля | цена, прайс, стоимость, ценник, тарификация, price, tariff, тариф | catch, flinch, happy, idle | добавлен |
+| `template` | папка с карточками | папка, настройки продавца, способы доставки, template, шаблон | catch, empty, flinch, full, idle | дизайнер |
+| `topic` | лента писем с читателем | лента, kafka, сообщения, topic, топик | catch, flinch, flow, idle, lag | дизайнер |
+<!-- characters:end -->
 
 Список берётся из `assets/live/sprites.json`, полный с подписями и синонимами — `go run ./cmd/maket char list [-look L]`. Незнакомое состояние — ошибка `has no state`. Нужного персонажа нет — его дорисовывают по `docs/characters.md`.
 

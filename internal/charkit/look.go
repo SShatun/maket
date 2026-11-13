@@ -20,8 +20,11 @@ type Look struct {
 }
 
 type Backdrop struct {
-	File  string   `json:"file"`
-	Floor *float64 `json:"floor"`
+	File    string   `json:"file"`
+	Floor   *float64 `json:"floor"`
+	Label   string   `json:"label,omitempty"`
+	Aliases []string `json:"aliases,omitempty"`
+	Origin  string   `json:"origin,omitempty"`
 }
 
 func ReadLook(dir string) (Look, error) {
