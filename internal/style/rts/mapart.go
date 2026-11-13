@@ -232,11 +232,11 @@ func (s *Style) wall(w *rawWall, byID map[string]*actor) (*wall, error) {
 			return nil, fmt.Errorf("map.wall.gate: unknown entity %q", w.Gate)
 		}
 		out.gate = g
-		out.y = int(math.Round(g.home[1]))
-		spec := s.set.Specs[g.kind]
-		ax := int(math.Round(g.home[0]))
+		out.y = int(math.Round(g.Home[1]))
+		spec := s.set.Specs[g.Kind]
+		ax := int(math.Round(g.Home[0]))
 		gap0 = ax - spec.Anchor[0]/12
-		gap1 = ax + (s.boxes12(g.kind) - spec.Anchor[0]/12)
+		gap1 = ax + (s.boxes12(g.Kind) - spec.Anchor[0]/12)
 	case w.Y != nil:
 		out.y = int(math.Round(*w.Y))
 	default:

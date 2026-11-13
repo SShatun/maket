@@ -1,0 +1,41 @@
+{
+  "style": "pixel",
+  "seed": 17,
+  "hold": 2,
+  "phrases": [
+    {"text": "Клиент отправил запросы к сервису. Перед сервисом стоит лимит.", "caption": "клиент → лимит → сервис"},
+    {"text": "Лимит закрыт. Два повтора стоят в очереди, но ответа нет.", "caption": "повторы тоже ждут"},
+    {"text": "Клиент ждёт паузу. Затем лимит пропускает по одному запросу.", "caption": "пауза перед повтором"},
+    {"text": "Запросы проходят по очереди. Сервис успевает ответить каждому.", "caption": "по одному"},
+    {"text": "Очередь пуста. Новые повторы больше не нужны.", "caption": "ответ получен"}
+  ],
+  "shots": [
+    {
+      "at": 0,
+      "place": {"wall": [24, 31, 53]},
+      "cast": [
+        {"id": "CLIENT", "kind": "session", "label": "клиент", "role": "consumer", "at": [220, 780], "size": 0.55, "state": "type"},
+        {"id": "SERVICE", "kind": "external", "label": "сервис", "role": "storage", "at": [760, 590], "size": 0.5, "state": "idle"},
+        {"id": "GATE", "kind": "lock", "label": "лимит", "role": "producer", "at": [640, 1000], "size": 0.7, "state": "deny"},
+        {"id": "REQUESTS", "kind": "service", "size": 0.28, "at": [435, 1270], "crowd": {"behavior": "formation", "count": 4, "cols": 2, "rows": 2, "step": [160, 180], "speed": 210, "state": "wait", "part": {"count": 2, "badges": [["p2:Два", "bad"]]}}}
+      ],
+      "do": [
+        {"at": 0, "do": "text", "text": "Повтор с паузой", "pos": [520, 280], "size": 40},
+        {"at": 0, "do": "line", "from": [220, 850], "to": [340, 1090], "kind": "arrow", "tone": "accent"},
+        {"at": 0, "do": "line", "from": "GATE", "to": "SERVICE", "kind": "arrow", "tone": "accent"},
+        {"at": 0, "do": "text", "text": "запросы", "pos": [430, 1480], "size": 28, "until": "p5"},
+        {"at": "p2", "do": "tries", "target": "CLIENT", "text": "{n}/3", "count": [1, 3, 4], "until": "p3:Затем"},
+        {"at": "p2:Два", "do": "role", "target": "REQUESTS", "part": true, "role": "error"},
+        {"at": "p2:Лимит", "do": "state", "target": "GATE", "state": "deny"},
+        {"at": "p2:ответа", "do": "state", "target": "CLIENT", "state": "wait"},
+        {"at": "p3", "do": "badge", "target": "REQUESTS", "part": true, "badge": "wait"},
+        {"at": "p3:Затем", "do": "admit", "gate": "GATE", "from": "REQUESTS", "rate": 0.6, "to": "SERVICE"},
+        {"at": "p3:Затем", "do": "role", "target": "REQUESTS", "part": true, "role": "ok"},
+        {"at": "p4", "do": "state", "target": "SERVICE", "state": "answer", "hold": true},
+        {"at": "p4:ответить", "do": "move", "from": "SERVICE", "to": "CLIENT", "label": "OK", "dur": 1.2, "until": "p5"},
+        {"at": "p5", "do": "state", "target": "CLIENT", "state": "idle"},
+        {"at": "p5", "do": "text", "text": "Ответ получен", "pos": [460, 1280], "size": 40, "tone": "ok"}
+      ]
+    }
+  ]
+}

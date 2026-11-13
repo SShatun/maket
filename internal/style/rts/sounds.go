@@ -58,15 +58,15 @@ func (s *Style) sounds() []audio.Cue {
 func fires(sh *shot) [][2]float64 {
 	var out [][2]float64
 	for _, a := range sh.actors {
-		if a.unit {
+		if a.Unit {
 			continue
 		}
-		for i, st := range a.steps {
-			if st.V != "bad" || (i > 0 && a.steps[i-1].V == "bad") {
+		for i, st := range a.Steps {
+			if st.V != "bad" || (i > 0 && a.Steps[i-1].V == "bad") {
 				continue
 			}
 			end := sh.until
-			for _, nx := range a.steps[i+1:] {
+			for _, nx := range a.Steps[i+1:] {
 				if nx.V != "bad" {
 					end = math.Min(end, nx.T)
 					break

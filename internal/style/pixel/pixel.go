@@ -17,6 +17,7 @@ import (
 	"golang.org/x/image/font"
 
 	"maket/internal/audio"
+	"maket/internal/behavior"
 	"maket/internal/charkit"
 	"maket/internal/render"
 	"maket/internal/scene"
@@ -54,6 +55,8 @@ type timedState struct {
 }
 
 type ent struct {
+	actor           *behavior.Actor
+	stage           *behavior.Stage
 	id, kind, label string
 	x, y            float64
 	appear, gone    float64
@@ -84,6 +87,7 @@ type shot struct {
 	backdrop  image.Image
 	events    []scene.Event
 	links     []link
+	stage     *behavior.Stage
 }
 
 type move struct {
@@ -124,6 +128,7 @@ type Pixel struct {
 	dot     color.RGBA
 	look    charkit.Look
 	tl      *timeline.Timeline
+	flips   map[*image.RGBA]*image.RGBA
 }
 
 func Colors(dir string) (map[string]color.RGBA, map[string]color.RGBA, error) {
@@ -183,6 +188,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 	p.dur = tl.Duration
 	p.tl = tl
 	p.byID = map[string]*ent{}
+	p.flips = map[*image.RGBA]*image.RGBA{}
 	at := tl.MustResolve
 	if len(sc.Shots) == 0 {
 		for i, e := range sc.Entities {
@@ -212,7 +218,12 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 			}
 			p.shots = append(p.shots, shot{at: starts[i], until: end, place: place, backdrop: backdrop, events: s.Do})
 			p.byID = map[string]*ent{}
+			stage := p.crowdStage(s, starts[i], end, tl, sc.Seed)
+			p.shots[len(p.shots)-1].stage = stage
 			for _, c := range s.Cast {
+				if c.Crowd != nil && c.Crowd.Behavior != "" {
+					continue
+				}
 				cast := []scene.Cast{c}
 				if c.Crowd != nil {
 					cast = crowd(c.Crowd, rng)
@@ -225,6 +236,31 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 					if err := p.entity(c.Entity, starts[i], end, size, c.State, true, tl); err != nil {
 						return fmt.Errorf("shot %d: %w", i+1, err)
 					}
+					if stage != nil && c.ID != "" {
+						a, err := stage.AddEntity(c)
+						if err != nil {
+							return fmt.Errorf("shot %d: %w", i+1, err)
+						}
+						x := p.ents[len(p.ents)-1]
+						x.actor, x.stage = a, stage
+					}
+				}
+			}
+			if stage != nil {
+				if err := crowdGate(stage, s.Do); err != nil {
+					return err
+				}
+				for _, c := range s.Cast {
+					if c.Crowd == nil || c.Crowd.Behavior == "" {
+						continue
+					}
+					cr, err := stage.AddCrowd(c, rng)
+					if err != nil {
+						return fmt.Errorf("shot %d: %w", i+1, err)
+					}
+					for _, a := range cr.Units {
+						p.ents = append(p.ents, &ent{id: a.ID, kind: a.Kind, x: a.Home[0], y: a.Home[1], size: a.Size, cut: true, actor: a, stage: stage})
+					}
 				}
 			}
 			events := append([]scene.Event{}, s.Do...)
@@ -234,10 +270,24 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 					return fmt.Errorf("shot %d: %w", i+1, err)
 				}
 			}
+			if stage != nil {
+				stage.Finish()
+				p.syncCrowd(stage)
+				for _, tally := range stage.Tallies {
+					if tally.Badge != "" && p.theme.Badges[pixelBadge(tally.Badge)] == nil {
+						return fmt.Errorf("shot %d: unknown tries badge %q", i+1, tally.Badge)
+					}
+				}
+			}
 			sh := &p.shots[len(p.shots)-1]
 			for _, ev := range s.Do {
 				if ev.Do != "line" {
 					continue
+				}
+				for _, pt := range []*scene.Point{ev.From, ev.To} {
+					if pt.ID != "" && p.byID[pt.ID] == nil {
+						return fmt.Errorf("shot %d: line endpoint %q needs one actor, not a crowd", i+1, pt.ID)
+					}
 				}
 				sh.links = append(sh.links, link{p.lineEnt(ev.From), p.lineEnt(ev.To)})
 			}
@@ -254,11 +304,16 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 			}
 			roles[r.v] = true
 		}
+		if x.actor != nil {
+			if err := behavior.ValidateStates(x.actor, p.sprites.specs); err != nil {
+				return err
+			}
+		}
 		if err := p.sprites.prepare(x.kind, roles); err != nil {
 			return fmt.Errorf("entity %s: %w", x.id, err)
 		}
 		for _, b := range x.badges {
-			if _, ok := p.theme.Badges[b.v]; !ok && b.v != "" {
+			if _, ok := p.theme.Badges[pixelBadge(b.v)]; !ok && b.v != "" {
 				return fmt.Errorf("entity %s: unknown badge %q", x.id, b.v)
 			}
 		}
@@ -268,6 +323,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 			}
 		}
 	}
+	p.prepareFlips()
 	p.bg = background(p.theme.BG, p.dot)
 	p.cues = p.sounds(sc, tl)
 	if len(sc.Shots) == 0 {
@@ -316,6 +372,14 @@ func (p *Pixel) entity(e scene.Entity, appear, gone, size float64, state string,
 }
 
 func (p *Pixel) event(i int, ev scene.Event, t, end float64, tl *timeline.Timeline) error {
+	if len(p.shots) > 0 {
+		if stage := p.shots[len(p.shots)-1].stage; stage != nil {
+			switch ev.Do {
+			case "state", "role", "badge", "walk", "admit", "tries":
+				return stage.Event(ev, t)
+			}
+		}
+	}
 	target := func() (*ent, error) {
 		if ev.Target == nil || p.byID[ev.Target.ID] == nil {
 			return nil, fmt.Errorf("event %d: %s needs a target entity", i+1, ev.Do)
@@ -409,12 +473,18 @@ func (p *Pixel) event(i int, ev scene.Event, t, end float64, tl *timeline.Timeli
 			gone = math.Min(src.gone, gone)
 		}
 		src.gone = gone
+		if src.actor != nil {
+			src.actor.Gone = gone
+		}
 		for _, id := range ev.Into {
 			h := p.byID[id]
 			if h == nil {
 				return fmt.Errorf("event %d: unknown entity %q", i+1, id)
 			}
 			h.appear = src.gone
+			if h.actor != nil {
+				h.actor.Appear = h.appear
+			}
 			if src.cut {
 				h.size *= 0.75
 				px, py := src.position(src.gone)
@@ -572,6 +642,9 @@ func spriteRect(anchor [2]int, r [4]int, px, py, k float64) box {
 
 func (x *ent) position(t float64) (float64, float64) {
 	px, py := x.x, x.y
+	if x.actor != nil {
+		px, py, _, _, _, _ = x.stage.Pose(x.actor, t)
+	}
 	if x.splitDur > 0 {
 		u := smooth(clamp((t - x.appear) / x.splitDur))
 		px = x.from[0] + (x.x-x.from[0])*u
@@ -723,6 +796,10 @@ func (p *Pixel) drawEnt(dst *image.RGBA, dc *gg.Context, x *ent, t, sway float64
 	}
 	spec := p.sprites.specs[x.kind]
 	im := p.sprites.frame(x.kind, x.states, t, lastStr(x.roles, t))
+	moving := false
+	if x.actor != nil {
+		im, moving = p.crowdFrame(x.actor, t)
+	}
 	shx := 0.0
 	for _, s := range x.shakes {
 		if t >= s && t < s+0.45 {
@@ -758,7 +835,16 @@ func (p *Pixel) drawEnt(dst *image.RGBA, dc *gg.Context, x *ent, t, sway float64
 		dc.SetColor(grey)
 		dc.DrawStringAnchored(s, px, ay+72*labelScale, 0.5, 0.5)
 	}
-	if b := p.theme.Badges[lastStr(x.badges, t)]; b != nil {
+	if x.stage != nil {
+		if tally := x.stage.TallyAt(x.actor, t); tally != nil {
+			p.drawTally(dc, x, tally, t)
+			return
+		}
+		if moving {
+			return
+		}
+	}
+	if b := p.theme.Badges[pixelBadge(lastStr(x.badges, t))]; b != nil {
 		ty := ay - float64(spec.Anchor[1]-spec.Top[1])*scale*x.size
 		bx := int(px + w*x.size*0.3 + shx)
 		if x.cut && x.size != 1 {

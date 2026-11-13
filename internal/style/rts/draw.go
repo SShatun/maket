@@ -38,8 +38,8 @@ func hash(a, b, c, d uint64) uint64 {
 func last(l []timedStr, t float64) (string, float64) {
 	v, at := "", 0.0
 	for _, x := range l {
-		if t >= x.t {
-			v, at = x.v, x.t
+		if t >= x.T {
+			v, at = x.V, x.T
 		}
 	}
 	return v, at
@@ -112,23 +112,17 @@ func (s *Style) items(sh *shot, t float64) []item {
 	out := make([]item, 0, len(sh.actors))
 	var one [1]spr.Step
 	for _, a := range sh.actors {
-		if t < a.appear || t >= a.gone {
+		if t < a.Appear || t >= a.Gone {
 			continue
 		}
-		x, y, st, since, flip, moving := a.pose(t)
-		if a.jitter {
-			n := uint64(int(t*30) / 3)
-			h := hash(sh.seed, a.salt, n, 3)
-			x += float64(int(h%3) - 1)
-			y += float64(int((h/3)%3) - 1)
-		}
-		role, _ := last(a.roles, t)
+		x, y, st, since, flip, moving := sh.behavior.Pose(a, t)
+		role, _ := last(a.Roles, t)
 		var im *image.RGBA
 		if st != "" {
 			one[0] = spr.Step{T: since, V: st}
-			im = s.set.Frame(a.kind, one[:], t, role)
+			im = s.set.Frame(a.Kind, one[:], t, role)
 		} else {
-			im = s.set.Frame(a.kind, a.steps, t, role)
+			im = s.set.Frame(a.Kind, a.Steps, t, role)
 		}
 		if im == nil {
 			continue
@@ -141,7 +135,7 @@ func (s *Style) items(sh *shot, t float64) []item {
 }
 
 func (s *Style) anchor(it item) (int, int, *image.RGBA) {
-	spec := s.set.Specs[it.a.kind]
+	spec := s.set.Specs[it.a.Kind]
 	ax, ay := spec.Anchor[0]/2, spec.Anchor[1]/2
 	im := it.im
 	if it.flip {
@@ -214,7 +208,7 @@ func (s *Style) selection(world *image.RGBA, sh *shot, t float64, items []item, 
 			continue
 		}
 		ax, ay, im := s.anchor(it)
-		b := s.boxes[it.a.kind]
+		b := s.boxes[it.a.Kind]
 		if it.flip {
 			w := im.Bounds().Dx()
 			b = image.Rect(w-b.Max.X, b.Min.Y, w-b.Min.X, b.Max.Y)
@@ -257,16 +251,16 @@ func (s *Style) selection(world *image.RGBA, sh *shot, t float64, items []item, 
 
 func (s *Style) marks(world *image.RGBA, sh *shot, t float64, items []item, ox, oy int) {
 	for _, it := range items {
-		if it.moving || len(it.a.marks) == 0 || sh.tallyAt(it.a, t) != nil {
+		if it.moving || len(it.a.Badges) == 0 || sh.tallyAt(it.a, t) != nil {
 			continue
 		}
-		m, at := last(it.a.marks, t)
+		m, at := last(it.a.Badges, t)
 		frames := s.art.marks[m]
 		if len(frames) == 0 {
 			continue
 		}
-		im := frames[int((t-at)*4+it.a.anim*4)%len(frames)]
-		spec := s.set.Specs[it.a.kind]
+		im := frames[int((t-at)*4+it.a.Anim*4)%len(frames)]
+		spec := s.set.Specs[it.a.Kind]
 		dx := (spec.Top[0] - spec.Anchor[0]) / 12
 		if it.flip {
 			dx = -dx
@@ -369,8 +363,8 @@ func (s *Style) hud(dst *image.RGBA, dc *gg.Context, face func(float64) font.Fac
 	if p.who != nil {
 		fr := s.art.frame
 		draw.Draw(dst, image.Rect(328, 1472, 328+fr.Bounds().Dx(), 1472+fr.Bounds().Dy()), fr, image.Point{}, draw.Src)
-		role, _ := last(p.who.roles, t)
-		if im := s.looks[p.who.kind+"/"+role]; im != nil {
+		role, _ := last(p.who.Roles, t)
+		if im := s.looks[p.who.Kind+"/"+role]; im != nil {
 			w, h := im.Bounds().Dx(), im.Bounds().Dy()
 			x, y := 388-w/2, 1532-h/2
 			draw.Draw(dst, image.Rect(x, y, x+w, y+h), im, image.Point{}, draw.Over)
@@ -408,11 +402,11 @@ func (s *Style) hud(dst *image.RGBA, dc *gg.Context, face func(float64) font.Fac
 		mx := x0 + int(float64(it.x)*float64(mw)/mapW)*4
 		my := minimapIn.Min.Y + int(float64(it.y)*62/mapH)*4
 		sz := 4
-		if !it.a.unit {
+		if !it.a.Unit {
 			sz = 8
 			mx, my = mx-4, my-4
 		}
-		role, _ := last(it.a.roles, t)
+		role, _ := last(it.a.Roles, t)
 		fill(dst, image.Rect(mx, my, mx+sz, my+sz).Intersect(clip), s.roles[role])
 	}
 }

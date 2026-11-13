@@ -165,31 +165,31 @@ func (s *Style) prepare() error {
 	var kinds []string
 	for _, sh := range s.shots {
 		for _, a := range sh.actors {
-			w := wants[a.kind]
+			w := wants[a.Kind]
 			if w == nil {
 				w = &want{roles: map[string]bool{}, states: map[string]bool{}}
-				wants[a.kind] = w
-				kinds = append(kinds, a.kind)
+				wants[a.Kind] = w
+				kinds = append(kinds, a.Kind)
 			}
-			spec := s.set.Specs[a.kind]
-			for _, r := range a.roles {
-				if _, ok := s.roles[r.v]; !ok {
-					return fmt.Errorf("%s: unknown role %q", a.name(), r.v)
+			spec := s.set.Specs[a.Kind]
+			for _, r := range a.Roles {
+				if _, ok := s.roles[r.V]; !ok {
+					return fmt.Errorf("%s: unknown role %q", a.Name(), r.V)
 				}
-				w.roles[r.v] = true
+				w.roles[r.V] = true
 			}
-			for _, st := range a.states() {
+			for _, st := range a.States() {
 				if _, ok := spec.States[st]; !ok {
-					return fmt.Errorf("%s: %s has no state %q", a.name(), a.kind, st)
+					return fmt.Errorf("%s: %s has no state %q", a.Name(), a.Kind, st)
 				}
 				w.states[st] = true
 			}
-			for _, m := range a.marks {
-				if _, ok := s.art.marks[m.v]; !ok && m.v != "" {
-					return fmt.Errorf("%s: unknown mark %q, known: bang, question, wait, dots, zzz", a.name(), m.v)
+			for _, m := range a.Badges {
+				if _, ok := s.art.marks[m.V]; !ok && m.V != "" {
+					return fmt.Errorf("%s: unknown mark %q, known: bang, question, wait, dots, zzz", a.Name(), m.V)
 				}
 			}
-			w.flip = w.flip || a.unit || a.flip || len(a.legs) > 0
+			w.flip = w.flip || a.Unit || a.Flip || len(a.Legs) > 0
 		}
 	}
 	s.flips = map[*image.RGBA]*image.RGBA{}
@@ -222,12 +222,12 @@ func (s *Style) prepare() error {
 			if p.who == nil {
 				continue
 			}
-			for _, r := range p.who.roles {
-				k := p.who.kind + "/" + r.v
+			for _, r := range p.who.Roles {
+				k := p.who.Kind + "/" + r.V
 				if s.looks[k] != nil {
 					continue
 				}
-				im, err := s.portrait(p.who.kind, r.v)
+				im, err := s.portrait(p.who.Kind, r.V)
 				if err != nil {
 					return err
 				}

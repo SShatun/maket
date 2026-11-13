@@ -7,12 +7,11 @@ import (
 	"image/draw"
 	"math"
 	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/fogleman/gg"
 	"golang.org/x/image/font"
 
+	"maket/internal/behavior"
 	"maket/internal/render"
 	"maket/internal/scene"
 )
@@ -38,12 +37,9 @@ type tag struct {
 }
 
 type tally struct {
-	who      *actor
-	t, until float64
-	steps    []float64
-	ims      []*image.RGBA
-	bars     []image.Rectangle
-	badge    string
+	shared *behavior.Tally
+	ims    []*image.RGBA
+	bars   []image.Rectangle
 }
 
 type layer struct {
@@ -163,21 +159,21 @@ func (s *Style) crowdTag(sh *shot, cr *crowd, c scene.Cast) error {
 		return err
 	}
 	if c.Label == "" {
-		return fmt.Errorf("crowd %s: label_pos needs label", cr.title)
+		return fmt.Errorf("crowd %s: label_pos needs label", cr.Title)
 	}
-	x0, y0, x1, y1 := cr.box()
+	x0, y0, x1, y1 := cr.Box(mapW, mapH)
 	if math.IsInf(x0, 1) {
 		return nil
 	}
-	spec := s.set.Specs[cr.kind]
-	b := s.box(cr.kind)
+	spec := s.set.Specs[cr.Kind]
+	b := s.box(cr.Kind)
 	ay := spec.Anchor[1] / 2
 	at := image.Pt(int(math.Round((x0+x1)/2))*px, mapTop+int(math.Round(y0))*px-(ay-b.Min.Y))
 	if below {
 		at.Y = mapTop + int(math.Round(y1))*px + (b.Max.Y - ay)
 	} else {
-		for _, u := range cr.units {
-			if len(u.marks) > 0 {
+		for _, u := range cr.Units {
+			if len(u.Badges) > 0 {
 				at.Y -= 72 + 2*px
 				break
 			}
@@ -201,64 +197,19 @@ func (s *Style) tallyPlate(txt, badge string) (*image.RGBA, image.Rectangle) {
 	return im, image.Rect(x, y+size+2*grain, x+tw, y+size+4*grain)
 }
 
-func (s *Style) tries(sh *shot, ev scene.Event, re rawEvent, t float64) error {
-	if ev.Target == nil || sh.byID[ev.Target.ID] == nil {
-		return fmt.Errorf("tries needs target: id of one cast entity in this shot")
+func (s *Style) tries(sh *shot, ev scene.Event, _ rawEvent, t float64) error {
+	if err := sh.behavior.Event(ev, t); err != nil {
+		return err
 	}
-	a := sh.byID[ev.Target.ID]
-	badge := "wait"
-	if re.Badge != nil {
-		badge = *re.Badge
+	shared := sh.behavior.Tallies[len(sh.behavior.Tallies)-1]
+	if shared.Badge != "" && len(s.art.small[shared.Badge]) == 0 {
+		return fmt.Errorf("unknown badge %q, known: bang, question, wait, dots, zzz", shared.Badge)
 	}
-	if badge == "bad" {
-		badge = "bang"
-	}
-	if badge != "" && len(s.art.small[badge]) == 0 {
-		return fmt.Errorf("unknown badge %q, known: bang, question, wait, dots, zzz", badge)
-	}
-	text := ev.Text
-	if text == "" {
-		text = "{n}"
-	}
-	var vals []string
-	var steps []float64
-	if c := re.Count; c != nil {
-		if len(c) != 3 || c[2] < 0 {
-			return fmt.Errorf("tries: count wants [from, to, seconds]")
-		}
-		if !strings.Contains(text, "{n}") {
-			text = "{n}" + text
-		}
-		from, to := int(math.Round(c[0])), int(math.Round(c[1]))
-		k, dir := to-from, 1
-		if k < 0 {
-			k, dir = -k, -1
-		}
-		for i := 0; i <= k; i++ {
-			ti := t
-			if k > 0 {
-				ti = t + float64(i)*c[2]/float64(k)
-			}
-			vals = append(vals, strings.ReplaceAll(text, "{n}", strconv.Itoa(from+i*dir)))
-			steps = append(steps, ti)
-		}
-	} else if strings.Contains(text, "{n}") {
-		return fmt.Errorf("tries: {n} in text needs count")
-	} else {
-		vals, steps = []string{text}, []float64{t}
-	}
-	until := sh.until
-	if ev.Until != nil {
-		u, err := s.when(*ev.Until)
-		if err != nil {
-			return err
-		}
-		until = math.Min(until, u)
-	}
-	x := tally{who: a, t: t, until: until, steps: steps, badge: badge}
-	for _, v := range vals {
-		im, bar := s.tallyPlate(v, badge)
-		x.ims, x.bars = append(x.ims, im), append(x.bars, bar)
+	x := tally{shared: shared}
+	for _, value := range shared.Values {
+		im, bar := s.tallyPlate(value, shared.Badge)
+		x.ims = append(x.ims, im)
+		x.bars = append(x.bars, bar)
 	}
 	sh.tallies = append(sh.tallies, x)
 	return nil
@@ -393,14 +344,16 @@ func (s *Style) panelImage(ev scene.Event, w, h int, lines []scene.PanelLine) *i
 }
 
 func (sh *shot) tallyAt(a *actor, t float64) *tally {
-	var cur *tally
+	shared := sh.behavior.TallyAt(a, t)
+	if shared == nil {
+		return nil
+	}
 	for i := range sh.tallies {
-		x := &sh.tallies[i]
-		if x.who == a && t >= x.t && t < x.until && (cur == nil || x.t >= cur.t) {
-			cur = x
+		if sh.tallies[i].shared == shared {
+			return &sh.tallies[i]
 		}
 	}
-	return cur
+	return nil
 }
 
 func paste(dst *image.RGBA, im *image.RGBA, x, y int) {
@@ -417,29 +370,26 @@ func (s *Style) plates(world *image.RGBA, sh *shot, t float64, items []item, ox,
 		if x == nil {
 			continue
 		}
-		spec := s.set.Specs[it.a.kind]
+		spec := s.set.Specs[it.a.Kind]
 		dx := (spec.Top[0] - spec.Anchor[0]) / 12
 		if it.flip {
 			dx = -dx
 		}
 		dy := (spec.Anchor[1] - spec.Top[1]) / 12
-		i := 0
-		for i+1 < len(x.steps) && t >= x.steps[i+1] {
-			i++
-		}
+		i := x.shared.Index(t)
 		im := x.ims[i]
 		w, h := im.Bounds().Dx()-border, im.Bounds().Dy()-border
 		px0 := snap(float64((it.x+dx+ox)*px - w/2))
 		py0 := mapTop + (it.y-dy-2+oy)*px - h
 		paste(world, im, px0, py0)
-		if x.badge != "" {
-			frames := s.art.small[x.badge]
-			ic := frames[int((t-x.t)*4+it.a.anim*4)%len(frames)]
+		if x.shared.Badge != "" {
+			frames := s.art.small[x.shared.Badge]
+			ic := frames[int((t-x.shared.T)*4+it.a.Anim*4)%len(frames)]
 			paste(world, ic, px0+border+pad, py0+(h-ic.Bounds().Dy())/2)
 		}
-		if x.badge == "wait" && i+1 < len(x.steps) {
+		if x.shared.Badge == "wait" && i+1 < len(x.shared.Steps) {
 			bar := x.bars[i].Add(image.Pt(px0, py0))
-			k := 1 - clamp((t-x.steps[i])/(x.steps[i+1]-x.steps[i]))
+			k := x.shared.Remaining(t)
 			fill(world, bar, well)
 			fill(world, image.Rect(bar.Min.X, bar.Min.Y, bar.Min.X+snap(k*float64(bar.Dx())), bar.Max.Y), s.palette["msg"])
 		}
@@ -460,7 +410,7 @@ func (s *Style) plates(world *image.RGBA, sh *shot, t float64, items []item, ox,
 				continue
 			}
 			ax, ay, im := s.anchor(it)
-			b := s.boxes[it.a.kind]
+			b := s.boxes[it.a.Kind]
 			if it.flip {
 				bw := im.Bounds().Dx()
 				b = image.Rect(bw-b.Max.X, b.Min.Y, bw-b.Min.X, b.Max.Y)

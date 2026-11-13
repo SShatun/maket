@@ -12,8 +12,8 @@ import (
 	xdraw "golang.org/x/image/draw"
 
 	"maket/internal/audio"
+	"maket/internal/behavior"
 	"maket/internal/scene"
-	spr "maket/internal/style/sprites"
 )
 
 type rawShot struct {
@@ -37,10 +37,10 @@ type rawRes struct {
 }
 
 type rawCast struct {
-	Flip   bool      `json:"flip"`
-	Select bool      `json:"select"`
-	HP     *float64  `json:"hp"`
-	Crowd  *rawCrowd `json:"crowd"`
+	Flip   bool            `json:"flip"`
+	Select bool            `json:"select"`
+	HP     *float64        `json:"hp"`
+	Crowd  json.RawMessage `json:"crowd"`
 }
 
 type rawEvent struct {
@@ -61,10 +61,10 @@ type rawEvent struct {
 	Part    bool      `json:"part"`
 }
 
-type timedStr struct {
-	t float64
-	v string
-}
+type actor = behavior.Actor
+type crowd = behavior.Crowd
+type leg = behavior.Leg
+type timedStr = behavior.Timed
 
 type resStep struct {
 	t     float64
@@ -134,6 +134,7 @@ type shot struct {
 	sfx       []audio.Cue
 	horde     float64
 	horn      float64
+	behavior  *behavior.Stage
 }
 
 var defaultButtons = []string{"move", "stop", "wait", "retry", "cancel", "attack"}
@@ -156,7 +157,11 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 	if rs.Map != nil && rs.Map.Seed != nil {
 		seed = *rs.Map.Seed
 	}
-	sh := &shot{at: at, until: until, seed: uint64(seed), byID: map[string]*actor{}, crowdByID: map[string]*crowd{}, horde: math.Inf(1), horn: math.Inf(1)}
+	sh := &shot{at: at, until: until, seed: uint64(seed), horde: math.Inf(1), horn: math.Inf(1)}
+	sh.behavior = s.behaviorStage(at, until)
+	sh.behavior.Seed = uint64(seed)
+	sh.byID = sh.behavior.ByID
+	sh.crowdByID = sh.behavior.CrowdByID
 	in, err := parseFade(rs.In, i == 0)
 	if err != nil {
 		return nil, err
@@ -168,11 +173,11 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 		if err := json.Unmarshal(c.Raw, &rc); err != nil {
 			return nil, err
 		}
-		if c.Crowd != nil || rc.Crowd != nil {
+		if c.Crowd != nil || len(rc.Crowd) > 0 && string(rc.Crowd) != "null" {
 			crowds = append(crowds, c)
 			continue
 		}
-		a, err := s.entity(sh, c, rc)
+		a, err := s.addBehaviorEntity(sh, c, rc)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +186,7 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			if rc.HP != nil {
 				hp = *rc.HP
 			}
-			sh.picks = append(sh.picks, pick{t: at, who: a, src: a.status, name: a.title(), tone: "ok", hp: hp})
+			sh.picks = append(sh.picks, pick{t: at, who: a, src: a.Status, name: a.Title(), tone: "ok", hp: hp})
 		}
 	}
 	rng := rand.New(rand.NewSource(seed))
@@ -192,7 +197,7 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			if a == nil {
 				return [2]float64{}, fmt.Errorf("unknown entity %q", id)
 			}
-			return [2]float64{a.home[0], a.home[1] + 2}, nil
+			return [2]float64{a.Home[0], a.Home[1] + 2}, nil
 		}
 		var v []float64
 		if json.Unmarshal(raw, &v) != nil || len(v) != 2 {
@@ -209,6 +214,9 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 		if sh.wall, err = s.wall(mp.Wall, sh.byID); err != nil {
 			return nil, err
 		}
+		if sh.wall != nil {
+			sh.behavior.Gate = sh.wall.gate
+		}
 	}
 	for j, c := range crowds {
 		cr, err := s.crowd(sh, c, j, rng)
@@ -216,13 +224,17 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			return nil, fmt.Errorf("crowd %d: %w", j+1, err)
 		}
 		sh.crowds = append(sh.crowds, cr)
-		if cr.id != "" {
-			sh.crowdByID[cr.id] = cr
+		if cr.ID != "" {
+			sh.crowdByID[cr.ID] = cr
 		}
-		if cr.sel {
-			sh.picks = append(sh.picks, groupPick(pick{t: at}, cr, false, cr.units))
+		if cr.Selected {
+			sh.picks = append(sh.picks, groupPick(pick{t: at}, cr, false, cr.Units))
 		}
 	}
+	sh.actors = sh.behavior.Actors
+	sh.crowds = sh.behavior.Crowds
+	sh.byID = sh.behavior.ByID
+	sh.crowdByID = sh.behavior.CrowdByID
 	sh.bg = image.NewRGBA(s.art.chrome.Bounds())
 	copy(sh.bg.Pix, s.art.chrome.Pix)
 	xdraw.NearestNeighbor.Scale(sh.bg, mapRect, lg, lg.Bounds(), xdraw.Src, nil)
@@ -278,20 +290,15 @@ func (s *Style) buildShot(i int, sc scene.Shot, at, until float64, keys []string
 			return nil, fmt.Errorf("event %d (%s): %w", j+1, events[j].Do, err)
 		}
 	}
-	for _, a := range sh.actors {
-		sort.SliceStable(a.steps, func(i, j int) bool { return a.steps[i].T < a.steps[j].T })
-		sort.SliceStable(a.roles, func(i, j int) bool { return a.roles[i].t < a.roles[j].t })
-		sort.SliceStable(a.marks, func(i, j int) bool { return a.marks[i].t < a.marks[j].t })
-		sort.SliceStable(a.legs, func(i, j int) bool { return a.legs[i].t0 < a.legs[j].t0 })
-	}
+	sh.behavior.Finish()
 	return sh, nil
 }
 
 func groupPick(p pick, cr *crowd, part bool, units []*actor) pick {
-	p.who, p.crowd, p.part, p.src, p.name = units[0], cr, part, cr.status, cr.title
+	p.who, p.crowd, p.part, p.src, p.name = units[0], cr, part, cr.Status, cr.Title
 	if !part {
 		in := map[*actor]bool{}
-		for _, u := range cr.part {
+		for _, u := range cr.Part {
 			in[u] = true
 		}
 		for _, u := range units {
@@ -325,19 +332,12 @@ func (s *Style) targets(sh *shot, ev scene.Event, re rawEvent) ([]*actor, error)
 		return nil, fmt.Errorf("target %q is not a cast entity or crowd of this shot", id)
 	}
 	if !re.Part {
-		return cr.units, nil
+		return cr.Units, nil
 	}
-	if len(cr.part) == 0 {
+	if len(cr.Part) == 0 {
 		return nil, fmt.Errorf("crowd %s has no part", id)
 	}
-	return cr.part, nil
-}
-
-func (a *actor) react(t float64) float64 {
-	if a.unit {
-		return t + 0.3*a.anim
-	}
-	return t
+	return cr.Part, nil
 }
 
 func parseFade(raw json.RawMessage, first bool) (fade, error) {
@@ -433,71 +433,6 @@ func (s *Style) addRes(sh *shot, keys *[]string, t float64, key, text, icon stri
 	return nil
 }
 
-func (s *Style) entity(sh *shot, c scene.Cast, rc rawCast) (*actor, error) {
-	spec, ok := s.set.Specs[c.Kind]
-	if !ok {
-		return nil, fmt.Errorf("cast %s: unknown kind %q", c.ID, c.Kind)
-	}
-	if c.At[0] < 0 || c.At[0] > mapW || c.At[1] < 0 || c.At[1] > mapH {
-		return nil, fmt.Errorf("cast %s: at wants map px inside 180x229, got %v", c.ID, c.At)
-	}
-	a := &actor{id: c.ID, kind: c.Kind, label: c.Label, home: [2]float64{c.At[0], c.At[1]}, appear: sh.at, gone: sh.until, flip: rc.Flip}
-	role := c.Role
-	if role == "" {
-		role = "external"
-	}
-	a.roles = []timedStr{{0, role}}
-	for _, r := range c.Roles {
-		t, err := s.when(r.At)
-		if err != nil {
-			return nil, err
-		}
-		a.roles = append(a.roles, timedStr{t, r.V})
-	}
-	state := c.State
-	if state == "" {
-		state = spec.Rest
-	}
-	a.steps = []spr.Step{{T: sh.at, V: state}}
-	for _, st := range c.States {
-		t, err := s.when(st.At)
-		if err != nil {
-			return nil, err
-		}
-		a.steps = append(a.steps, spr.Step{T: t, V: st.V, Hold: st.Hold})
-	}
-	var err error
-	if a.marks, err = s.timed(c.Badges); err != nil {
-		return nil, err
-	}
-	if a.status, err = s.timed(c.Status); err != nil {
-		return nil, err
-	}
-	if err := s.entityTag(sh, a, c); err != nil {
-		return nil, err
-	}
-	sh.actors = append(sh.actors, a)
-	sh.byID[c.ID] = a
-	return a, nil
-}
-
-func (s *Style) timed(l []scene.Timed[string]) ([]timedStr, error) {
-	var out []timedStr
-	for _, x := range l {
-		t, err := s.when(x.At)
-		if err != nil {
-			return nil, err
-		}
-		v := x.V
-		if v == "bad" {
-			v = "bang"
-		}
-		out = append(out, timedStr{t, v})
-	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].t < out[j].t })
-	return out, nil
-}
-
 func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 	var re rawEvent
 	if err := json.Unmarshal(ev.Raw, &re); err != nil {
@@ -510,96 +445,27 @@ func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 		u, err := s.when(*ev.Until)
 		return math.Min(u, sh.until), err
 	}
-	target := func() (*actor, error) {
-		if ev.Target == nil || sh.byID[ev.Target.ID] == nil {
-			return nil, fmt.Errorf("needs target: id of a cast entity in this shot")
-		}
-		return sh.byID[ev.Target.ID], nil
-	}
 	switch ev.Do {
-	case "state":
-		us, err := s.targets(sh, ev, re)
-		if err != nil {
-			return err
-		}
-		moving := ev.State == "walk" || ev.State == "carry"
-		for _, a := range us {
-			at := a.react(t)
-			if a.period > 0 {
-				switch {
-				case !moving && math.IsInf(a.halt, 1):
-					a.halt = at
-				case moving && !math.IsInf(a.halt, 1) && math.IsInf(a.resume, 1):
-					a.resume = at
-				}
-			}
-			a.steps = append(a.steps, spr.Step{T: at, V: ev.State, Hold: ev.Hold})
-		}
-		if ev.State == "deny" {
+	case "state", "role", "badge", "walk":
+		if ev.Do == "state" && ev.State == "deny" {
 			sh.denies = append(sh.denies, t)
 		}
-	case "role":
-		us, err := s.targets(sh, ev, re)
-		if err != nil {
-			return err
-		}
-		var u float64
-		if ev.Until != nil {
-			if u, err = s.when(*ev.Until); err != nil {
-				return err
-			}
-		}
-		for _, a := range us {
-			a.roles = append(a.roles, timedStr{a.react(t), ev.Role})
-			if ev.Until != nil {
-				a.roles = append(a.roles, timedStr{a.react(u), a.roles[0].v})
-			}
-		}
-	case "badge":
-		us, err := s.targets(sh, ev, re)
-		if err != nil {
-			return err
-		}
-		v := ""
-		if re.Badge != nil {
-			v = *re.Badge
-		}
-		if v == "bad" {
-			v = "bang"
-		}
-		var u float64
-		if ev.Until != nil {
-			if u, err = s.when(*ev.Until); err != nil {
-				return err
-			}
-		}
-		for _, a := range us {
-			prev, _ := last(a.marks, t)
-			a.marks = append(a.marks, timedStr{a.react(t), v})
-			if ev.Until != nil {
-				a.marks = append(a.marks, timedStr{a.react(u), prev})
-			}
-			sort.SliceStable(a.marks, func(i, j int) bool { return a.marks[i].t < a.marks[j].t })
-		}
+		return sh.behavior.Event(ev, t)
+	case "admit":
+		passCount := len(sh.behavior.Passes)
+		err := sh.behavior.Event(ev, t)
+		sh.passes = append(sh.passes, sh.behavior.Passes[passCount:]...)
+		return err
 	case "tries":
 		return s.tries(sh, ev, re, t)
+	}
+	switch ev.Do {
 	case "text", "panel", "line":
 		u, err := until(sh.until)
 		if err != nil {
 			return err
 		}
 		return s.element(sh, ev, t, u)
-	case "walk":
-		a, err := target()
-		if err != nil {
-			return err
-		}
-		x, y := a.rest(t)
-		st := ""
-		if _, ok := s.set.Specs[a.kind].States["walk"]; ok {
-			st = "walk"
-		}
-		a.legs = append(a.legs, leg{t0: t, t1: t + ev.Dur, from: [2]float64{x, y}, to: [2]float64{ev.To.Coords[0], ev.To.Coords[1]}, state: st})
 	case "shake":
 		p := int(math.Round(re.Px))
 		if p == 0 {
@@ -639,8 +505,6 @@ func (s *Style) event(sh *shot, ev scene.Event, t float64) error {
 		return s.addRes(sh, &sh.keys, t, re.Key, ev.Text, re.Icon, re.Alert, re.Count)
 	case "select":
 		return s.selectEvent(sh, ev, re, t)
-	case "admit":
-		return s.admit(sh, ev, re, t)
 	case "sfx":
 		var o struct {
 			Name string `json:"name"`
@@ -689,11 +553,11 @@ func (s *Style) selectEvent(sh *shot, ev scene.Event, re rawEvent, t float64) er
 	if ev.Target != nil {
 		if a := sh.byID[ev.Target.ID]; a != nil {
 			if re.Part {
-				return fmt.Errorf("part is for crowds, %s is one entity", a.id)
+				return fmt.Errorf("part is for crowds, %s is one entity", a.ID)
 			}
 			if a != p.who || p.group != nil {
-				p.who, p.group, p.crowd, p.part, p.src = a, nil, nil, false, a.status
-				p.name, p.status, p.fixed, p.hp, p.tone = a.title(), "", false, 1, "ok"
+				p.who, p.group, p.crowd, p.part, p.src = a, nil, nil, false, a.Status
+				p.name, p.status, p.fixed, p.hp, p.tone = a.Title(), "", false, 1, "ok"
 			}
 		} else if cr := sh.crowdByID[ev.Target.ID]; cr != nil {
 			us, err := s.targets(sh, ev, re)
