@@ -115,6 +115,7 @@ func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, 
 	dc := gg.NewContextForRGBA(dst)
 	o := overlay{dc: dc, sc: sc, tl: tl, th: th, t: t}
 	if th.OwnCaption {
+		o.diagram()
 		if !th.NoProgress {
 			o.progress()
 		}
@@ -124,6 +125,7 @@ func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, 
 	if len(sc.Shots) > 0 {
 		o.numbers()
 		o.camera(dst)
+		o.diagram()
 		o.guess()
 		o.answer()
 		if !th.OwnCaption {
@@ -134,6 +136,7 @@ func Overlay(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, 
 		}
 		return
 	}
+	o.diagram()
 	o.guess()
 	o.answer()
 	o.numbers()

@@ -24,6 +24,7 @@ type Scene struct {
 	Entities     []Entity        `json:"entities"`
 	Events       []Event         `json:"events"`
 	Shots        []Shot          `json:"shots"`
+	Diagram      *Diagram        `json:"diagram"`
 	Code         *Code           `json:"code"`
 	Caption      json.RawMessage `json:"caption"`
 }
@@ -210,6 +211,11 @@ func Load(path string) (*Scene, error) {
 }
 
 func (sc *Scene) check() error {
+	if sc.Diagram != nil {
+		if err := sc.Diagram.check(); err != nil {
+			return fmt.Errorf("diagram: %w", err)
+		}
+	}
 	if len(sc.Shots) > 0 {
 		if len(sc.Entities) > 0 || len(sc.Events) > 0 {
 			return errors.New("shots use cast and do instead of entities and events")

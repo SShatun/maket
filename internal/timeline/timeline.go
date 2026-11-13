@@ -168,6 +168,20 @@ func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 		out = append(out, t)
 		return nil
 	}
+	if d := sc.Diagram; d != nil {
+		previous := -1.0
+		for i, step := range d.Steps {
+			t, err := tl.Resolve(step.At)
+			if err != nil {
+				return nil, fmt.Errorf("diagram step %d: %w", i+1, err)
+			}
+			if t < 0 || t >= tl.Duration || t <= previous {
+				return nil, fmt.Errorf("diagram step %d: time %.3f must be inside the scene and after %.3f", i+1, t, previous)
+			}
+			out = append(out, t)
+			previous = t
+		}
+	}
 	for i, ev := range sc.Events {
 		if err := add(ev.At); err != nil {
 			return nil, fmt.Errorf("event %d: %w", i+1, err)
