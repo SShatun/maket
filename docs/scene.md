@@ -107,7 +107,8 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 | kind | кто | состояния |
 |---|---|---|
-| `person` | человек с телефоном | `idle`, `wait`, `surprised`, `happy` |
+| `person` | человек с телефоном; только когда в истории важен телефон | `idle`, `wait`, `surprised`, `happy` |
+| `developer` | человек за ноутбуком; обычный человек ролика: разработчик, дежурный, сотрудник | `idle`, `wait`, `surprised`, `happy` |
 | `service` | сервис, работник | `idle`, `count`, `wait`, `skip`, `bad` |
 | `session` | терминал | `idle`, `type`, `wait`, `sleep` |
 | `dialog` | окошко Yes/No | `idle`, `impatient`, `closed` |
