@@ -25,6 +25,10 @@ import (
 )
 
 type Config struct {
+	YandexPython     string `json:"yandex_python"`
+	YandexVoice      string `json:"yandex_voice"`
+	YandexRole       string `json:"yandex_role"`
+	YandexKeyFile    string `json:"yandex_key_file"`
 	SpeechifyPython  string `json:"speechify_python"`
 	SpeechifyVoice   string `json:"speechify_voice"`
 	SpeechifyKeyFile string `json:"speechify_key_file"`
@@ -107,7 +111,7 @@ func LoadConfig(root string) (Config, error) {
 	if v := os.Getenv("MAKET_VOICE_BACKEND"); v != "" {
 		c.Backend = v
 	}
-	if c.Backend != "" && c.Backend != "qwen" && c.Backend != "speechify" {
+	if c.Backend != "" && c.Backend != "qwen" && c.Backend != "speechify" && c.Backend != "yandex" {
 		return c, fmt.Errorf("unknown voice_backend %q", c.Backend)
 	}
 	return c, nil
@@ -166,6 +170,9 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 }
 
 func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	if cfg.Backend == "yandex" {
+		return yandexTexts(root, sc)
+	}
 	if cfg.Backend == "speechify" {
 		return speechifyTexts(root, sc)
 	}
@@ -177,6 +184,9 @@ func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name st
 }
 
 func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	if cfg.Backend == "yandex" {
+		return synthesizeYandex(ctx, root, cfg, sc)
+	}
 	if cfg.Backend == "speechify" {
 		return synthesizeSpeechify(ctx, root, cfg, sc)
 	}
@@ -724,7 +734,7 @@ func (r *run) python(py, script string, job any) error {
 			}
 		}
 	}
-	if script != "speechify.py" {
+	if script != "speechify.py" && script != "yandex.py" {
 		unlock, err := lockMachine()
 		if err != nil {
 			return err

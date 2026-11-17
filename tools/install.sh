@@ -5,6 +5,7 @@ root=$(cd "$(dirname "$0")/.." && pwd -P)
 prefix=${HOME}/.local/share/maket
 mode=install
 speechify_only=0
+yandex_only=0
 step=preflight
 
 while (($#)); do
@@ -15,6 +16,10 @@ while (($#)); do
             ;;
         --speechify)
             speechify_only=1
+            shift
+            ;;
+        --yandex)
+            yandex_only=1
             shift
             ;;
         --check)
@@ -29,6 +34,34 @@ while (($#)); do
 done
 
 trap 'printf "Failed at step: %s\nRerun: bash tools/install.sh --prefix %q\n" "$step" "$prefix" >&2' ERR
+
+if ((yandex_only)); then
+    step='Yandex SpeechKit settings'
+    command -v python3 >/dev/null
+    command -v ffmpeg >/dev/null
+    MAKET_PREFIX=$prefix MAKET_ROOT=$root MAKET_MODE=$mode python3 - <<'PYYANDEX'
+import json
+import os
+import shutil
+from pathlib import Path
+p = Path(os.environ['MAKET_ROOT']) / 'maket.local.json'
+c = json.loads(p.read_text()) if p.exists() else {}
+if os.environ['MAKET_MODE'] == 'install':
+    c.setdefault('yandex_python', shutil.which('python3'))
+    c.setdefault('yandex_voice', 'anton')
+    c.setdefault('yandex_role', 'good')
+    c.setdefault('yandex_key_file', str(Path(os.environ['MAKET_PREFIX']).resolve() / 'yandex.key'))
+    p.write_text(json.dumps(c, ensure_ascii=False, indent=2) + '\n')
+    print('Yandex SpeechKit settings written; select voice_backend=yandex to send video text to Yandex')
+else:
+    for field in ('yandex_python', 'yandex_key_file', 'tts_python', 'whisper_model'):
+        value = c.get(field)
+        if not value or not Path(value).exists():
+            raise SystemExit(f'Missing {field}')
+    print('Yandex SpeechKit and Whisper paths: OK; no request sent, key validity not checked')
+PYYANDEX
+    exit 0
+fi
 
 if ((speechify_only)); then
     step='Speechify settings'
