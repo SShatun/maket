@@ -25,6 +25,9 @@ import (
 )
 
 type Config struct {
+	FishPython       string `json:"fish_python"`
+	FishModel        string `json:"fish_model"`
+	FishKeyFile      string `json:"fish_key_file"`
 	YandexPython     string `json:"yandex_python"`
 	YandexVoice      string `json:"yandex_voice"`
 	YandexRole       string `json:"yandex_role"`
@@ -111,7 +114,7 @@ func LoadConfig(root string) (Config, error) {
 	if v := os.Getenv("MAKET_VOICE_BACKEND"); v != "" {
 		c.Backend = v
 	}
-	if c.Backend != "" && c.Backend != "qwen" && c.Backend != "speechify" && c.Backend != "yandex" {
+	if c.Backend != "" && c.Backend != "qwen" && c.Backend != "speechify" && c.Backend != "yandex" && c.Backend != "fish" {
 		return c, fmt.Errorf("unknown voice_backend %q", c.Backend)
 	}
 	return c, nil
@@ -170,6 +173,13 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 }
 
 func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	if cfg.Backend == "fish" {
+		r, err := newFishRun(ctx, root, cfg, sc, name)
+		if err != nil {
+			return nil, err
+		}
+		return fishTexts(r), nil
+	}
 	if cfg.Backend == "yandex" {
 		return yandexTexts(root, sc)
 	}
@@ -184,6 +194,9 @@ func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name st
 }
 
 func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	if cfg.Backend == "fish" {
+		return synthesizeFish(ctx, root, cfg, sc, name)
+	}
 	if cfg.Backend == "yandex" {
 		return synthesizeYandex(ctx, root, cfg, sc)
 	}
@@ -734,7 +747,7 @@ func (r *run) python(py, script string, job any) error {
 			}
 		}
 	}
-	if script != "speechify.py" && script != "yandex.py" {
+	if script != "speechify.py" && script != "yandex.py" && script != "fish.py" {
 		unlock, err := lockMachine()
 		if err != nil {
 			return err

@@ -6,6 +6,7 @@ prefix=${HOME}/.local/share/maket
 mode=install
 speechify_only=0
 yandex_only=0
+fish_only=0
 step=preflight
 
 while (($#)); do
@@ -22,6 +23,10 @@ while (($#)); do
             yandex_only=1
             shift
             ;;
+        --fish)
+            fish_only=1
+            shift
+            ;;
         --check)
             mode=check
             shift
@@ -34,6 +39,33 @@ while (($#)); do
 done
 
 trap 'printf "Failed at step: %s\nRerun: bash tools/install.sh --prefix %q\n" "$step" "$prefix" >&2' ERR
+
+if ((fish_only)); then
+    step='Fish Audio settings'
+    command -v python3 >/dev/null
+    command -v ffmpeg >/dev/null
+    MAKET_PREFIX=$prefix MAKET_ROOT=$root MAKET_MODE=$mode python3 - <<'PYFISH'
+import json
+import os
+import shutil
+from pathlib import Path
+p = Path(os.environ['MAKET_ROOT']) / 'maket.local.json'
+c = json.loads(p.read_text()) if p.exists() else {}
+if os.environ['MAKET_MODE'] == 'install':
+    c.setdefault('fish_python', shutil.which('python3'))
+    c.setdefault('fish_model', 's2.1-pro-free')
+    c.setdefault('fish_key_file', str(Path(os.environ['MAKET_PREFIX']).resolve() / 'fish.key'))
+    p.write_text(json.dumps(c, ensure_ascii=False, indent=2) + '\n')
+    print('Fish Audio settings written; select voice_backend=fish to send video text and reference audio to Fish')
+else:
+    for field in ('fish_python', 'fish_key_file', 'tts_python', 'whisper_model'):
+        value = c.get(field)
+        if not value or not Path(value).exists():
+            raise SystemExit(f'Missing {field}')
+    print('Fish Audio and Whisper paths: OK; no request sent, key validity not checked')
+PYFISH
+    exit 0
+fi
 
 if ((yandex_only)); then
     step='Yandex SpeechKit settings'
