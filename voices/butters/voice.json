@@ -1,0 +1,11 @@
+{
+  "reference_id": "23a1470b05b74c5ebaa09572845ec46e",
+  "stress": {},
+  "spell": {
+    "yes": "йес",
+    "read": "рид",
+    "write": "райт",
+    "readwrite": "ридрайт",
+    "dsn": "дсн"
+  }
+}

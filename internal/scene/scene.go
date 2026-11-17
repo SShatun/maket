@@ -119,6 +119,7 @@ type Highlight struct {
 
 type Entity struct {
 	ID       string          `json:"id"`
+	Voice    string          `json:"voice,omitempty"`
 	Kind     string          `json:"kind"`
 	Obj      string          `json:"obj,omitempty"`
 	Role     string          `json:"role"`

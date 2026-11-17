@@ -48,10 +48,11 @@ type Config struct {
 }
 
 type Spec struct {
-	RefAudio string            `json:"ref_audio"`
-	RefText  string            `json:"ref_text"`
-	Stress   map[string]string `json:"stress"`
-	Spell    map[string]string `json:"spell"`
+	ReferenceID string            `json:"reference_id"`
+	RefAudio    string            `json:"ref_audio"`
+	RefText     string            `json:"ref_text"`
+	Stress      map[string]string `json:"stress"`
+	Spell       map[string]string `json:"spell"`
 }
 
 type Result struct {
@@ -94,7 +95,7 @@ const (
 	repeatedAs   = "voice repeated «%s»"
 )
 
-func LoadConfig(root string) (Config, error) {
+func LoadConfig(root, styleBackend string) (Config, error) {
 	var c Config
 	b, err := os.ReadFile(filepath.Join(root, "maket.json"))
 	if err != nil {
@@ -110,6 +111,9 @@ func LoadConfig(root string) (Config, error) {
 		}
 	} else if !os.IsNotExist(err) {
 		return c, fmt.Errorf("maket.local.json: %w", err)
+	}
+	if styleBackend != "" {
+		c.Backend = styleBackend
 	}
 	if v := os.Getenv("MAKET_VOICE_BACKEND"); v != "" {
 		c.Backend = v
@@ -173,12 +177,15 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 }
 
 func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	if err := checkLibraryVoices(root, cfg, sc, name); err != nil {
+		return nil, err
+	}
 	if cfg.Backend == "fish" {
-		r, err := newFishRun(ctx, root, cfg, sc, name)
+		runs, err := fishRuns(ctx, root, cfg, sc, name)
 		if err != nil {
 			return nil, err
 		}
-		return fishTexts(r), nil
+		return fishTexts(runs), nil
 	}
 	if cfg.Backend == "yandex" {
 		return yandexTexts(root, sc)
@@ -194,6 +201,9 @@ func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name st
 }
 
 func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	if err := checkLibraryVoices(root, cfg, sc, name); err != nil {
+		return nil, err
+	}
 	if cfg.Backend == "fish" {
 		return synthesizeFish(ctx, root, cfg, sc, name)
 	}

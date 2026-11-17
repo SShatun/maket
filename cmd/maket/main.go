@@ -40,25 +40,28 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 
 var ownLooks = map[string]bool{"moe": true, "rts": true, "paper": true}
 
-func voiceName(sc *scene.Scene, opt options) string {
-	if opt.voice != "" {
-		return opt.voice
-	}
-	if sc.Voice != "" {
-		return sc.Voice
-	}
+func voiceConfig(sc *scene.Scene, opt options) (voice.Config, string, error) {
 	look := sc.Look
 	if ownLooks[sc.Style] {
 		look = sc.Style
 	}
-	if look == "" {
-		return ""
+	var lk charkit.Look
+	if look != "" {
+		var err error
+		lk, err = charkit.ReadLook(charkit.Dir(opt.root, look))
+		if err != nil {
+			return voice.Config{}, "", err
+		}
 	}
-	lk, err := charkit.ReadLook(charkit.Dir(opt.root, look))
-	if err != nil {
-		return ""
+	cfg, err := voice.LoadConfig(opt.root, lk.VoiceBackend)
+	name := lk.Voice
+	if sc.Voice != "" {
+		name = sc.Voice
 	}
-	return lk.Voice
+	if opt.voice != "" {
+		name = opt.voice
+	}
+	return cfg, name, err
 }
 
 const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-no-sfx] [-workers N] [-root DIR]
@@ -206,11 +209,10 @@ type job struct {
 }
 
 func speak(sc *scene.Scene, opt options) (*voice.Result, error) {
-	cfg, err := voice.LoadConfig(opt.root)
+	cfg, name, err := voiceConfig(sc, opt)
 	if err != nil {
 		return nil, err
 	}
-	name := voiceName(sc, opt)
 	if opt.seed != 0 {
 		sc.Seed = opt.seed
 	}
@@ -343,11 +345,10 @@ func stressTable(scenePath string, opt options) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := voice.LoadConfig(opt.root)
+	cfg, name, err := voiceConfig(sc, opt)
 	if err != nil {
 		return err
 	}
-	name := voiceName(sc, opt)
 	marked, err := voice.Mark(context.Background(), opt.root, cfg, sc, name)
 	if err != nil {
 		return err

@@ -31,7 +31,8 @@
           "at": [
             215,
             1560
-          ]
+          ],
+          "voice": "cartman"
         },
         {
           "id": "S",
@@ -41,7 +42,8 @@
             1560
           ],
           "state": "broken",
-          "size": 0.75
+          "size": 0.75,
+          "voice": "butters"
         }
       ],
       "do": [
@@ -72,7 +74,8 @@
           "at": [
             215,
             1560
-          ]
+          ],
+          "voice": "cartman"
         },
         {
           "id": "E",
@@ -108,7 +111,8 @@
             215,
             1560
           ],
-          "enter": "none"
+          "enter": "none",
+          "voice": "cartman"
         },
         {
           "id": "S",
@@ -118,7 +122,8 @@
             1560
           ],
           "enter": "none",
-          "size": 0.75
+          "size": 0.75,
+          "voice": "butters"
         }
       ],
       "do": [

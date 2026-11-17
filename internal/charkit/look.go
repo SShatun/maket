@@ -11,12 +11,13 @@ import (
 var themeKeys = map[string]bool{"bg": true, "ink": true, "card": true, "muted": true, "accent": true, "error": true, "ok": true, "grid": true, "dot": true}
 
 type Look struct {
-	About     string
-	Voice     string
-	Theme     map[string]color.RGBA
-	Roles     map[string]color.RGBA
-	Palette   map[string]color.RGBA
-	Backdrops map[string]Backdrop
+	About        string
+	Voice        string
+	VoiceBackend string
+	Theme        map[string]color.RGBA
+	Roles        map[string]color.RGBA
+	Palette      map[string]color.RGBA
+	Backdrops    map[string]Backdrop
 }
 
 type Backdrop struct {
@@ -38,12 +39,13 @@ func ReadLook(dir string) (Look, error) {
 		return Look{}, err
 	}
 	var f struct {
-		About     string              `json:"about"`
-		Voice     string              `json:"voice"`
-		Theme     map[string][3]uint8 `json:"theme"`
-		Roles     map[string][3]uint8 `json:"roles"`
-		Palette   map[string][3]uint8 `json:"palette"`
-		Backdrops map[string]Backdrop `json:"backdrops"`
+		About        string              `json:"about"`
+		Voice        string              `json:"voice"`
+		VoiceBackend string              `json:"voice_backend"`
+		Theme        map[string][3]uint8 `json:"theme"`
+		Roles        map[string][3]uint8 `json:"roles"`
+		Palette      map[string][3]uint8 `json:"palette"`
+		Backdrops    map[string]Backdrop `json:"backdrops"`
 	}
 	if err := json.Unmarshal(b, &f); err != nil {
 		return Look{}, fmt.Errorf("%s/look.json: %w", dir, err)
@@ -58,6 +60,7 @@ func ReadLook(dir string) (Look, error) {
 		lk.Roles[k] = color.RGBA{v[0], v[1], v[2], 255}
 	}
 	lk.About, lk.Voice, lk.Backdrops = f.About, f.Voice, f.Backdrops
+	lk.VoiceBackend = f.VoiceBackend
 	lk.Palette = map[string]color.RGBA{}
 	for k, v := range f.Palette {
 		lk.Palette[k] = color.RGBA{v[0], v[1], v[2], 255}

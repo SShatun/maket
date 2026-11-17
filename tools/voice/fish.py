@@ -31,10 +31,13 @@ def pack(value):
 
 def main():
     job = json.loads(Path(sys.argv[1]).read_text())
+    model = job.get('model', '').strip()
+    if not model:
+        raise SynthesisError('fish: model is required')
     directory = Path(job['directory'])
     key = None
-    reference = None
-    for i, text in enumerate(job['texts'], 1):
+    references = {}
+    for i, item in enumerate(job['items'], 1):
         wav = directory / f'phrase-{i}.wav'
         if wav.is_file() and wav.stat().st_size > 44:
             continue
@@ -42,11 +45,17 @@ def main():
             key = Path(job['key_file']).read_text().strip()
             if not key or '\n' in key or '\r' in key:
                 raise SynthesisError('fish: key file must contain one nonempty API key')
-            reference = Path(job['ref_audio']).read_bytes()
-        request = {'text': text, 'references': [{'audio': reference, 'text': job['ref_text']}],
+        request = {'text': item['text'],
                    'format': 'wav', 'sample_rate': 44100, 'normalize': True, 'latency': 'normal'}
+        if item.get('reference_id'):
+            request['reference_id'] = item['reference_id']
+        else:
+            path = item['ref_audio']
+            if path not in references:
+                references[path] = Path(path).read_bytes()
+            request['references'] = [{'audio': references[path], 'text': item['ref_text']}]
         req = urllib.request.Request('https://api.fish.audio/v1/tts', data=pack(request),
-                                     headers={'Authorization': 'Bearer ' + key, 'model': job['model'],
+                                     headers={'Authorization': 'Bearer ' + key, 'model': model,
                                               'Content-Type': 'application/msgpack'})
         try:
             with urllib.request.urlopen(req, timeout=180) as response:
