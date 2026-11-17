@@ -23,6 +23,7 @@ var baseGain = map[string]float64{
 	PadSunset: 0.12, PadNight: 0.12, PadIdea: 0.12, PadSakura: 0.12, Drone: 0.14, DroneLow: 0.14,
 	MusicBox: 0.35, Meow: 0.45, Heartbeat: 0.6, Purr: 0.25, Stab: 0.6, Blip: 0.3, Sparkle: 0.35,
 	Pluck: 0.4, Drums: 0.55, Horn: 0.4, Crackle: 0.25, Clunk: 0.6,
+	Strum: 0.5, Babble: 0.12, Chalk: 0.18,
 }
 
 var pads = map[string][]float64{
@@ -48,6 +49,14 @@ func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
 	rng := rand.New(rand.NewSource(7))
 	for _, c := range cues {
 		sig := synth(c.Kind, rng)
+		switch c.Kind {
+		case Strum:
+			sig = strum(c.Chord, rng)
+		case Babble:
+			sig = babble(c.Pitch, c.Dur, rng)
+		case Chalk:
+			sig = chalk(c.Dur, rng)
+		}
 		if sig == nil {
 			sig = long(c.Kind, c.Dur, rng)
 		}

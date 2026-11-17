@@ -45,7 +45,7 @@ func (s *Style) addBehaviorEntity(sh *shot, c scene.Cast, rc rawCast) (*actor, e
 	}
 	c.Size = 1
 	if c.Role == "" {
-		c.Role = "external"
+		c.Role = s.set.Specs[c.Kind].DefaultRole()
 	}
 	a, err := sh.behavior.AddEntity(c)
 	if err != nil {

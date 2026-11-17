@@ -21,6 +21,7 @@ import (
 	"maket/internal/style"
 	"maket/internal/style/maket"
 	"maket/internal/style/moe"
+	"maket/internal/style/paper"
 	"maket/internal/style/pixel"
 	"maket/internal/style/rts"
 	"maket/internal/timeline"
@@ -34,9 +35,10 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 	"pixel": func(root, look string, fonts *render.Fonts) (style.Style, error) { return pixel.New(root, look, fonts) },
 	"moe":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return moe.New(root, fonts) },
 	"rts":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return rts.New(root, fonts) },
+	"paper": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return paper.New(root, fonts) },
 }
 
-var ownLooks = map[string]bool{"moe": true, "rts": true}
+var ownLooks = map[string]bool{"moe": true, "rts": true, "paper": true}
 
 func voiceName(sc *scene.Scene, opt options) string {
 	if opt.voice != "" {
@@ -59,7 +61,7 @@ func voiceName(sc *scene.Scene, opt options) string {
 	return lk.Voice
 }
 
-const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-workers N] [-root DIR]
+const usage = `maket render scene.json -o out.mp4 [-voice NAME] [-seed N] [-silent] [-no-sfx] [-workers N] [-root DIR]
 maket stills scene.json -o dir [-voice NAME] [-silent] [-root DIR] t1 t2 ...
 maket voice scene.json [-voice NAME] [-seed N] [-root DIR]
 maket styles [-root DIR]
@@ -90,8 +92,9 @@ func main() {
 	voiceName := fs.String("voice", "", "voice folder in voices/, default from the scene, the style look.json or maket.json")
 	seed := fs.Int("seed", 0, "voice seed, default from the scene")
 	silent := fs.Bool("silent", false, "no voice: phrases timed by letter count")
+	noSFX := fs.Bool("no-sfx", false, "mute scene sound effects")
 	fs.Parse(os.Args[3:])
-	opt := options{root: *root, voice: *voiceName, seed: *seed, silent: *silent}
+	opt := options{root: *root, voice: *voiceName, seed: *seed, silent: *silent, noSFX: *noSFX}
 	if *workers < 1 {
 		fmt.Fprintln(os.Stderr, "maket: -workers must be at least 1")
 		os.Exit(2)
@@ -160,7 +163,7 @@ func listStyles(root string) error {
 		fmt.Printf("  %s\n    about: %s\n    palette: [%s]\n    backdrops: [%s]\n", name, lk.About, strings.Join(palette, ", "), strings.Join(backdrops, ", "))
 		printBackdrops(lk, backdrops, "    ")
 	}
-	for _, name := range []string{"moe", "rts"} {
+	for _, name := range []string{"moe", "rts", "paper"} {
 		lk, err := charkit.ReadLook(charkit.Dir(root, name))
 		if err != nil {
 			return err
@@ -192,6 +195,7 @@ type options struct {
 	root, voice string
 	seed        int
 	silent      bool
+	noSFX       bool
 }
 
 type job struct {
@@ -242,7 +246,7 @@ func prepare(scenePath string, opt options) (*job, error) {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
 	}
 	if len(sc.Shots) > 0 && name != "pixel" && !ownLooks[name] {
-		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe or rts", name)
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe, rts or paper", name)
 	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
@@ -301,7 +305,11 @@ func renderVideo(scenePath, out string, opt options, workers int) error {
 	}
 	mix := out + ".audio.wav"
 	defer os.Remove(mix)
-	if err := audio.Mix(track, j.st.Sounds(), j.tl.Duration, mix); err != nil {
+	cues := j.st.Sounds()
+	if opt.noSFX {
+		cues = nil
+	}
+	if err := audio.Mix(track, cues, j.tl.Duration, mix); err != nil {
 		return err
 	}
 	if err := video.Mux(vid, mix, out); err != nil {

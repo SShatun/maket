@@ -75,6 +75,7 @@ func (c Crowd) FigureID(n int) string {
 type Phrase struct {
 	Text    string            `json:"text"`
 	Caption string            `json:"caption"`
+	Speaker string            `json:"speaker,omitempty"`
 	Pause   float64           `json:"pause"`
 	Stress  map[string]string `json:"stress"`
 }
@@ -119,6 +120,7 @@ type Highlight struct {
 type Entity struct {
 	ID       string          `json:"id"`
 	Kind     string          `json:"kind"`
+	Obj      string          `json:"obj,omitempty"`
 	Role     string          `json:"role"`
 	Roles    []Timed[string] `json:"roles"`
 	Label    string          `json:"label"`
@@ -211,6 +213,18 @@ func Load(path string) (*Scene, error) {
 }
 
 func (sc *Scene) check() error {
+	for i := range sc.Entities {
+		if err := sc.Entities[i].objectKind(); err != nil {
+			return err
+		}
+	}
+	for i := range sc.Shots {
+		for j := range sc.Shots[i].Cast {
+			if err := sc.Shots[i].Cast[j].objectKind(); err != nil {
+				return fmt.Errorf("shot %d: %w", i+1, err)
+			}
+		}
+	}
 	if sc.Diagram != nil {
 		if err := sc.Diagram.check(); err != nil {
 			return fmt.Errorf("diagram: %w", err)
@@ -221,15 +235,26 @@ func (sc *Scene) check() error {
 			return errors.New("shots use cast and do instead of entities and events")
 		}
 		for i, s := range sc.Shots {
-			if err := s.check(sc.Style == "" || sc.Style == "pixel"); err != nil {
+			if err := s.check(sc.Style); err != nil {
 				return fmt.Errorf("shot %d: %w", i+1, err)
 			}
 		}
 	}
-	return checkEvents(sc.Entities, sc.Events)
+	return checkEvents(sc.Entities, sc.Events, false)
 }
 
-func (s Shot) check(pixel bool) error {
+func (e *Entity) objectKind() error {
+	if e.Obj != "" {
+		if e.Kind != "" && e.Kind != e.Obj {
+			return fmt.Errorf("entity %s: obj and kind must name the same object", e.ID)
+		}
+		e.Kind = e.Obj
+	}
+	return nil
+}
+
+func (s Shot) check(style string) error {
+	pixel := style == "" || style == "pixel"
 	wall := s.Place.Wall.Name != "" || len(s.Place.Wall.RGB) == 3
 	ground := s.Place.Ground.Name != "" || len(s.Place.Ground.RGB) == 3
 	if pixel && s.Place.Name == "" && (!wall || s.Place.Floor != nil && (!ground || *s.Place.Floor < 600 || *s.Place.Floor > 1900)) {
@@ -277,10 +302,10 @@ func (s Shot) check(pixel bool) error {
 		ids[c.ID] = true
 		entities = append(entities, c.Entity)
 	}
-	return checkEvents(entities, s.Do)
+	return checkEvents(entities, s.Do, style == "paper")
 }
 
-func checkEvents(entities []Entity, events []Event) error {
+func checkEvents(entities []Entity, events []Event, defaultWalkDuration bool) error {
 	ids := map[string]bool{}
 	hasAppear := map[string]bool{}
 	for _, e := range entities {
@@ -336,7 +361,7 @@ func checkEvents(entities []Entity, events []Event) error {
 		if ev.Do == "zoom" && (ev.To == nil || ev.To.Value == nil || *ev.To.Value < 1 || ev.Dur <= 0) {
 			return fmt.Errorf("event %d: zoom needs to >= 1 and positive dur", i+1)
 		}
-		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || len(ev.To.Coords) != 2 || ev.Dur <= 0) {
+		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || len(ev.To.Coords) != 2 || ev.Dur < 0 || ev.Dur == 0 && !defaultWalkDuration) {
 			return fmt.Errorf("event %d: walk needs target, to: [x, y] and positive dur", i+1)
 		}
 		if ev.Do != "zoom" && ev.To != nil && ev.To.Value != nil {

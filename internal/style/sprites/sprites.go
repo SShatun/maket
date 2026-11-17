@@ -20,12 +20,29 @@ type State struct {
 }
 
 type Spec struct {
-	Size   [2]int           `json:"size"`
-	Anchor [2]int           `json:"anchor"`
-	Top    [2]int           `json:"top"`
-	Rest   string           `json:"rest"`
-	Tint   *bool            `json:"tint"`
-	States map[string]State `json:"states"`
+	Role        string           `json:"role"`
+	Group       string           `json:"group"`
+	RenderScale float64          `json:"render_scale"`
+	Size        [2]int           `json:"size"`
+	Anchor      [2]int           `json:"anchor"`
+	Top         [2]int           `json:"top"`
+	Rest        string           `json:"rest"`
+	Tint        *bool            `json:"tint"`
+	States      map[string]State `json:"states"`
+}
+
+func (s Spec) DefaultRole() string {
+	if s.Role != "" {
+		return s.Role
+	}
+	return "external"
+}
+
+func (s Spec) DisplayScale() float64 {
+	if s.RenderScale > 0 {
+		return s.RenderScale
+	}
+	return 1
 }
 
 type Step struct {
@@ -114,7 +131,12 @@ func opaqueBounds(src image.Image) image.Rectangle {
 	return r
 }
 
-func (s *Set) Frame(name string, steps []Step, t float64, role string) *image.RGBA {
+func (s *Set) StateAt(name string, steps []Step, t float64) string {
+	state, _ := s.frameAt(name, steps, t)
+	return state
+}
+
+func (s *Set) frameAt(name string, steps []Step, t float64) (string, int) {
 	spec := s.Specs[name]
 	ts, state, hold := 0.0, spec.Rest, false
 	for _, x := range steps {
@@ -137,6 +159,12 @@ func (s *Set) Frame(name string, steps []Step, t float64, role string) *image.RG
 		rs := spec.States[state]
 		i = int((t-ts)*rs.FPS) % rs.Frames
 	}
+	return state, i
+}
+
+func (s *Set) Frame(name string, steps []Step, t float64, role string) *image.RGBA {
+	state, i := s.frameAt(name, steps, t)
+	spec := s.Specs[name]
 	if spec.Tint != nil && !*spec.Tint {
 		role = ""
 	}

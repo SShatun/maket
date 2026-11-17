@@ -36,13 +36,8 @@ type spoken struct {
 }
 
 func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
-	cur := -1
-	for i, p := range tl.Phrases {
-		if i < len(sc.Phrases) && t >= p.Start {
-			cur = i
-		}
-	}
-	if cur < 0 || t > tl.Phrases[cur].End+0.35 {
+	cur := CaptionPhrase(sc, tl, t)
+	if cur < 0 {
 		return
 	}
 	text := sc.Phrases[cur].Caption
@@ -74,6 +69,23 @@ func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th T
 			}
 		}
 	}
+	drawStyledCaption(dst, th, marks, t)
+}
+
+func CaptionPhrase(sc *scene.Scene, tl *timeline.Timeline, t float64) int {
+	cur := -1
+	for i, p := range tl.Phrases {
+		if i < len(sc.Phrases) && t >= p.Start {
+			cur = i
+		}
+	}
+	if cur < 0 || t > tl.Phrases[cur].End+0.35 {
+		return -1
+	}
+	return cur
+}
+
+func drawStyledCaption(dst *image.RGBA, th Theme, marks []spoken, t float64) {
 	cs := th.Caption
 	face := Face(th.Fonts.Bold, cs.Size)
 	center := cs.Center

@@ -866,6 +866,4000 @@
      "loop": true
     }
    }
+  },
+  "gor": {
+   "dir": "gor/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "горутина",
+   "aliases": [
+    "gor",
+    "горутина"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "mutex": {
+   "dir": "mutex/",
+   "role": "error",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "мьютекс",
+   "aliases": [
+    "mutex",
+    "мьютекс"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "channel": {
+   "dir": "channel/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "канал",
+   "aliases": [
+    "channel",
+    "канал"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "waitgroup": {
+   "dir": "waitgroup/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "группа ожидания",
+   "aliases": [
+    "waitgroup",
+    "группа ожидания"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "select": {
+   "dir": "select/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "выбор канала",
+   "aliases": [
+    "select",
+    "выбор канала"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "context": {
+   "dir": "context/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "контекст отмены",
+   "aliases": [
+    "context",
+    "контекст отмены"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "timeout": {
+   "dir": "timeout/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "таймаут",
+   "aliases": [
+    "timeout",
+    "таймаут"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "semaphore": {
+   "dir": "semaphore/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "семафор",
+   "aliases": [
+    "semaphore",
+    "семафор"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "pointer": {
+   "dir": "pointer/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "указатель",
+   "aliases": [
+    "pointer",
+    "указатель"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "struct": {
+   "dir": "struct/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "структура",
+   "aliases": [
+    "struct",
+    "структура"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "iface": {
+   "dir": "iface/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "интерфейс",
+   "aliases": [
+    "iface",
+    "интерфейс"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "stack": {
+   "dir": "stack/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "стек",
+   "aliases": [
+    "stack",
+    "стек"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "heap": {
+   "dir": "heap/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "куча",
+   "aliases": [
+    "heap",
+    "куча"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "gc": {
+   "dir": "gc/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "сборщик мусора",
+   "aliases": [
+    "gc",
+    "сборщик мусора"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "slice": {
+   "dir": "slice/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "срез",
+   "aliases": [
+    "slice",
+    "срез"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "hash": {
+   "dir": "hash/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "хеш",
+   "aliases": [
+    "hash",
+    "хеш"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "bucket": {
+   "dir": "bucket/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "бакет",
+   "aliases": [
+    "bucket",
+    "бакет"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "btree": {
+   "dir": "btree/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "B-дерево",
+   "aliases": [
+    "btree",
+    "B-дерево"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "list": {
+   "dir": "list/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "связный список",
+   "aliases": [
+    "list",
+    "связный список"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "bloom": {
+   "dir": "bloom/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "фильтр Блума",
+   "aliases": [
+    "bloom",
+    "фильтр Блума"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "packet": {
+   "dir": "packet/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "сетевой пакет",
+   "aliases": [
+    "packet",
+    "сетевой пакет"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "balancer": {
+   "dir": "balancer/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "балансировщик",
+   "aliases": [
+    "balancer",
+    "балансировщик"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "limiter": {
+   "dir": "limiter/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "ограничитель запросов",
+   "aliases": [
+    "limiter",
+    "ограничитель запросов"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "breaker": {
+   "dir": "breaker/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "предохранитель запросов",
+   "aliases": [
+    "breaker",
+    "предохранитель запросов"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "retry": {
+   "dir": "retry/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "повтор запроса",
+   "aliases": [
+    "retry",
+    "повтор запроса"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "leader": {
+   "dir": "leader/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "лидер",
+   "aliases": [
+    "leader",
+    "лидер"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "replica": {
+   "dir": "replica/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "реплика",
+   "aliases": [
+    "replica",
+    "реплика"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "shard": {
+   "dir": "shard/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "шард",
+   "aliases": [
+    "shard",
+    "шард"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "wal": {
+   "dir": "wal/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "журнал записи",
+   "aliases": [
+    "wal",
+    "журнал записи"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "tx": {
+   "dir": "tx/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "транзакция",
+   "aliases": [
+    "tx",
+    "транзакция"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "dlq": {
+   "dir": "dlq/",
+   "role": "error",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "очередь ошибок",
+   "aliases": [
+    "dlq",
+    "очередь ошибок"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "cpu": {
+   "dir": "cpu/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "процессор",
+   "aliases": [
+    "cpu",
+    "процессор"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "disk": {
+   "dir": "disk/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "диск",
+   "aliases": [
+    "disk",
+    "диск"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "client": {
+   "dir": "client/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "клиент",
+   "aliases": [
+    "client",
+    "клиент"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "woman": {
+   "dir": "woman/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "коллега с листом проверок",
+   "aliases": [
+    "woman",
+    "коллега с листом проверок",
+    "женщина",
+    "коллега",
+    "продакт",
+    "QA"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "baby": {
+   "dir": "baby/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "малыш",
+   "aliases": [
+    "baby",
+    "малыш"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "oncall": {
+   "dir": "oncall/",
+   "role": "error",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "дежурный с рацией",
+   "aliases": [
+    "oncall",
+    "дежурный с рацией"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "product": {
+   "dir": "product/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "продакт со свитком PRD",
+   "aliases": [
+    "product",
+    "продакт со свитком PRD"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "seller": {
+   "dir": "seller/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "продавец",
+   "aliases": [
+    "seller",
+    "продавец"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "courier": {
+   "dir": "courier/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "курьер",
+   "aliases": [
+    "courier",
+    "курьер"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "customs": {
+   "dir": "customs/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "таможенник",
+   "aliases": [
+    "customs",
+    "таможенник"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "warehouse": {
+   "dir": "warehouse/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "склад",
+   "aliases": [
+    "warehouse",
+    "склад"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "stock": {
+   "dir": "stock/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "остаток товара",
+   "aliases": [
+    "stock",
+    "остаток товара"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "whmap": {
+   "dir": "whmap/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "карта складов",
+   "aliases": [
+    "whmap",
+    "карта складов"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "avail": {
+   "dir": "avail/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "доступность товара",
+   "aliases": [
+    "avail",
+    "доступность товара"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "shipping": {
+   "dir": "shipping/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "способ доставки",
+   "aliases": [
+    "shipping",
+    "способ доставки"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "pvz": {
+   "dir": "pvz/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "пункт выдачи",
+   "aliases": [
+    "pvz",
+    "пункт выдачи"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "mail": {
+   "dir": "mail/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "почта",
+   "aliases": [
+    "mail",
+    "почта"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "truck": {
+   "dir": "truck/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "грузовик",
+   "aliases": [
+    "truck",
+    "грузовик"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "plane": {
+   "dir": "plane/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "самолёт",
+   "aliases": [
+    "plane",
+    "самолёт"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "duty": {
+   "dir": "duty/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "таможенная пошлина",
+   "aliases": [
+    "duty",
+    "таможенная пошлина"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "market": {
+   "dir": "market/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "маркетплейс",
+   "aliases": [
+    "market",
+    "маркетплейс"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "card": {
+   "dir": "card/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "карточка товара",
+   "aliases": [
+    "card",
+    "карточка товара"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "eta": {
+   "dir": "eta/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "срок доставки",
+   "aliases": [
+    "eta",
+    "срок доставки"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "resync": {
+   "dir": "resync/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "пересинхронизация",
+   "aliases": [
+    "resync",
+    "пересинхронизация"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "flag": {
+   "dir": "flag/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "флаг функции",
+   "aliases": [
+    "flag",
+    "флаг функции"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "migration": {
+   "dir": "migration/",
+   "role": "storage",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "миграция",
+   "aliases": [
+    "migration",
+    "миграция"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "deploy": {
+   "dir": "deploy/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "деплой",
+   "aliases": [
+    "deploy",
+    "деплой"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "mr": {
+   "dir": "mr/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "запрос на слияние",
+   "aliases": [
+    "mr",
+    "запрос на слияние"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "ticket": {
+   "dir": "ticket/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "задача",
+   "aliases": [
+    "ticket",
+    "задача"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "docs": {
+   "dir": "docs/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "документация",
+   "aliases": [
+    "docs",
+    "документация"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "log": {
+   "dir": "log/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "лог",
+   "aliases": [
+    "log",
+    "лог"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "metric": {
+   "dir": "metric/",
+   "role": "external",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "метрика",
+   "aliases": [
+    "metric",
+    "метрика"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "alert": {
+   "dir": "alert/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "алерт",
+   "aliases": [
+    "alert",
+    "алерт"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "trace": {
+   "dir": "trace/",
+   "role": "consumer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "трассировка",
+   "aliases": [
+    "trace",
+    "трассировка"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "cron": {
+   "dir": "cron/",
+   "role": "buffer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "планировщик",
+   "aliases": [
+    "cron",
+    "планировщик"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "webhook": {
+   "dir": "webhook/",
+   "role": "producer",
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": true,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "вебхук",
+   "aliases": [
+    "webhook",
+    "вебхук"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "batch": {
+   "dir": "batch/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "пакетная обработка",
+   "aliases": [
+    "batch",
+    "пакетная обработка"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "budget": {
+   "dir": "budget/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "бюджет",
+   "aliases": [
+    "budget",
+    "бюджет"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
+  },
+  "err500": {
+   "dir": "err500/",
+   "role": null,
+   "size": [
+    1040,
+    1200
+   ],
+   "anchor": [
+    520,
+    1120
+   ],
+   "top": [
+    520,
+    300
+   ],
+   "rest": "idle",
+   "tint": false,
+   "states": {
+    "idle": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "work": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "broken": {
+     "frames": 2,
+     "fps": 4,
+     "loop": true
+    },
+    "wait": {
+     "frames": 2,
+     "fps": 2,
+     "loop": true
+    },
+    "happy": {
+     "frames": 2,
+     "fps": 6,
+     "loop": true
+    },
+    "sad": {
+     "frames": 2,
+     "fps": 3,
+     "loop": true
+    }
+   },
+   "label": "ошибка 500",
+   "aliases": [
+    "err500",
+    "ошибка 500"
+   ],
+   "origin": "designer",
+   "render_scale": 0.9
   }
  },
  "badges": [

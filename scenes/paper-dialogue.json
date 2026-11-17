@@ -1,0 +1,159 @@
+{
+  "style": "paper",
+  "hold": 1,
+  "phrases": [
+    {
+      "text": "Склад, ты работаешь?",
+      "speaker": "W",
+      "pause": 1.1
+    },
+    {
+      "text": "Я просто тихо умираю.",
+      "speaker": "S"
+    },
+    {
+      "text": "Вот наша причина. Пятьсотый ответ.",
+      "speaker": "W"
+    },
+    {
+      "text": "Исправили. Можно работать.",
+      "speaker": "W"
+    }
+  ],
+  "shots": [
+    {
+      "at": 0,
+      "place": "day",
+      "cast": [
+        {
+          "id": "W",
+          "obj": "woman",
+          "at": [
+            215,
+            1560
+          ]
+        },
+        {
+          "id": "S",
+          "obj": "warehouse",
+          "at": [
+            760,
+            1560
+          ],
+          "state": "broken",
+          "size": 0.75
+        }
+      ],
+      "do": [
+        {
+          "at": 0,
+          "do": "title",
+          "episode": 1,
+          "lines": [
+            "ТИХИЙ СКЛАД"
+          ],
+          "until": 1.2
+        },
+        {
+          "at": "p2",
+          "do": "state",
+          "target": "S",
+          "state": "sad"
+        }
+      ]
+    },
+    {
+      "at": "p3",
+      "place": "classroom",
+      "cast": [
+        {
+          "id": "W",
+          "obj": "person",
+          "at": [
+            215,
+            1560
+          ]
+        },
+        {
+          "id": "E",
+          "obj": "err500",
+          "at": [
+            790,
+            1560
+          ],
+          "state": "broken",
+          "size": 0.9
+        }
+      ],
+      "do": [
+        {
+          "at": "p3",
+          "do": "chalk",
+          "lines": [
+            "status: 500",
+            "reason: timeout"
+          ],
+          "cps": 18
+        }
+      ]
+    },
+    {
+      "at": "p4",
+      "place": "sunset",
+      "cast": [
+        {
+          "id": "W",
+          "obj": "woman",
+          "at": [
+            215,
+            1560
+          ],
+          "enter": "none"
+        },
+        {
+          "id": "S",
+          "obj": "warehouse",
+          "at": [
+            760,
+            1560
+          ],
+          "enter": "none",
+          "size": 0.75
+        }
+      ],
+      "do": [
+        {
+          "at": "p4",
+          "do": "state",
+          "target": "S",
+          "state": "happy"
+        },
+        {
+          "at": "p4+0.5",
+          "do": "walk",
+          "target": "W",
+          "to": [
+            270,
+            1560
+          ],
+          "dur": 0.8
+        },
+        {
+          "at": "p4+1.4",
+          "do": "flash",
+          "dur": 0.15
+        },
+        {
+          "at": "p4+1.6",
+          "do": "text",
+          "text": "Готово",
+          "pos": [
+            540,
+            440
+          ],
+          "size": 92
+        }
+      ]
+    }
+  ]
+}

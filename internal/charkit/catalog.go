@@ -18,19 +18,23 @@ type State struct {
 }
 
 type Entry struct {
-	Label   string           `json:"label,omitempty"`
-	Aliases []string         `json:"aliases,omitempty"`
-	Origin  string           `json:"origin,omitempty"`
-	Dir     string           `json:"dir,omitempty"`
-	Size    [2]int           `json:"size"`
-	Anchor  [2]int           `json:"anchor"`
-	Top     [2]int           `json:"top"`
-	Pixel   int              `json:"pixel,omitempty"`
-	Scale   float64          `json:"scale,omitempty"`
-	Source  string           `json:"source,omitempty"`
-	Rest    string           `json:"rest"`
-	Tint    *bool            `json:"tint,omitempty"`
-	States  map[string]State `json:"states"`
+	Role        string           `json:"role,omitempty"`
+	Group       string           `json:"group,omitempty"`
+	Kind        string           `json:"kind,omitempty"`
+	RenderScale float64          `json:"render_scale,omitempty"`
+	Label       string           `json:"label,omitempty"`
+	Aliases     []string         `json:"aliases,omitempty"`
+	Origin      string           `json:"origin,omitempty"`
+	Dir         string           `json:"dir,omitempty"`
+	Size        [2]int           `json:"size"`
+	Anchor      [2]int           `json:"anchor"`
+	Top         [2]int           `json:"top"`
+	Pixel       int              `json:"pixel,omitempty"`
+	Scale       float64          `json:"scale,omitempty"`
+	Source      string           `json:"source,omitempty"`
+	Rest        string           `json:"rest"`
+	Tint        *bool            `json:"tint,omitempty"`
+	States      map[string]State `json:"states"`
 }
 
 func (e Entry) StateNames() []string {

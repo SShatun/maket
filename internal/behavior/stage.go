@@ -56,7 +56,7 @@ func (s *Stage) AddEntity(c scene.Cast) (*Actor, error) {
 		role = s.DefaultRoles[c.Kind]
 	}
 	if role == "" {
-		role = "external"
+		role = spec.DefaultRole()
 	}
 	size := c.Size
 	if size == 0 {

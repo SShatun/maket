@@ -1,0 +1,48 @@
+{
+ "size": [
+  1080,
+  1920
+ ],
+ "stand_y": "y where characters stand (anchor), range 1500-1620",
+ "backgrounds": {
+  "day": {
+   "file": "bg/day.jpg",
+   "stand_y": 1560,
+   "use": "обычная сцена, титул, развязка"
+  },
+  "night": {
+   "file": "bg/night.jpg",
+   "stand_y": 1560,
+   "use": "ожидание, таймаут, сон"
+  },
+  "sunset": {
+   "file": "bg/sunset.jpg",
+   "stand_y": 1560,
+   "use": "конец дня, вывод"
+  },
+  "alarm": {
+   "file": "bg/alarm.jpg",
+   "stand_y": 1560,
+   "use": "авария, пожар, всё упало"
+  },
+  "classroom": {
+   "file": "bg/classroom.jpg",
+   "stand_y": 1560,
+   "use": "объяснение: на доске мелом пишется код или схема",
+   "board": {
+    "rect": [
+     74,
+     274,
+     1006,
+     876
+    ],
+    "chalk": [
+     245,
+     245,
+     235
+    ],
+    "font": "Pangolin 40-56 px, line step 64"
+   }
+  }
+ }
+}

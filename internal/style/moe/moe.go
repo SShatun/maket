@@ -251,9 +251,10 @@ func (s *Style) layoutShot(input scene.Shot, start, end float64, meta map[string
 		if size == 0 {
 			size = 1
 		}
+		size *= spec.DisplayScale()
 		role := c.Role
 		if role == "" {
-			role = "external"
+			role = spec.DefaultRole()
 		}
 		state := c.State
 		if state == "" {

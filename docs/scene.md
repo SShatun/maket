@@ -25,14 +25,14 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 | Поле | Что |
 |---|---|
-| `style` | `pixel`, `moe`, `rts` или `maket`; у `moe` и `rts` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в `docs/styles/moe.md` и `docs/styles/rts.md`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
+| `style` | `pixel`, `moe`, `rts`, `paper` или `maket`; у `moe`, `rts` и `paper` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в [moe](styles/moe.md), [rts](styles/rts.md) и [paper](styles/paper.md). Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
 | `look` | стилистика Пикселей: папка `assets/looks/<look>/` со своими персонажами и необязательными `look.json` (фон, цвета, роли) и `badges/`; без поля — `assets/live`; с `maket` — ошибка |
 | `guess` | `{"text": "Ресинк сломан?"}` — неверная догадка крупно в начале |
 | `answer` | `{"at": момент, "card_at": момент, "text": "Шаблон пустой", "badge": "ok"\|"bad"\|"question"\|"wait", "size": 64}` — в `at` догадка зачёркивается, в `card_at` появляется ответ (без него через 0.7 с). Без `guess` ответ не рисуется. `size` по умолчанию 70. `badge` рисуется только в Пикселях |
 | `phrases` | что говорит голос, по порядку |
 | `entities` | кто в кадре |
 | `events` | что происходит: `{"at": момент, "do": "move", …}` |
-| `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
+| `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`, `paper`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
 | `diagram` | общая схема с обходом и осью времени; сохраняется при смене `shots` |
 | `code` | карточка кода внизу кадра, по желанию |
 | `hold` | секунд после последней фразы, по умолчанию 1.5 |
@@ -42,6 +42,8 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `voice` | папка в `voices/`. Не писать: тогда голос берётся из `maket.json`, а `-voice` его меняет |
 
 Длина ролика — конец последней фразы плюс `hold`. Полей `duration` и `captions` нет: время задают фразы.
+
+`obj` служит синонимом `kind` у сущности и участника `cast`. Если заданы оба, значения должны совпадать. Например, `{"id": "S", "obj": "warehouse", "at": [540, 1560]}`.
 
 ## Фразы
 
@@ -140,21 +142,91 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 <!-- characters:start -->
 | kind | кто | синонимы | состояния | происхождение |
 |---|---|---|---|---|
+| `alert` | алерт | alert, алерт | broken, happy, idle, sad, wait, work | дизайнер |
+| `avail` | доступность товара | avail, доступность товара | broken, happy, idle, sad, wait, work | дизайнер |
+| `baby` | малыш | baby, малыш | broken, happy, idle, sad, wait, work | дизайнер |
+| `balancer` | балансировщик | balancer, балансировщик | broken, happy, idle, sad, wait, work | дизайнер |
+| `batch` | пакетная обработка | batch, пакетная обработка | broken, happy, idle, sad, wait, work | дизайнер |
+| `bloom` | фильтр Блума | bloom, фильтр Блума | broken, happy, idle, sad, wait, work | дизайнер |
 | `branch` | росток в горшке | git, коммит, branch, ветка | catch, flinch, grow, idle, pushed | дизайнер |
+| `breaker` | предохранитель запросов | breaker, предохранитель запросов | broken, happy, idle, sad, wait, work | дизайнер |
+| `btree` | B-дерево | btree, B-дерево | broken, happy, idle, sad, wait, work | дизайнер |
+| `bucket` | бакет | bucket, бакет | broken, happy, idle, sad, wait, work | дизайнер |
+| `budget` | бюджет | budget, бюджет | broken, happy, idle, sad, wait, work | дизайнер |
 | `cache` | рюкзак с карманом | рюкзак, готовые ответы, cache, redis, кэш | catch, flinch, give, idle, miss | дизайнер |
+| `card` | карточка товара | card, карточка товара | broken, happy, idle, sad, wait, work | дизайнер |
+| `channel` | канал | channel, канал | broken, happy, idle, sad, wait, work | дизайнер |
+| `client` | клиент | client, клиент | broken, happy, idle, sad, wait, work | дизайнер |
+| `context` | контекст отмены | context, контекст отмены | broken, happy, idle, sad, wait, work | дизайнер |
+| `courier` | курьер | courier, курьер | broken, happy, idle, sad, wait, work | дизайнер |
+| `cpu` | процессор | cpu, процессор | broken, happy, idle, sad, wait, work | дизайнер |
+| `cron` | планировщик | cron, планировщик | broken, happy, idle, sad, wait, work | дизайнер |
+| `customs` | таможенник | customs, таможенник | broken, happy, idle, sad, wait, work | дизайнер |
 | `db` | шкаф-картотека | картотека, таблица, хранилище, postgres, db, database, база | catch, empty, flinch, give, idle | дизайнер |
+| `deploy` | деплой | deploy, деплой | broken, happy, idle, sad, wait, work | дизайнер |
 | `developer` | человек за ноутбуком | разработчик, сотрудник, инженер, developer, человек за ноутбуком | catch, flinch, happy, idle, surprised, wait | добавлен |
 | `dialog` | окошко Yes/No | диалог, вопрос, подтверждение, dialog, prompt, окошко | catch, closed, flinch, idle, impatient | дизайнер |
+| `disk` | диск | disk, диск | broken, happy, idle, sad, wait, work | дизайнер |
+| `dlq` | очередь ошибок | dlq, очередь ошибок | broken, happy, idle, sad, wait, work | дизайнер |
+| `docs` | документация | docs, документация | broken, happy, idle, sad, wait, work | дизайнер |
+| `duty` | таможенная пошлина | duty, таможенная пошлина | broken, happy, idle, sad, wait, work | дизайнер |
+| `err500` | ошибка 500 | err500, ошибка 500 | broken, happy, idle, sad, wait, work | дизайнер |
+| `eta` | срок доставки | eta, срок доставки | broken, happy, idle, sad, wait, work | дизайнер |
 | `external` | здание чужого сервиса | внешняя система, партнёр, апи, external, api, чужой сервис | answer, catch, closed, flinch, idle | дизайнер |
+| `flag` | флаг функции | flag, флаг функции | broken, happy, idle, sad, wait, work | дизайнер |
+| `gc` | сборщик мусора | gc, сборщик мусора | broken, happy, idle, sad, wait, work | дизайнер |
+| `gor` | горутина | gor, горутина | broken, happy, idle, sad, wait, work | дизайнер |
+| `hash` | хеш | hash, хеш | broken, happy, idle, sad, wait, work | дизайнер |
+| `heap` | куча | heap, куча | broken, happy, idle, sad, wait, work | дизайнер |
+| `iface` | интерфейс | iface, интерфейс | broken, happy, idle, sad, wait, work | дизайнер |
+| `leader` | лидер | leader, лидер | broken, happy, idle, sad, wait, work | дизайнер |
+| `limiter` | ограничитель запросов | limiter, ограничитель запросов | broken, happy, idle, sad, wait, work | дизайнер |
+| `list` | связный список | list, связный список | broken, happy, idle, sad, wait, work | дизайнер |
 | `lock` | вахтёр со списком и шлагбаумом | вахтёр, проверка, хук, доступ, lock, guard, замок | allow, catch, check, deny, flinch, idle | дизайнер |
+| `log` | лог | log, лог | broken, happy, idle, sad, wait, work | дизайнер |
+| `mail` | почта | mail, почта | broken, happy, idle, sad, wait, work | дизайнер |
+| `market` | маркетплейс | market, маркетплейс | broken, happy, idle, sad, wait, work | дизайнер |
+| `metric` | метрика | metric, метрика | broken, happy, idle, sad, wait, work | дизайнер |
+| `migration` | миграция | migration, миграция | broken, happy, idle, sad, wait, work | дизайнер |
+| `mr` | запрос на слияние | mr, запрос на слияние | broken, happy, idle, sad, wait, work | дизайнер |
+| `mutex` | мьютекс | mutex, мьютекс | broken, happy, idle, sad, wait, work | дизайнер |
+| `oncall` | дежурный с рацией | oncall, дежурный с рацией | broken, happy, idle, sad, wait, work | дизайнер |
+| `packet` | сетевой пакет | packet, сетевой пакет | broken, happy, idle, sad, wait, work | дизайнер |
 | `parcel` | картонная посылка с лицом | товар, заказ, коробка, parcel, item, посылка | catch, flinch, happy, idle, sad, wait | дизайнер |
 | `person` | человек с телефоном | пользователь, дежурный, клиент, user, person, человек | catch, flinch, happy, idle, surprised, wait | дизайнер |
+| `plane` | самолёт | plane, самолёт | broken, happy, idle, sad, wait, work | дизайнер |
+| `pointer` | указатель | pointer, указатель | broken, happy, idle, sad, wait, work | дизайнер |
+| `product` | продакт со свитком PRD | product, продакт со свитком PRD | broken, happy, idle, sad, wait, work | дизайнер |
+| `pvz` | пункт выдачи | pvz, пункт выдачи | broken, happy, idle, sad, wait, work | дизайнер |
 | `queue` | конвейер с головой-мотором | конвейер, буфер, очередь задач, queue, buffer, очередь | catch, flinch, full, run, stop | дизайнер |
+| `replica` | реплика | replica, реплика | broken, happy, idle, sad, wait, work | дизайнер |
+| `resync` | пересинхронизация | resync, пересинхронизация | broken, happy, idle, sad, wait, work | дизайнер |
+| `retry` | повтор запроса | retry, повтор запроса | broken, happy, idle, sad, wait, work | дизайнер |
+| `select` | выбор канала | select, выбор канала | broken, happy, idle, sad, wait, work | дизайнер |
+| `seller` | продавец | seller, продавец | broken, happy, idle, sad, wait, work | дизайнер |
+| `semaphore` | семафор | semaphore, семафор | broken, happy, idle, sad, wait, work | дизайнер |
 | `service` | машинка с экраном-лицом и счётами | расчёт, джоба, воркер, обработчик, service, worker, сервис | bad, catch, count, flinch, idle, skip, wait | дизайнер |
 | `session` | терминал с глазами-курсорами | терминал, агент, консоль, session, terminal, сессия | catch, flinch, idle, sleep, type, wait | дизайнер |
+| `shard` | шард | shard, шард | broken, happy, idle, sad, wait, work | дизайнер |
+| `shipping` | способ доставки | shipping, способ доставки | broken, happy, idle, sad, wait, work | дизайнер |
+| `slice` | срез | slice, срез | broken, happy, idle, sad, wait, work | дизайнер |
+| `stack` | стек | stack, стек | broken, happy, idle, sad, wait, work | дизайнер |
+| `stock` | остаток товара | stock, остаток товара | broken, happy, idle, sad, wait, work | дизайнер |
+| `struct` | структура | struct, структура | broken, happy, idle, sad, wait, work | дизайнер |
 | `tariff` | ценник со знаком рубля | цена, прайс, стоимость, ценник, тарификация, price, tariff, тариф | catch, flinch, happy, idle | добавлен |
 | `template` | папка с карточками | папка, настройки продавца, способы доставки, template, шаблон | catch, empty, flinch, full, idle | дизайнер |
+| `ticket` | задача | ticket, задача | broken, happy, idle, sad, wait, work | дизайнер |
+| `timeout` | таймаут | timeout, таймаут | broken, happy, idle, sad, wait, work | дизайнер |
 | `topic` | лента писем с читателем | лента, kafka, сообщения, topic, топик | catch, flinch, flow, idle, lag | дизайнер |
+| `trace` | трассировка | trace, трассировка | broken, happy, idle, sad, wait, work | дизайнер |
+| `truck` | грузовик | truck, грузовик | broken, happy, idle, sad, wait, work | дизайнер |
+| `tx` | транзакция | tx, транзакция | broken, happy, idle, sad, wait, work | дизайнер |
+| `waitgroup` | группа ожидания | waitgroup, группа ожидания | broken, happy, idle, sad, wait, work | дизайнер |
+| `wal` | журнал записи | wal, журнал записи | broken, happy, idle, sad, wait, work | дизайнер |
+| `warehouse` | склад | warehouse, склад | broken, happy, idle, sad, wait, work | дизайнер |
+| `webhook` | вебхук | webhook, вебхук | broken, happy, idle, sad, wait, work | дизайнер |
+| `whmap` | карта складов | whmap, карта складов | broken, happy, idle, sad, wait, work | дизайнер |
+| `woman` | коллега с листом проверок | woman, коллега с листом проверок, женщина, коллега, продакт, QA | broken, happy, idle, sad, wait, work | дизайнер |
 <!-- characters:end -->
 
 Список берётся из `assets/live/sprites.json`, полный с подписями и синонимами — `go run ./cmd/maket char list [-look L]`. Незнакомое состояние — ошибка `has no state`. Нужного персонажа нет — его дорисовывают по `docs/characters.md`.
@@ -245,7 +317,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 Новый мир от дизайнера обязательно приходит с разделом «Для каких историй» первым в `docs/styles/<имя>.md`. В нём указаны подходящие и неподходящие случаи, по одному примеру каждого. Режиссёр читает этот раздел перед выбором мира; наличие подходящего персонажа само по себе выбор не определяет. У Макета этот раздел находится ниже, рядом с его форматом.
 
-`go run ./cmd/maket styles` показывает стили `pixel`, `moe`, `rts` и `maket`; у Пикселей — стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`, кроме папок стилей `moe` и `rts`; у `moe` и `rts` — их `about` и голос. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
+`go run ./cmd/maket styles` показывает стили `pixel`, `moe`, `rts`, `paper` и `maket`; у Пикселей — стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`, кроме папок стилей `moe`, `rts` и `paper`; у `moe`, `rts` и `paper` — их `about` и голос. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
 
 ```json
 {"about": "Посылки, шаблоны и сервисы для историй о доставке.",
@@ -255,6 +327,18 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 ```
 
 Пути картинок отсчитываются от папки стилистики. Место выбирается как `"place": "склад"` или `"place": {"wall": "warehouse", "floor": 1420, "ground": "shelf"}`. Пока у стилистики по умолчанию нет картинок мест, её `backdrops` пустой.
+
+## Бумага
+
+`style: "paper"` использует существующие `phrases/shots/cast/do`, без поля `look`. Полное описание: [docs/styles/paper.md](styles/paper.md).
+
+У фразы появилось необязательное поле `speaker`: id участника кадра. `{"text": "Я не упала.", "caption": "Я не упала.", "speaker": "S"}` включает на этом объекте `talk`, пока субтитр виден. При отсутствии `talk` только `idle` временно заменяется на `work`; остальные состояния продолжаются без перезапуска. После реплики снова действует шкала состояний объекта. Если реплика пересекает склейку, id должен присутствовать в обоих кадрах. В остальных стилях `speaker` не меняет поведение.
+
+`place`: `day`, `night`, `sunset`, `alarm`, `classroom`. Фоны 1080×1920, линия ног y=1560. Переходы через чёрное 0.3 с, вход в класс через белое 0.15 с. `cast.enter`: `left`, `right`, `none`; по умолчанию въезд из ближайшего края за 0.8 с с подскоками. Позиции обновляются 12 раз/с, `size` масштабирует PNG со сглаживанием: 1.1 для нескольких объектов, 1.3 для одного.
+
+Событие `chalk` доступно только на `classroom`: `{"at": "p3", "do": "chalk", "lines": ["status: 500", "reason: timeout"], "cps": 18}`. Pangolin 60 px, строки через 74 px, набор по буквам внутри доски [74, 274, 1006, 876]. `until` ограничивает видимость; следующий `chalk` или смена фона очищает текст. `title` с `episode` и `lines` рисует лист на скотче, падающий за 0.4 с. `flash` даёт белую вспышку, `cut` выбирает `color: "black"` или `"white"` и `dur`.
+
+Звуки `strum`, `babble`, `chalk` синтезируются вместе с общими эффектами. `sound: false` отключает звук события Paper, `render -no-sfx` отключает все эффекты без изменения голоса.
 
 ## Макет
 
@@ -287,7 +371,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 - Персонажи меняют лицо и позу (`states`), цвет (`roles`), значок (`badges`), ловят и вздрагивают. Так видно, что с героем случилось.
 - Карточка кода внизу — настоящая строка как улика; в кадрах вместо неё `panel` со строками.
 - Длина — от конца последней фразы. Обычно ролик держит внимание 20–40 секунд.
-- В одном ролике один стиль. Назначение миров: первые разделы `docs/styles/rts.md`, `docs/styles/pixel.md`, `docs/styles/moe.md` и «Макет» выше. Стилистики Пикселей перечисляет `go run ./cmd/maket styles`.
+- В одном ролике один стиль. Назначение миров: первые разделы `docs/styles/rts.md`, `docs/styles/pixel.md`, `docs/styles/moe.md`, `docs/styles/paper.md` и «Макет» выше. Стилистики Пикселей перечисляет `go run ./cmd/maket styles`.
 
 Зоны кадра 1080×1920, общие для всех кадров:
 - y 112…136 — полоса прогресса; выше 140 ничего своего не ставят.

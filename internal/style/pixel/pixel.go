@@ -259,7 +259,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 						return fmt.Errorf("shot %d: %w", i+1, err)
 					}
 					for _, a := range cr.Units {
-						p.ents = append(p.ents, &ent{id: a.ID, kind: a.Kind, x: a.Home[0], y: a.Home[1], size: a.Size, cut: true, actor: a, stage: stage})
+						p.ents = append(p.ents, &ent{id: a.ID, kind: a.Kind, x: a.Home[0], y: a.Home[1], size: a.Size * p.sprites.specs[a.Kind].DisplayScale(), cut: true, actor: a, stage: stage})
 					}
 				}
 			}
@@ -333,6 +333,7 @@ func (p *Pixel) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 }
 
 func (p *Pixel) entity(e scene.Entity, appear, gone, size float64, state string, cut bool, tl *timeline.Timeline) error {
+	size *= p.sprites.specs[e.Kind].DisplayScale()
 	at := tl.MustResolve
 	if len(e.At) != 2 {
 		return fmt.Errorf("entity %s: pixel style wants at: [x, y] in px", e.ID)
@@ -349,7 +350,7 @@ func (p *Pixel) entity(e scene.Entity, appear, gone, size float64, state string,
 	}
 	role := e.Role
 	if role == "" {
-		role = "external"
+		role = p.sprites.specs[e.Kind].DefaultRole()
 	}
 	x.roles = append(x.roles, timedStr{0, role})
 	for _, r := range e.Roles {

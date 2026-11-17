@@ -1,0 +1,50 @@
+{
+ "about": "Бумага: диалог и сатира. История держится на репликах персонажей и их последствиях.",
+ "backdrops": {
+  "day": {
+   "file": "bg/day.jpg",
+   "floor": 1560,
+   "label": "обычная сцена, титул, развязка",
+   "aliases": [
+    "day"
+   ],
+   "origin": "designer"
+  },
+  "night": {
+   "file": "bg/night.jpg",
+   "floor": 1560,
+   "label": "ожидание, таймаут, сон",
+   "aliases": [
+    "night"
+   ],
+   "origin": "designer"
+  },
+  "sunset": {
+   "file": "bg/sunset.jpg",
+   "floor": 1560,
+   "label": "конец дня, вывод",
+   "aliases": [
+    "sunset"
+   ],
+   "origin": "designer"
+  },
+  "alarm": {
+   "file": "bg/alarm.jpg",
+   "floor": 1560,
+   "label": "авария, пожар, всё упало",
+   "aliases": [
+    "alarm"
+   ],
+   "origin": "designer"
+  },
+  "classroom": {
+   "file": "bg/classroom.jpg",
+   "floor": 1560,
+   "label": "объяснение: на доске мелом пишется код или схема",
+   "aliases": [
+    "classroom"
+   ],
+   "origin": "designer"
+  }
+ }
+}
