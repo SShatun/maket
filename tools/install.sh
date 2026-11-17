@@ -4,6 +4,7 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd -P)
 prefix=${HOME}/.local/share/maket
 mode=install
+speechify_only=0
 step=preflight
 
 while (($#)); do
@@ -11,6 +12,10 @@ while (($#)); do
         --prefix)
             prefix=${2:?missing path after --prefix}
             shift 2
+            ;;
+        --speechify)
+            speechify_only=1
+            shift
             ;;
         --check)
             mode=check
@@ -24,6 +29,37 @@ while (($#)); do
 done
 
 trap 'printf "Failed at step: %s\nRerun: bash tools/install.sh --prefix %q\n" "$step" "$prefix" >&2' ERR
+
+if ((speechify_only)); then
+    step='Speechify settings'
+    command -v python3 >/dev/null
+    command -v ffmpeg >/dev/null
+    if ! command -v espeak-ng >/dev/null; then
+        printf 'Missing espeak-ng. Install it before rerunning.\n' >&2
+        exit 1
+    fi
+    MAKET_PREFIX=$prefix MAKET_ROOT=$root MAKET_MODE=$mode python3 - <<'PYSPEECHIFY'
+import json
+import os
+import shutil
+from pathlib import Path
+p = Path(os.environ['MAKET_ROOT']) / 'maket.local.json'
+c = json.loads(p.read_text()) if p.exists() else {}
+if os.environ['MAKET_MODE'] == 'install':
+    c.setdefault('speechify_python', shutil.which('python3'))
+    c.setdefault('speechify_voice', 'alexei')
+    c.setdefault('speechify_key_file', str(Path(os.environ['MAKET_PREFIX']).resolve() / 'speechify.key'))
+    p.write_text(json.dumps(c, ensure_ascii=False, indent=2) + '\n')
+    print('Speechify settings written; select voice_backend=speechify to send video text to Speechify')
+else:
+    if not Path(c.get('speechify_python', '')).is_file():
+        raise SystemExit('Missing speechify_python')
+    if not Path(c.get('speechify_key_file', '')).is_file():
+        raise SystemExit('Missing speechify_key_file')
+    print('Speechify paths and dependencies: OK; no request sent, key validity not checked')
+PYSPEECHIFY
+    exit 0
+fi
 
 if [[ $mode == check ]]; then
     step=check

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -22,15 +25,19 @@ import (
 )
 
 type Config struct {
-	Voice        string `json:"voice"`
-	TTSPython    string `json:"tts_python"`
-	StressPython string `json:"stress_python"`
-	TTSModel     string `json:"tts_model"`
-	RUAccentDir  string `json:"ruaccent_dir"`
-	RUAccent     bool   `json:"ruaccent"`
-	WhisperModel string `json:"whisper_model"`
-	ChecksPython string `json:"checks_python"`
-	ChecksModel  string `json:"checks_model"`
+	SpeechifyPython  string `json:"speechify_python"`
+	SpeechifyVoice   string `json:"speechify_voice"`
+	SpeechifyKeyFile string `json:"speechify_key_file"`
+	Backend          string `json:"voice_backend"`
+	Voice            string `json:"voice"`
+	TTSPython        string `json:"tts_python"`
+	StressPython     string `json:"stress_python"`
+	TTSModel         string `json:"tts_model"`
+	RUAccentDir      string `json:"ruaccent_dir"`
+	RUAccent         bool   `json:"ruaccent"`
+	WhisperModel     string `json:"whisper_model"`
+	ChecksPython     string `json:"checks_python"`
+	ChecksModel      string `json:"checks_model"`
 }
 
 type Spec struct {
@@ -56,7 +63,8 @@ const (
 	maxRetries   = 1
 	edgeSec      = 0.08
 	nearCut      = 0.15
-	tempoTol     = 0.10
+	tempoMin     = 0.67
+	tempoMax     = 1.50
 	tempoSnap    = 0.03
 	takes        = 3
 	takeSeedStep = 100
@@ -64,8 +72,9 @@ const (
 	choppyMax    = 0.3
 	gapMin       = 0.5
 	sentenceMin  = 0.55
-	clauseMin    = 0.5
-	padFrom      = 0.06
+	clauseMin    = 0.45
+	commaMin     = 0.28
+	spliceFade   = 0.005
 	flatFall     = -3.0
 	timbreRef    = 0.30
 	timbreNear   = 0.40
@@ -94,6 +103,12 @@ func LoadConfig(root string) (Config, error) {
 		}
 	} else if !os.IsNotExist(err) {
 		return c, fmt.Errorf("maket.local.json: %w", err)
+	}
+	if v := os.Getenv("MAKET_VOICE_BACKEND"); v != "" {
+		c.Backend = v
+	}
+	if c.Backend != "" && c.Backend != "qwen" && c.Backend != "speechify" {
+		return c, fmt.Errorf("unknown voice_backend %q", c.Backend)
 	}
 	return c, nil
 }
@@ -151,6 +166,9 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 }
 
 func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) ([]string, error) {
+	if cfg.Backend == "speechify" {
+		return speechifyTexts(root, sc)
+	}
 	r, _, err := newRun(ctx, root, cfg, sc, name)
 	if err != nil {
 		return nil, err
@@ -159,6 +177,9 @@ func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name st
 }
 
 func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, name string) (*Result, error) {
+	if cfg.Backend == "speechify" {
+		return synthesizeSpeechify(ctx, root, cfg, sc)
+	}
 	r, specBytes, err := newRun(ctx, root, cfg, sc, name)
 	if err != nil {
 		return nil, err
@@ -280,13 +301,6 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if r.sc.ClausePauses == nil || *r.sc.ClausePauses {
-		for i, p := range pieces {
-			if notes := p.clausePauses(clauseEnds(r.sc.Phrases[i].Text)); len(notes) > 0 {
-				tempo[i] += ", padded " + strings.Join(notes, ", ")
-			}
-		}
-	}
 	short := choppy(pieces)
 	res, err := r.place(pieces)
 	if err != nil {
@@ -307,7 +321,7 @@ func (r *run) synthesize(marked []string) (*Result, error) {
 	if short > choppyMax {
 		res.Warnings = append(res.Warnings, fmt.Sprintf("take has %.2f short pauses per second of speech (at most %.2f): sentences may sound joined by commas", short, choppyMax))
 	}
-	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, tempo spread %.0f%%", short, best.spread*100)}, tempo...)
+	res.Tempo = append([]string{fmt.Sprintf("take: short pauses %.2f/s of speech, raw tempo spread %.0f%%", short, best.spread*100)}, tempo...)
 	return res, nil
 }
 
@@ -443,7 +457,7 @@ func (r *run) checks(pieces []*piece) ([]*check, error) {
 			continue
 		}
 		a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
-		wav := filepath.Join(r.dir, fmt.Sprintf("check%02d-%d-%d-%d-%d.wav", i+1, p.seed, a, b, len(p.pcm)))
+		wav := filepath.Join(r.dir, fmt.Sprintf("check%02d-%s.wav", i+1, pcmHash(p.pcm[a:b])))
 		if _, err := os.Stat(wav); err != nil {
 			if err := audio.Write(wav, p.pcm[a:b]); err != nil {
 				return nil, err
@@ -693,10 +707,56 @@ func (r *run) python(py, script string, job any) error {
 	cmd := exec.CommandContext(r.ctx, py, "-I", filepath.Join(r.root, "tools", "voice", script), jobPath)
 	cmd.Env = append(os.Environ(), "HF_HUB_OFFLINE=1", "TRANSFORMERS_VERBOSITY=error", "TRANSFORMERS_NO_ADVISORY_WARNINGS=1")
 	cmd.Stderr = os.Stderr
+	if busy := os.Getenv("MAKET_BUSY_CHECK"); busy != "" && (script == "tts.py" || script == "asr.py") {
+		for {
+			err := exec.CommandContext(r.ctx, "bash", busy).Run()
+			if code, ok := err.(*exec.ExitError); ok && code.ExitCode() == 1 {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("voice busy check: %w", err)
+			}
+			fmt.Fprintln(os.Stderr, "maket: voice machine busy, waiting one minute")
+			select {
+			case <-r.ctx.Done():
+				return r.ctx.Err()
+			case <-time.After(time.Minute):
+			}
+		}
+	}
+	if script != "speechify.py" {
+		unlock, err := lockMachine()
+		if err != nil {
+			return err
+		}
+		defer unlock()
+	}
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", script, err)
 	}
 	return nil
+}
+
+func lockMachine() (func(), error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return nil, err
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "maket"), 0o755); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(filepath.Join(dir, "maket", "voice.lock"), os.O_CREATE|os.O_RDWR, 0o644)
+	if err != nil {
+		return nil, err
+	}
+	if syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) != nil {
+		fmt.Fprintln(os.Stderr, "maket: another voice is being recorded on this machine, waiting for it")
+		if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
+			f.Close()
+			return nil, err
+		}
+	}
+	return func() { f.Close() }, nil
 }
 
 func (r *run) phraseWords(i int) []sceneWord {
@@ -871,33 +931,115 @@ func (r *run) regenerate(marked []string, pieces []*piece, lost []int, attempt i
 }
 
 func (r *run) evenPieces(pieces []*piece) ([]string, error) {
-	rate := make([]float64, len(pieces))
-	var main, mainLevel, allLevel []float64
+	parts := make([][]*piece, len(pieces))
+	var rates, mainRates, levels, mainLevels []float64
+	var owners []int
 	for i, p := range pieces {
-		rate[i] = r.speechRate(i, p)
-		allLevel = append(allLevel, speechLevel(p))
-		if p.wav == "" {
-			main = append(main, rate[i])
-			mainLevel = append(mainLevel, allLevel[i])
-		}
-	}
-	level := median(mainLevel)
-	if level == 0 {
-		level = median(allLevel)
-	}
-	target := median(main)
-	if target == 0 {
-		target = median(rate)
-	}
-	lines := make([]string, len(pieces))
-	for i, p := range pieces {
-		k := 1.0
-		if rate[i] > 0 && target > 0 && math.Abs(rate[i]/target-1) > tempoSnap {
-			k = math.Min(1+tempoTol, math.Max(1-tempoTol, target/rate[i]))
-			if err := r.stretch(i, p, k); err != nil {
-				return nil, err
+		parts[i] = p.clauses(clauseEnds(r.sc.Phrases[i].Text))
+		for _, c := range parts[i] {
+			rate := clauseRate(c)
+			if syllables(c.words) < 4 || c.to-c.from < 0.6 {
+				rate = 0
+			}
+			rates = append(rates, rate)
+			owners = append(owners, i)
+			if rate > 0 && p.wav == "" {
+				mainRates = append(mainRates, rate)
 			}
 		}
+		levels = append(levels, speechLevel(p))
+		if p.wav == "" {
+			mainLevels = append(mainLevels, levels[i])
+		}
+	}
+	target := median(mainRates)
+	if target == 0 {
+		for _, rate := range rates {
+			if rate > 0 {
+				mainRates = append(mainRates, rate)
+			}
+		}
+		target = median(mainRates)
+	}
+	factors := make([]float64, len(rates))
+	for i, rate := range rates {
+		factors[i] = 1
+		if rate > 0 && target > 0 && math.Abs(rate/target-1) > tempoSnap {
+			factors[i] = math.Min(tempoMax, math.Max(tempoMin, target/rate))
+		}
+	}
+	for i, rate := range rates {
+		if rate > 0 {
+			continue
+		}
+		best := -1
+		for j, other := range rates {
+			if other == 0 {
+				continue
+			}
+			if best >= 0 && owners[best] == owners[i] && owners[j] != owners[i] {
+				continue
+			}
+			if best < 0 || owners[j] == owners[i] && owners[best] != owners[i] || math.Abs(float64(j-i)) < math.Abs(float64(best-i)) {
+				best = j
+			}
+		}
+		if best >= 0 {
+			factors[i] = factors[best]
+		}
+	}
+	level := median(mainLevels)
+	if level == 0 {
+		level = median(levels)
+	}
+	lines := make([]string, len(pieces))
+	index := 0
+	for i, p := range pieces {
+		var pcm []float32
+		var words []sceneWord
+		var notes []string
+		ends := clauseEnds(r.sc.Phrases[i].Text)
+		for j, c := range parts[i] {
+			before := clauseRate(c)
+			k := factors[index]
+			if k != 1 {
+				if err := r.stretch(index, c, k); err != nil {
+					return nil, err
+				}
+			} else {
+				c.gain(1)
+			}
+			note := fmt.Sprintf("clause %d %.1f → %.1f syl/s atempo %.2f", j+1, before, clauseRate(c), k)
+			if rates[index] == 0 {
+				note += " inherited"
+			}
+			if j > 0 {
+				need := ends[len(words)-1]
+				if r.sc.ClausePauses != nil && !*r.sc.ClausePauses {
+					need = 0
+				}
+				have := edgeQuiet(parts[i][j-1], true) + edgeQuiet(c, false)
+				pad := max(0, int(math.Ceil((need-have)*audio.Rate)))
+				fade := min(int(spliceFade*audio.Rate), len(pcm), len(c.pcm))
+				for f := 0; f < fade; f++ {
+					g := float32(f) / float32(fade)
+					pcm[len(pcm)-1-f] *= g
+					c.pcm[f] *= g
+				}
+				pcm = append(pcm, make([]float32, pad)...)
+				note += fmt.Sprintf(" pause before %.2f s", have+float64(pad)/audio.Rate)
+			}
+			offset := float64(len(pcm)) / audio.Rate
+			for _, w := range c.words {
+				w.s += offset
+				w.e += offset
+				words = append(words, w)
+			}
+			pcm = append(pcm, c.pcm...)
+			notes = append(notes, note)
+			index++
+		}
+		p.pcm, p.from, p.to, p.words = pcm, 0, float64(len(pcm))/audio.Rate, words
 		was := speechLevel(p)
 		for try := 0; try < levelTries; try++ {
 			if v := speechLevel(p); v > 0 && level > 0 {
@@ -910,7 +1052,7 @@ func (r *run) evenPieces(pieces []*piece) ([]string, error) {
 		if p.wav != "" {
 			src = "re-voiced"
 		}
-		lines[i] = fmt.Sprintf("phrase %d: %s seed %d, %.1f → %.1f syl/s, atempo %.2f, target %.1f; speech %.1f → %.1f dB, target %.1f", i+1, src, p.seed, rate[i], rate[i]*k, k, target, db(was), db(speechLevel(p)), db(level))
+		lines[i] = fmt.Sprintf("phrase %d: %s seed %d, target %.1f; %s; speech %.1f → %.1f dB, target %.1f", i+1, src, p.seed, target, strings.Join(notes, "; "), db(was), db(speechLevel(p)), db(level))
 	}
 	final, err := r.checks(pieces)
 	if err != nil {
@@ -1013,65 +1155,82 @@ func clauseEnds(text string) map[int]float64 {
 		switch {
 		case strings.HasSuffix(t, ".") || strings.HasSuffix(t, "?") || strings.HasSuffix(t, "!"):
 			ends[k-1] = sentenceMin
-		case strings.HasSuffix(t, ":") || strings.HasSuffix(t, "—"):
+		case strings.HasSuffix(t, ","):
+			ends[k-1] = commaMin
+		case strings.HasSuffix(t, ":") || strings.HasSuffix(t, ";") || strings.HasSuffix(t, "—"):
 			ends[k-1] = math.Max(ends[k-1], clauseMin)
 		}
 	}
 	return ends
 }
 
-func (p *piece) clausePauses(ends map[int]float64) []string {
-	var notes []string
-	for k := 0; k+1 < len(p.words); k++ {
-		need := ends[k]
-		if need == 0 {
+func (p *piece) clauses(ends map[int]float64) []*piece {
+	var out []*piece
+	first, from := 0, p.from
+	for k := range p.words {
+		if ends[k] == 0 && k+1 < len(p.words) {
 			continue
 		}
-		q := quietFrames(p)
-		idx := func(t float64) int { return int((t - p.from) / frameSec) }
-		lo, hi, next := max(0, idx(p.words[k].e-nearCut)), min(len(q)-1, idx(p.words[k+1].s+nearCut)), idx(p.words[k+1].s)
-		bestA, bestB := -1, -1
-		for f := lo; f <= hi; f++ {
-			if !q[f] {
-				continue
-			}
-			a, b := f, f
-			for a > 0 && q[a-1] {
-				a--
-			}
-			for b+1 < len(q) && q[b+1] {
-				b++
-			}
-			if a <= next && b-a > bestB-bestA {
-				bestA, bestB = a, b
-			}
-			f = b
+		to := p.to
+		if k+1 < len(p.words) {
+			to = p.clauseCut(k)
 		}
-		have := float64(bestB-bestA+1) * frameSec
-		if bestA < 0 || have < padFrom || have >= need {
-			continue
+		to = math.Max(from, math.Min(p.to, to))
+		words := append([]sceneWord(nil), p.words[first:k+1]...)
+		for j := range words {
+			words[j].s = math.Max(from, math.Min(to, words[j].s))
+			words[j].e = math.Max(words[j].s, math.Min(to, words[j].e))
 		}
-		add := need - have
-		at := int(p.from*audio.Rate) + (bestA+bestB+1)/2*int(frameSec*audio.Rate)
-		pcm := make([]float32, 0, len(p.pcm)+int(add*audio.Rate))
-		pcm = append(pcm, p.pcm[:at]...)
-		pcm = append(pcm, make([]float32, int(add*audio.Rate))...)
-		pcm = append(pcm, p.pcm[at:]...)
-		cut := float64(at) / audio.Rate
-		if p.words[k].e > cut {
-			p.words[k].e += add
-		}
-		for j := k + 1; j < len(p.words); j++ {
-			p.words[j].s += add
-			p.words[j].e += add
-		}
-		if p.to > cut {
-			p.to += add
-		}
-		p.pcm = pcm
-		notes = append(notes, fmt.Sprintf("«%s» %.2f → %.2f s", p.words[k].text, have, need))
+		out = append(out, &piece{pcm: p.pcm, from: from, to: to, words: words, seed: p.seed})
+		first, from = k+1, to
 	}
-	return notes
+	return out
+}
+
+func (p *piece) clauseCut(k int) float64 {
+	left, right := p.words[k], p.words[k+1]
+	mid := (left.e + right.s) / 2
+	lo := math.Max(p.from, math.Max((left.s+left.e)/2, math.Min(left.e, right.s)-nearCut))
+	hi := math.Min(p.to, math.Min((right.s+right.e)/2, math.Max(left.e, right.s)+nearCut))
+	best := math.Max(p.from, math.Min(p.to, mid))
+	energy := math.Inf(1)
+	half := int(0.005 * audio.Rate)
+	for at := max(half, int(lo*audio.Rate)); at <= min(len(p.pcm)-half, int(hi*audio.Rate)); at += int(0.001 * audio.Rate) {
+		sum := 0.0
+		for _, v := range p.pcm[at-half : at+half] {
+			sum += float64(v) * float64(v)
+		}
+		t := float64(at) / audio.Rate
+		if sum < energy || sum == energy && math.Abs(t-mid) < math.Abs(best-mid) {
+			energy, best = sum, t
+		}
+	}
+	return best
+}
+
+func syllables(words []sceneWord) int {
+	n := 0
+	for _, w := range words {
+		n += vowels(w.text)
+	}
+	return n
+}
+
+func clauseRate(p *piece) float64 {
+	duration := p.to - p.from - edgeQuiet(p, false) - edgeQuiet(p, true)
+	if duration <= 0 {
+		return 0
+	}
+	return float64(syllables(p.words)) / duration
+}
+
+func pcmHash(pcm []float32) string {
+	b := make([]byte, len(pcm)*4)
+	for i, v := range pcm {
+		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+	}
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])[:16]
 }
 
 func (p *piece) gain(g float64) {
@@ -1089,19 +1248,19 @@ func (p *piece) gain(g float64) {
 
 func (r *run) stretch(i int, p *piece, k float64) error {
 	a, b := int(p.from*audio.Rate), min(len(p.pcm), int(p.to*audio.Rate))
-	wav := filepath.Join(r.dir, fmt.Sprintf("tempo%02d-%d-%d-%d.wav", i+1, p.seed, a, b))
+	wav := filepath.Join(r.dir, fmt.Sprintf("tempo%02d-%s.wav", i+1, pcmHash(p.pcm[a:b])))
 	if _, err := os.Stat(wav); err != nil {
 		if err := audio.Write(wav, p.pcm[a:b]); err != nil {
 			return err
 		}
 	}
-	pcm, err := audio.Read(wav, fmt.Sprintf("atempo=%g", k))
+	pcm, err := audio.Read(wav, fmt.Sprintf("apad=pad_dur=0.1,atempo=%g,atrim=duration=%g", k, float64(b-a)/audio.Rate/k))
 	if err != nil {
 		return err
 	}
 	for w := range p.words {
-		p.words[w].s = (p.words[w].s - p.from) / k
-		p.words[w].e = (p.words[w].e - p.from) / k
+		p.words[w].s = math.Max(0, math.Min(float64(len(pcm))/audio.Rate, (p.words[w].s-p.from)/k))
+		p.words[w].e = math.Max(p.words[w].s, math.Min(float64(len(pcm))/audio.Rate, (p.words[w].e-p.from)/k))
 	}
 	p.pcm, p.from, p.to = pcm, 0, float64(len(pcm))/audio.Rate
 	return nil
