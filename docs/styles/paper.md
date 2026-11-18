@@ -23,7 +23,7 @@
 ## Персонажи и реплики
 
 ```json
-{"id": "W", "obj": "woman", "voice": "cartman", "at": [290, 1560], "size": 1.1, "enter": "left"}
+{"id": "W", "obj": "woman", "voice": "paper-loud", "at": [290, 1560], "size": 1.1, "enter": "left"}
 {"text": "Склад, ты работаешь?", "caption": "Склад, ты работаешь?", "speaker": "W"}
 ```
 
@@ -64,15 +64,15 @@ PNG 880×960 представляют логический холст 440×480. 
 
 ## Голоса
 
-Бумага озвучивается Fish Audio двумя фиксированными голосами публичной библиотеки: `cartman` (`e857469fd8a44624a842bc13808d315f`) и `butters` (`23a1470b05b74c5ebaa09572845ec46e`). Модель берётся из `fish_model`; установщик задаёт `s2.1-pro-free`. Имя выбранной модели передаётся в обязательном заголовке `model`. Нужен ключ Fish, см. [установку](../install.md).
+Бумага озвучивается Fish Audio двумя фиксированными голосами публичной библиотеки: `paper-loud` (`e857469fd8a44624a842bc13808d315f`) и `paper-shy` (`23a1470b05b74c5ebaa09572845ec46e`). Модель берётся из `fish_model`; установщик задаёт `s2.1-pro-free`. Имя выбранной модели передаётся в обязательном заголовке `model`. Нужен ключ Fish, см. [установку](../install.md).
 
-В `assets/looks/paper/look.json` заданы `voice_backend: "fish"`, голос по умолчанию `voice: "cartman"` и список `voices`. Бэкенд выбирается в порядке `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Другие стили сохраняют свои настройки.
+В `assets/looks/paper/look.json` заданы `voice_backend: "fish"`, голос по умолчанию `voice: "paper-loud"` и список `voices`. Бэкенд выбирается в порядке `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Другие стили сохраняют свои настройки.
 
 Каждому персонажу задайте `voice` с именем папки из `voices/`, а его реплике `speaker` с тем же `id`:
 
 ```json
-{"id": "W", "obj": "woman", "voice": "cartman", "at": [215, 1560]}
-{"id": "S", "obj": "warehouse", "voice": "butters", "at": [760, 1560]}
+{"id": "W", "obj": "woman", "voice": "paper-loud", "at": [215, 1560]}
+{"id": "S", "obj": "warehouse", "voice": "paper-shy", "at": [760, 1560]}
 {"text": "Склад, ты работаешь?", "speaker": "W"}
 {"text": "Я просто тихо умираю.", "speaker": "S"}
 ```

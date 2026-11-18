@@ -32,7 +32,7 @@
             215,
             1560
           ],
-          "voice": "cartman"
+          "voice": "paper-loud"
         },
         {
           "id": "S",
@@ -43,7 +43,7 @@
           ],
           "state": "broken",
           "size": 0.75,
-          "voice": "butters"
+          "voice": "paper-shy"
         }
       ],
       "do": [
@@ -75,7 +75,7 @@
             215,
             1560
           ],
-          "voice": "cartman"
+          "voice": "paper-loud"
         },
         {
           "id": "E",
@@ -112,7 +112,7 @@
             1560
           ],
           "enter": "none",
-          "voice": "cartman"
+          "voice": "paper-loud"
         },
         {
           "id": "S",
@@ -123,7 +123,7 @@
           ],
           "enter": "none",
           "size": 0.75,
-          "voice": "butters"
+          "voice": "paper-shy"
         }
       ],
       "do": [

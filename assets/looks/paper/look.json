@@ -1,10 +1,10 @@
 {
  "about": "Бумага: диалог и сатира. История держится на репликах персонажей и их последствиях.",
  "voice_backend": "fish",
- "voice": "cartman",
+ "voice": "paper-loud",
  "voices": {
-  "cartman": "cartman",
-  "butters": "butters"
+  "paper-loud": "paper-loud",
+  "paper-shy": "paper-shy"
  },
  "backdrops": {
   "day": {
