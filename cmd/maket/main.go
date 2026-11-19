@@ -40,6 +40,8 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 
 var ownLooks = map[string]bool{"moe": true, "rts": true, "paper": true}
 
+var styleVoiceBackend = map[string]string{"pixel": "speechify", "maket": "speechify"}
+
 func voiceConfig(sc *scene.Scene, opt options) (voice.Config, string, error) {
 	look := sc.Look
 	if ownLooks[sc.Style] {
@@ -53,7 +55,11 @@ func voiceConfig(sc *scene.Scene, opt options) (voice.Config, string, error) {
 			return voice.Config{}, "", err
 		}
 	}
-	cfg, err := voice.LoadConfig(opt.root, lk.VoiceBackend)
+	backend := lk.VoiceBackend
+	if backend == "" {
+		backend = styleVoiceBackend[sc.Style]
+	}
+	cfg, err := voice.LoadConfig(opt.root, backend)
 	name := lk.Voice
 	if sc.Voice != "" {
 		name = sc.Voice

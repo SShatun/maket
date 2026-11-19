@@ -41,7 +41,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `seed` | seed голоса и раскладки толпы, по умолчанию 42 |
 | `voice` | папка в `voices/`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` стиля > конфигурация. В Paper не заменяет голоса персонажей |
 
-`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper выбирает `fish`; у остальных стилей настройки не меняются.
+`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper выбирает `fish`; `pixel` и `maket` без своего `voice_backend` озвучиваются `speechify` (голос `speechify_voice`, Алексей); Moe и RTS остаются на Qwen со своими голосами.
 
 Длина ролика — конец последней фразы плюс `hold`. Полей `duration` и `captions` нет: время задают фразы.
 
