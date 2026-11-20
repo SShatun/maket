@@ -10,6 +10,7 @@ import (
 type Timeline struct {
 	Phrases  []PhraseTime
 	Duration float64
+	activity []Interval
 }
 
 type PhraseTime struct {
@@ -22,7 +23,7 @@ type WordTime struct {
 	S, E float64
 }
 
-type Gap struct {
+type Interval struct {
 	From, To float64
 }
 
@@ -246,20 +247,30 @@ func (tl *Timeline) Moments(sc *scene.Scene) ([]float64, error) {
 	return out, nil
 }
 
-func (tl *Timeline) Quiet(sc *scene.Scene) []Gap {
+func (tl *Timeline) AddActivity(from, to float64) {
+	if from <= to {
+		tl.activity = append(tl.activity, Interval{From: from, To: to})
+	}
+}
+
+func (tl *Timeline) Quiet(sc *scene.Scene) []Interval {
 	moments, err := tl.Moments(sc)
 	if err != nil || len(tl.Phrases) == 0 {
 		return nil
 	}
-	var gaps []Gap
-	prev := tl.Phrases[0].Start
+	activity := make([]Interval, 0, len(moments)+len(tl.activity)+1)
+	activity = append(activity, tl.activity...)
 	for _, t := range append(moments, tl.Duration) {
-		if t-prev > quietLimitSec {
-			gaps = append(gaps, Gap{From: prev, To: t})
+		activity = append(activity, Interval{From: t, To: t})
+	}
+	sort.Slice(activity, func(i, j int) bool { return activity[i].From < activity[j].From })
+	var gaps []Interval
+	prev := tl.Phrases[0].Start
+	for _, a := range activity {
+		if a.From-prev > quietLimitSec {
+			gaps = append(gaps, Interval{From: prev, To: a.From})
 		}
-		if t > prev {
-			prev = t
-		}
+		prev = max(prev, a.To)
 	}
 	return gaps
 }

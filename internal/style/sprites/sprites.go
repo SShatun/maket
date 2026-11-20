@@ -164,6 +164,10 @@ func (s *Set) frameAt(name string, steps []Step, t float64) (string, int) {
 
 func (s *Set) Frame(name string, steps []Step, t float64, role string) *image.RGBA {
 	state, i := s.frameAt(name, steps, t)
+	return s.FrameIndex(name, state, i, role)
+}
+
+func (s *Set) FrameIndex(name, state string, i int, role string) *image.RGBA {
 	spec := s.Specs[name]
 	if spec.Tint != nil && !*spec.Tint {
 		role = ""
@@ -176,4 +180,18 @@ func (s *Set) scaled(src image.Image) *image.RGBA {
 	dst := image.NewRGBA(image.Rect(0, 0, int(float64(b.Dx())*s.Scale), int(float64(b.Dy())*s.Scale)))
 	xdraw.NearestNeighbor.Scale(dst, dst.Bounds(), src, b, xdraw.Src, nil)
 	return dst
+}
+
+func Mirror(src *image.RGBA) *image.RGBA {
+	b := src.Bounds()
+	out := image.NewRGBA(b)
+	w := b.Dx()
+	for y := 0; y < b.Dy(); y++ {
+		row := src.Pix[y*src.Stride : y*src.Stride+w*4]
+		dst := out.Pix[y*out.Stride : y*out.Stride+w*4]
+		for x := 0; x < w; x++ {
+			copy(dst[(w-1-x)*4:(w-x)*4], row[x*4:x*4+4])
+		}
+	}
+	return out
 }

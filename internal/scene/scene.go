@@ -241,7 +241,7 @@ func (sc *Scene) check() error {
 			}
 		}
 	}
-	return checkEvents(sc.Entities, sc.Events, false)
+	return checkEvents(sc.Entities, sc.Events, "")
 }
 
 func (e *Entity) objectKind() error {
@@ -303,10 +303,10 @@ func (s Shot) check(style string) error {
 		ids[c.ID] = true
 		entities = append(entities, c.Entity)
 	}
-	return checkEvents(entities, s.Do, style == "paper")
+	return checkEvents(entities, s.Do, style)
 }
 
-func checkEvents(entities []Entity, events []Event, defaultWalkDuration bool) error {
+func checkEvents(entities []Entity, events []Event, style string) error {
 	ids := map[string]bool{}
 	hasAppear := map[string]bool{}
 	for _, e := range entities {
@@ -362,7 +362,7 @@ func checkEvents(entities []Entity, events []Event, defaultWalkDuration bool) er
 		if ev.Do == "zoom" && (ev.To == nil || ev.To.Value == nil || *ev.To.Value < 1 || ev.Dur <= 0) {
 			return fmt.Errorf("event %d: zoom needs to >= 1 and positive dur", i+1)
 		}
-		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || len(ev.To.Coords) != 2 || ev.Dur < 0 || ev.Dur == 0 && !defaultWalkDuration) {
+		if ev.Do == "walk" && (ev.Target == nil || ev.Target.ID == "" || ev.To == nil || (len(ev.To.Coords) != 2 && (style != "park" || ev.To.ID == "")) || ev.Dur < 0 || ev.Dur == 0 && style != "paper" && style != "park") {
 			return fmt.Errorf("event %d: walk needs target, to: [x, y] and positive dur", i+1)
 		}
 		if ev.Do != "zoom" && ev.To != nil && ev.To.Value != nil {
@@ -370,7 +370,7 @@ func checkEvents(entities []Entity, events []Event, defaultWalkDuration bool) er
 		}
 		pts := append([]Point{}, ev.Targets...)
 		for _, p := range []*Point{ev.Target, ev.From, ev.To} {
-			if p != nil {
+			if p != nil && !(style == "park" && ev.Do == "walk" && p != ev.Target) {
 				pts = append(pts, *p)
 			}
 		}

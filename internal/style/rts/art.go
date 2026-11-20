@@ -173,20 +173,6 @@ func lighten(src *image.RGBA) *image.RGBA {
 	return out
 }
 
-func mirror(src *image.RGBA) *image.RGBA {
-	b := src.Bounds()
-	out := image.NewRGBA(b)
-	w := b.Dx()
-	for y := 0; y < b.Dy(); y++ {
-		row := src.Pix[y*src.Stride : y*src.Stride+w*4]
-		dst := out.Pix[y*out.Stride : y*out.Stride+w*4]
-		for x := 0; x < w; x++ {
-			copy(dst[(w-1-x)*4:(w-x)*4], row[x*4:x*4+4])
-		}
-	}
-	return out
-}
-
 func opaque(im *image.RGBA) image.Rectangle {
 	if im == nil {
 		return image.Rectangle{}

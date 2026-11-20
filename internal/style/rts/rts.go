@@ -211,7 +211,7 @@ func (s *Style) prepare() error {
 				for i := 0; i < ss.Frames; i++ {
 					im := s.set.Frame(kind, []spr.Step{{T: 0, V: st}}, (float64(i)+0.5)/ss.FPS, role)
 					if im != nil && s.flips[im] == nil {
-						s.flips[im] = mirror(im)
+						s.flips[im] = spr.Mirror(im)
 					}
 				}
 			}

@@ -30,9 +30,9 @@ func Caption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, 
 	overlay{dc: gg.NewContextForRGBA(dst), sc: sc, tl: tl, th: th, t: t}.caption()
 }
 
-type spoken struct {
-	text string
-	at   float64
+type CaptionWord struct {
+	Text string
+	At   float64
 }
 
 func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th Theme, t float64) {
@@ -40,36 +40,39 @@ func styledCaption(dst *image.RGBA, sc *scene.Scene, tl *timeline.Timeline, th T
 	if cur < 0 {
 		return
 	}
-	text := sc.Phrases[cur].Caption
+	marks := CaptionWords(sc.Phrases[cur], tl.Phrases[cur])
+	if len(marks) > 0 {
+		drawStyledCaption(dst, th, marks, t)
+	}
+}
+
+func CaptionWords(p scene.Phrase, pt timeline.PhraseTime) []CaptionWord {
+	text := p.Caption
 	if text == "" {
-		text = sc.Phrases[cur].Text
+		text = p.Text
 	}
 	text = strings.ReplaceAll(text, "\u0301", "")
 	words := strings.Fields(text)
-	if len(words) == 0 {
-		return
-	}
-	pt := tl.Phrases[cur]
-	marks := make([]spoken, len(words))
+	marks := make([]CaptionWord, len(words))
 	k := 0
 	for i, w := range words {
-		marks[i] = spoken{w, pt.Start}
+		marks[i] = CaptionWord{w, pt.Start}
 		ws := scene.Words(w)
 		if len(ws) == 0 {
 			if i > 0 {
-				marks[i].at = marks[i-1].at
+				marks[i].At = marks[i-1].At
 			}
 			continue
 		}
 		f := scene.Fold(ws[0])
 		for j := k; j < len(pt.Words); j++ {
 			if scene.Fold(pt.Words[j].Text) == f {
-				marks[i].at, k = pt.Words[j].S, j+1
+				marks[i].At, k = pt.Words[j].S, j+1
 				break
 			}
 		}
 	}
-	drawStyledCaption(dst, th, marks, t)
+	return marks
 }
 
 func CaptionPhrase(sc *scene.Scene, tl *timeline.Timeline, t float64) int {
@@ -85,7 +88,7 @@ func CaptionPhrase(sc *scene.Scene, tl *timeline.Timeline, t float64) int {
 	return cur
 }
 
-func drawStyledCaption(dst *image.RGBA, th Theme, marks []spoken, t float64) {
+func drawStyledCaption(dst *image.RGBA, th Theme, marks []CaptionWord, t float64) {
 	cs := th.Caption
 	face := Face(th.Fonts.Bold, cs.Size)
 	center := cs.Center
@@ -101,7 +104,7 @@ func drawStyledCaption(dst *image.RGBA, th Theme, marks []spoken, t float64) {
 		for _, line := range lines {
 			w := -space
 			for _, m := range line {
-				w += float64(font.MeasureString(face, m.text).Round()) + space
+				w += float64(font.MeasureString(face, m.Text).Round()) + space
 			}
 			wide = math.Max(wide, w)
 		}
@@ -114,28 +117,28 @@ func drawStyledCaption(dst *image.RGBA, th Theme, marks []spoken, t float64) {
 	for _, line := range lines {
 		width := -space
 		for _, m := range line {
-			width += float64(font.MeasureString(face, m.text).Round()) + space
+			width += float64(font.MeasureString(face, m.Text).Round()) + space
 		}
 		x := center - width/2
 		for _, m := range line {
 			col := cs.Ink
-			if cs.Karaoke && t < m.at {
+			if cs.Karaoke && t < m.At {
 				col = cs.Dim
 			}
-			strokeText(dst, face, m.text, x, y, cs.Stroke, cs.Edge, col)
-			x += float64(font.MeasureString(face, m.text).Round()) + space
+			StrokeText(dst, face, m.Text, x, y, cs.Stroke, cs.Edge, col)
+			x += float64(font.MeasureString(face, m.Text).Round()) + space
 		}
 		y += lh
 	}
 }
 
-func wrapCaption(face font.Face, marks []spoken, max float64) [][]spoken {
-	var lines [][]spoken
-	var line []spoken
+func wrapCaption(face font.Face, marks []CaptionWord, max float64) [][]CaptionWord {
+	var lines [][]CaptionWord
+	var line []CaptionWord
 	w := 0.0
 	space := float64(font.MeasureString(face, " ").Round())
 	for _, m := range marks {
-		mw := float64(font.MeasureString(face, m.text).Round())
+		mw := float64(font.MeasureString(face, m.Text).Round())
 		if len(line) > 0 && w+space+mw > max {
 			lines = append(lines, line)
 			line, w = nil, 0
@@ -149,7 +152,7 @@ func wrapCaption(face font.Face, marks []spoken, max float64) [][]spoken {
 	return append(lines, line)
 }
 
-func strokeText(dst *image.RGBA, face font.Face, s string, x, y, r float64, edge, ink color.RGBA) {
+func StrokeText(dst *image.RGBA, face font.Face, s string, x, y, r float64, edge, ink color.RGBA) {
 	m := face.Metrics()
 	asc, desc := m.Ascent.Ceil(), m.Descent.Ceil()
 	pad := int(math.Ceil(r)) + 1

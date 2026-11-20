@@ -24,6 +24,7 @@ var baseGain = map[string]float64{
 	MusicBox: 0.35, Meow: 0.45, Heartbeat: 0.6, Purr: 0.25, Stab: 0.6, Blip: 0.3, Sparkle: 0.35,
 	Pluck: 0.4, Drums: 0.55, Horn: 0.4, Crackle: 0.25, Clunk: 0.6,
 	Strum: 0.5, Babble: 0.12, Chalk: 0.18,
+	Calliope: 0.35, Crowd: 0.35,
 }
 
 var pads = map[string][]float64{
@@ -46,10 +47,16 @@ func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
 	}
 	n := max(int(duration*Rate), len(voice))
 	fx := make([]float64, n)
-	rng := rand.New(rand.NewSource(7))
+	sharedRNG := rand.New(rand.NewSource(7))
 	for _, c := range cues {
+		rng := sharedRNG
+		if c.Seed != 0 {
+			rng = rand.New(rand.NewSource(c.Seed))
+		}
 		sig := synth(c.Kind, rng)
 		switch c.Kind {
+		case Calliope:
+			sig = calliope(c.Dur, c.Accents)
 		case Strum:
 			sig = strum(c.Chord, rng)
 		case Babble:
@@ -228,6 +235,10 @@ func at(sig []float64, t float64, part []float64) []float64 {
 
 func synth(kind string, rng *rand.Rand) []float64 {
 	switch kind {
+	case Click:
+		return parkClick(rng)
+	case Chord:
+		return parkChord()
 	case Whoosh:
 		n := samples(0.5)
 		x := lowpass(noise(n, rng), 0.06)
@@ -370,6 +381,8 @@ func long(kind string, dur float64, rng *rand.Rand) []float64 {
 		return math.Min(1, math.Min(t/0.5, (dur-t)/0.5))
 	}
 	switch kind {
+	case Crowd:
+		return parkCrowd(dur, rng)
 	case PadSunset, PadNight, PadIdea, PadSakura, Drone, DroneLow:
 		fs := pads[kind]
 		x := make([]float64, n)

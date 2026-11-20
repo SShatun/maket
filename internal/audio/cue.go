@@ -1,12 +1,14 @@
 package audio
 
 type Cue struct {
-	T     float64
-	Kind  string
-	Gain  float64
-	Dur   float64
-	Pitch float64
-	Chord int
+	T       float64
+	Kind    string
+	Gain    float64
+	Dur     float64
+	Pitch   float64
+	Chord   int
+	Seed    int64
+	Accents [][2]float64
 }
 
 const (
@@ -49,4 +51,8 @@ const (
 	Strum     = "strum"
 	Babble    = "babble"
 	Chalk     = "chalk"
+	Calliope  = "calliope"
+	Crowd     = "crowd"
+	Click     = "click"
+	Chord     = "chord"
 )

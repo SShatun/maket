@@ -11,12 +11,17 @@ import (
 	"sync"
 )
 
-func Encode(ctx context.Context, out string, w, h, fps, n int, frame func(i int) *image.RGBA, workers int) error {
+func Encode(ctx context.Context, out string, w, h, fps, n int, frame func(i int) *image.RGBA, workers int, pixelArt bool) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "ffmpeg", "-v", "error", "-y",
-		"-f", "rawvideo", "-pix_fmt", "rgb24", "-s", fmt.Sprintf("%dx%d", w, h), "-r", strconv.Itoa(fps), "-i", "-",
-		"-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out)
+	args := []string{"-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", fmt.Sprintf("%dx%d", w, h), "-r", strconv.Itoa(fps), "-i", "-", "-c:v", "libx264", "-preset", "veryfast"}
+	if pixelArt {
+		args = append(args, "-crf", "12", "-x264-params", "no-deblock=1:aq-mode=0")
+	} else {
+		args = append(args, "-crf", "18")
+	}
+	args = append(args, "-pix_fmt", "yuv420p", "-movflags", "+faststart", out)
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
 	cmd.Stderr = os.Stderr
 	stdin, err := cmd.StdinPipe()
 	if err != nil {

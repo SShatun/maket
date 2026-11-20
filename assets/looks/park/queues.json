@@ -1,0 +1,649 @@
+{
+ "carousel": {
+  "kind": "switchback",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1287,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 1233,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 1179,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 1125,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 1071,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 1017,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 963,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 909,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 855,
+    "y": 2118,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 855,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 909,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 963,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1017,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1071,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1125,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1179,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1233,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1287,
+    "y": 2184,
+    "view": "side",
+    "flip": true
+   }
+  ],
+  "gate": [
+   1332,
+   2040
+  ],
+  "ride": "carousel"
+ },
+ "coaster": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 312,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 357,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 402,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 447,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 492,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 537,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 582,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 627,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 672,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 717,
+    "y": 1338,
+    "view": "side",
+    "flip": true
+   }
+  ],
+  "ride": "coaster"
+ },
+ "ferris": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1812,
+    "y": 1140,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1812,
+    "y": 1194,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1812,
+    "y": 1248,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1812,
+    "y": 1302,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1812,
+    "y": 1356,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1812,
+    "y": 1410,
+    "view": "back",
+    "flip": false
+   }
+  ],
+  "ride": "ferris"
+ },
+ "ferris_fastpass": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1884,
+    "y": 1152,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1884,
+    "y": 1194,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1884,
+    "y": 1236,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1884,
+    "y": 1278,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1884,
+    "y": 1320,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1884,
+    "y": 1362,
+    "view": "back",
+    "flip": false
+   }
+  ],
+  "ride": "ferris",
+  "priority": true
+ },
+ "swings": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 528,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 483,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 438,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 393,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 348,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   },
+   {
+    "x": 303,
+    "y": 1992,
+    "view": "side",
+    "flip": false
+   }
+  ],
+  "ride": "swings"
+ },
+ "bumper": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1500,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1545,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1590,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1635,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1680,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   },
+   {
+    "x": 1725,
+    "y": 2070,
+    "view": "side",
+    "flip": true
+   }
+  ],
+  "ride": "bumper"
+ },
+ "security1": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 900,
+    "y": 3126,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 900,
+    "y": 3180,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 900,
+    "y": 3234,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 900,
+    "y": 3288,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 900,
+    "y": 3342,
+    "view": "back",
+    "flip": false
+   }
+  ],
+  "gate": [
+   900,
+   3144
+  ]
+ },
+ "security2": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1080,
+    "y": 3126,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1080,
+    "y": 3180,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1080,
+    "y": 3234,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1080,
+    "y": 3288,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1080,
+    "y": 3342,
+    "view": "back",
+    "flip": false
+   }
+  ],
+  "gate": [
+   1080,
+   3144
+  ]
+ },
+ "security3": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1260,
+    "y": 3126,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1260,
+    "y": 3180,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1260,
+    "y": 3234,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1260,
+    "y": 3288,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1260,
+    "y": 3342,
+    "view": "back",
+    "flip": false
+   }
+  ],
+  "gate": [
+   1260,
+   3144
+  ]
+ },
+ "cashier1": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 528,
+    "y": 3432,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 528,
+    "y": 3480,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 528,
+    "y": 3528,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ },
+ "cashier2": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 732,
+    "y": 3432,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 732,
+    "y": 3480,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 732,
+    "y": 3528,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ },
+ "cashier3": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1428,
+    "y": 3432,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1428,
+    "y": 3480,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1428,
+    "y": 3528,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ },
+ "cashier4": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1632,
+    "y": 3432,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1632,
+    "y": 3480,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1632,
+    "y": 3528,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ },
+ "toilets": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 180,
+    "y": 2922,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 222,
+    "y": 2922,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 264,
+    "y": 2922,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 306,
+    "y": 2922,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 348,
+    "y": 2922,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ },
+ "kitchen_order": {
+  "kind": "line",
+  "head_first": true,
+  "slots": [
+   {
+    "x": 1782,
+    "y": 2574,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1782,
+    "y": 2622,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1782,
+    "y": 2670,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1782,
+    "y": 2718,
+    "view": "back",
+    "flip": false
+   },
+   {
+    "x": 1782,
+    "y": 2766,
+    "view": "back",
+    "flip": false
+   }
+  ]
+ }
+}

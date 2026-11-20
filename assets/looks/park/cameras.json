@@ -1,0 +1,33 @@
+{
+ "frame": [
+  1080,
+  1920
+ ],
+ "presets": {
+  "service_coaster": [
+   0,
+   0
+  ],
+  "ferris_bumper": [
+   1080,
+   420
+  ],
+  "carousel": [
+   540,
+   1260
+  ],
+  "food_entrance": [
+   540,
+   1920
+  ],
+  "entrance": [
+   540,
+   1920
+  ],
+  "north_lake": [
+   540,
+   0
+  ]
+ },
+ "note": "top-left of the 1080x1920 window inside world (2160x3840); move in steps of 3 px"
+}

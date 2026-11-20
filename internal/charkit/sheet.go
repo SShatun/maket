@@ -136,7 +136,7 @@ func Tint(src image.Image, c color.RGBA) image.Image {
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
 			p := color.NRGBAModel.Convert(src.At(x, y)).(color.NRGBA)
-			if p.A > 0 && p.R == p.G && p.G == p.B {
+			if p.A > 0 && p.R > 0 && p.R == p.G && p.G == p.B {
 				p.R = uint8(int(p.R) * int(c.R) / 255)
 				p.G = uint8(int(p.G) * int(c.G) / 255)
 				p.B = uint8(int(p.B) * int(c.B) / 255)

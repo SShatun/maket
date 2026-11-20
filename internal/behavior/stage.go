@@ -41,15 +41,25 @@ func (s *Stage) AddEntity(c scene.Cast) (*Actor, error) {
 	if c.ID == "" {
 		return nil, fmt.Errorf("entity needs id")
 	}
+	if s.ByID[c.ID] != nil {
+		return nil, fmt.Errorf("duplicate id %q", c.ID)
+	}
+	a, err := s.NewActor(c)
+	if err != nil {
+		return nil, err
+	}
+	s.Actors = append(s.Actors, a)
+	s.ByID[a.ID] = a
+	return a, nil
+}
+
+func (s *Stage) NewActor(c scene.Cast) (*Actor, error) {
 	spec, ok := s.Specs[c.Kind]
 	if !ok {
 		return nil, fmt.Errorf("cast %s: unknown kind %q", c.ID, c.Kind)
 	}
 	if len(c.At) != 2 {
 		return nil, fmt.Errorf("cast %s needs at: [x, y]", c.ID)
-	}
-	if s.ByID[c.ID] != nil {
-		return nil, fmt.Errorf("duplicate id %q", c.ID)
 	}
 	role := c.Role
 	if role == "" {
@@ -87,8 +97,6 @@ func (s *Stage) AddEntity(c scene.Cast) (*Actor, error) {
 		}
 		a.Steps = append(a.Steps, spr.Step{T: t, V: st.V, Hold: st.Hold})
 	}
-	s.Actors = append(s.Actors, a)
-	s.ByID[a.ID] = a
 	return a, nil
 }
 

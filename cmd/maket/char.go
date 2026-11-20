@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"image/color"
 	"image/png"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"maket/internal/charkit"
@@ -37,6 +39,8 @@ func charMain(cmd string, args []string) int {
 	dir := charkit.Dir(*root, *look)
 	var err error
 	switch {
+	case cmd == "list" && len(pos) == 0 && *look == "park":
+		err = charParkList(dir, *markdown)
 	case cmd == "list" && len(pos) == 0:
 		err = charList(dir, *markdown)
 	case cmd == "grid" && (len(pos) == 1 || len(pos) == 2):
@@ -62,6 +66,33 @@ func charMain(cmd string, args []string) int {
 		return 1
 	}
 	return 0
+}
+
+func charParkList(dir string, markdown bool) error {
+	b, err := os.ReadFile(filepath.Join(dir, "sprites.json"))
+	if err != nil {
+		return err
+	}
+	var catalog struct {
+		People map[string]json.RawMessage
+	}
+	if err := json.Unmarshal(b, &catalog); err != nil {
+		return err
+	}
+	if len(catalog.People) == 0 {
+		return fmt.Errorf("park sprites.json has no people")
+	}
+	if markdown {
+		fmt.Println("| obj |\n|---|")
+	}
+	for _, id := range slices.Sorted(maps.Keys(catalog.People)) {
+		if markdown {
+			fmt.Printf("| %s |\n", id)
+		} else {
+			fmt.Println(id)
+		}
+	}
+	return nil
 }
 
 func charList(dir string, markdown bool) error {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ import (
 	"maket/internal/style/maket"
 	"maket/internal/style/moe"
 	"maket/internal/style/paper"
+	"maket/internal/style/park"
 	"maket/internal/style/pixel"
 	"maket/internal/style/rts"
 	"maket/internal/timeline"
@@ -36,15 +38,16 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 	"moe":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return moe.New(root, fonts) },
 	"rts":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return rts.New(root, fonts) },
 	"paper": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return paper.New(root, fonts) },
+	"park":  func(root, _ string, fonts *render.Fonts) (style.Style, error) { return park.New(root, fonts) },
 }
 
-var ownLooks = map[string]bool{"moe": true, "rts": true, "paper": true}
+var ownLooks = []string{"moe", "rts", "paper", "park"}
 
-var styleVoiceBackend = map[string]string{"pixel": "speechify", "maket": "speechify"}
+var styleVoiceBackend = map[string]string{"pixel": "speechify", "maket": "speechify", "park": "speechify"}
 
 func voiceConfig(sc *scene.Scene, opt options) (voice.Config, string, error) {
 	look := sc.Look
-	if ownLooks[sc.Style] {
+	if slices.Contains(ownLooks, sc.Style) {
 		look = sc.Style
 	}
 	var lk charkit.Look
@@ -148,7 +151,7 @@ func listStyles(root string) error {
 		return err
 	}
 	for _, d := range dirs {
-		if d.IsDir() && !ownLooks[d.Name()] {
+		if d.IsDir() && !slices.Contains(ownLooks, d.Name()) {
 			looks = append(looks, d.Name())
 		}
 	}
@@ -172,7 +175,7 @@ func listStyles(root string) error {
 		fmt.Printf("  %s\n    about: %s\n    palette: [%s]\n    backdrops: [%s]\n", name, lk.About, strings.Join(palette, ", "), strings.Join(backdrops, ", "))
 		printBackdrops(lk, backdrops, "    ")
 	}
-	for _, name := range []string{"moe", "rts", "paper"} {
+	for _, name := range ownLooks {
 		lk, err := charkit.ReadLook(charkit.Dir(root, name))
 		if err != nil {
 			return err
@@ -182,7 +185,13 @@ func listStyles(root string) error {
 			backdrops = append(backdrops, key)
 		}
 		sort.Strings(backdrops)
-		fmt.Printf("%s\n  about: %s\n  voice: %s\n  backdrops: [%s]\n", name, lk.About, lk.Voice, strings.Join(backdrops, ", "))
+		fmt.Printf("%s\n  about: %s\n", name, lk.About)
+		if backend := styleVoiceBackend[name]; lk.Voice == "" && backend != "" {
+			fmt.Printf("  voice backend: %s\n", backend)
+		} else {
+			fmt.Printf("  voice: %s\n", lk.Voice)
+		}
+		fmt.Printf("  backdrops: [%s]\n", strings.Join(backdrops, ", "))
 		printBackdrops(lk, backdrops, "  ")
 	}
 	fmt.Println("maket")
@@ -253,8 +262,8 @@ func prepare(scenePath string, opt options) (*job, error) {
 	if sc.Look != "" && name != "pixel" {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
 	}
-	if len(sc.Shots) > 0 && name != "pixel" && !ownLooks[name] {
-		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe, rts or paper", name)
+	if len(sc.Shots) > 0 && name != "pixel" && !slices.Contains(ownLooks, name) {
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe, rts, paper or park", name)
 	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {
@@ -303,7 +312,7 @@ func renderVideo(scenePath, out string, opt options, workers int) error {
 	defer os.Remove(vid)
 	err = video.Encode(context.Background(), vid, render.W, render.H, render.FPS, n, func(i int) *image.RGBA {
 		return j.frame(float64(i) / render.FPS)
-	}, workers)
+	}, workers, j.sc.Style == "park")
 	if err != nil {
 		return err
 	}
