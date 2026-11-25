@@ -27,6 +27,8 @@ type Scene struct {
 	Diagram      *Diagram        `json:"diagram"`
 	Code         *Code           `json:"code"`
 	Caption      json.RawMessage `json:"caption"`
+
+	Cases map[string]json.RawMessage `json:"cases,omitempty"`
 }
 
 type Shot struct {
@@ -294,7 +296,7 @@ func (s Shot) check(style string) error {
 		if c.ID == "" || ids[c.ID] {
 			return fmt.Errorf("cast %d: missing or duplicate id %q", i+1, c.ID)
 		}
-		if c.Kind == "" || len(c.At) != 2 || c.Size != 0 && (c.Size < 0.2 || c.Size > 4) {
+		if c.Kind == "" || (len(c.At) != 2 && !(style == "noir" && len(c.At) == 0)) || c.Size != 0 && (c.Size < 0.2 || c.Size > 4) {
 			return fmt.Errorf("cast %s: needs kind, at: [x, y] and size in 0.2..4", c.ID)
 		}
 		if c.Appear != nil {

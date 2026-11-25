@@ -1,0 +1,638 @@
+{
+ "street": {
+  "bg": "bg/street.png",
+  "fx": [
+   "fx/rain_0.png",
+   "fx/rain_1.png",
+   "fx/rain_2.png"
+  ],
+  "queue_feet_head_to_tail": [
+   [
+    461,
+    1418
+   ],
+   [
+    375,
+    1418
+   ],
+   [
+    289,
+    1418
+   ],
+   [
+    203,
+    1418
+   ],
+   [
+    117,
+    1418
+   ],
+   [
+    31,
+    1418
+   ]
+  ],
+  "queue_scale": 0.42,
+  "queue_flip": true,
+  "doorman_feet": [
+   625,
+   1414
+  ],
+  "doorman_scale": 0.42,
+  "neon": {
+   "text": "ОТЕЛЬ",
+   "vertical": true,
+   "at": [
+    408,
+    490
+   ],
+   "step": 104,
+   "px": 62
+  },
+  "people_light": {
+   "map": "light/street.png",
+   "tint": [
+    0.82,
+    0.86,
+    1.0
+   ],
+   "floor": 0.18,
+   "rim": [
+    255,
+    214,
+    150
+   ],
+   "rim_dir": [
+    1,
+    0
+   ],
+   "rim_px": 9
+  }
+ },
+ "office": {
+  "bg": "bg/office.png",
+  "detective_bust": {
+   "pos": [
+    540,
+    760
+   ],
+   "scale": 0.62
+  },
+  "board_rect": [
+   80,
+   270,
+   430,
+   764
+  ],
+  "neon": {
+   "text": "БАР",
+   "behind_blinds": true
+  },
+  "people_light": {
+   "map": "light/office.png",
+   "tint": [
+    0.86,
+    0.9,
+    1.0
+   ],
+   "floor": 0.18,
+   "rim": [
+    200,
+    210,
+    236
+   ],
+   "rim_dir": [
+    1,
+    0
+   ],
+   "rim_px": 9
+  }
+ },
+ "interrogation": {
+  "bg": "bg/interrogation.png",
+  "suspect_bust": {
+   "pos": [
+    220,
+    430
+   ],
+   "scale": 1.0
+  },
+  "wall_shadow": "silhouette of the bust ×1.12, +260 px x, −40 px y, colour (8,8,12)",
+  "order": [
+   "bg",
+   "wall_shadow",
+   "bust",
+   "fx/pool_hands.png (pool only)",
+   "fx/detective_back.png",
+   "caption",
+   "speech"
+  ],
+  "speech_box": [
+   560,
+   1600,
+   1030,
+   1800
+  ],
+  "people_light": {
+   "map": "light/interrogation.png",
+   "tint": [
+    1.0,
+    0.96,
+    0.88
+   ],
+   "floor": 0.18,
+   "rim": [
+    255,
+    244,
+    210
+   ],
+   "rim_dir": [
+    0,
+    -1
+   ],
+   "rim_px": 9
+  }
+ },
+ "archive": {
+  "bg": "bg/archive.png",
+  "cards": [
+   {
+    "rect": [
+     50,
+     1262,
+     410,
+     1442
+    ],
+    "time_at": [
+     74,
+     1314
+    ],
+    "text_at": [
+     74,
+     1362
+    ],
+    "red_tab": true
+   },
+   {
+    "rect": [
+     350,
+     1150,
+     730,
+     1340
+    ],
+    "time_at": [
+     374,
+     1202
+    ],
+    "text_at": [
+     374,
+     1250
+    ],
+    "red_tab": false
+   },
+   {
+    "rect": [
+     650,
+     1262,
+     1000,
+     1436
+    ],
+    "time_at": [
+     674,
+     1314
+    ],
+    "text_at": [
+     674,
+     1362
+    ],
+    "red_tab": false
+   }
+  ],
+  "font": {
+   "time_px": 40,
+   "text_px": 27
+  }
+ },
+ "lobby": {
+  "bg": "bg/lobby.png",
+  "key_hooks": [
+   [
+    200,
+    366
+   ],
+   [
+    290,
+    366
+   ],
+   [
+    380,
+    366
+   ],
+   [
+    470,
+    366
+   ],
+   [
+    560,
+    366
+   ],
+   [
+    200,
+    536
+   ],
+   [
+    290,
+    536
+   ],
+   [
+    380,
+    536
+   ],
+   [
+    470,
+    536
+   ],
+   [
+    560,
+    536
+   ]
+  ],
+  "key_sprite": "locations/key.png",
+  "pool_bust": {
+   "pos": [
+    618,
+    400
+   ],
+   "scale": 0.62
+  },
+  "clients_feet": [
+   [
+    200,
+    1880
+   ],
+   [
+    860,
+    1880
+   ]
+  ],
+  "client_scale": 0.62,
+  "comment": "keys free = keys on hooks; the engine pastes key.png on the first N hooks",
+  "people_light": {
+   "map": "light/lobby.png",
+   "tint": [
+    1.0,
+    0.92,
+    0.8
+   ],
+   "floor": 0.18,
+   "rim": [
+    255,
+    226,
+    170
+   ],
+   "rim_dir": [
+    1,
+    -1
+   ],
+   "rim_px": 9
+  }
+ },
+ "entrance": {
+  "bg_closed": "bg/entrance_closed.png",
+  "bg_open": "bg/entrance_open.png",
+  "doorman_feet": [
+   540,
+   1360
+  ],
+  "doorman_scale": 0.78,
+  "rope": "bg/entrance_closed.png has the rope; entrance_open.png without",
+  "crowd_feet": [
+   [
+    90,
+    1880
+   ],
+   [
+    990,
+    1880
+   ]
+  ],
+  "crowd_scale": 0.7,
+  "people_light": {
+   "map": "light/entrance.png",
+   "tint": [
+    0.9,
+    0.88,
+    0.86
+   ],
+   "floor": 0.18,
+   "rim": [
+    255,
+    220,
+    150
+   ],
+   "rim_dir": [
+    0,
+    -1
+   ],
+   "rim_px": 9
+  }
+ },
+ "kiosk": {
+  "bg": "bg/kiosk.png",
+  "newsboy_feet": [
+   560,
+   1500
+  ],
+  "newsboy_scale": 0.9,
+  "headline_board": {
+   "rect": [
+    856,
+    900,
+    1024,
+    1080
+   ],
+   "line1": {
+    "at": [
+     940,
+     940
+    ],
+    "px": 34,
+    "fresh": "СВЕЖАЯ ink",
+    "stale": "ВЧЕРА red"
+   },
+   "line2": {
+    "at": [
+     940,
+     1000
+    ],
+    "px": 44
+   }
+  },
+  "buyer_feet": [
+   980,
+   1800
+  ],
+  "people_light": {
+   "map": "light/kiosk.png",
+   "tint": [
+    0.86,
+    0.92,
+    0.9
+   ],
+   "floor": 0.18,
+   "rim": [
+    220,
+    240,
+    210
+   ],
+   "rim_dir": [
+    -1,
+    0
+   ],
+   "rim_px": 9
+  }
+ },
+ "post": {
+  "bg": "bg/post.png",
+  "pigeonholes": [
+   [
+    212,
+    280
+   ],
+   [
+    325,
+    280
+   ],
+   [
+    438,
+    280
+   ],
+   [
+    551,
+    280
+   ],
+   [
+    664,
+    280
+   ],
+   [
+    777,
+    280
+   ],
+   [
+    212,
+    398
+   ],
+   [
+    325,
+    398
+   ],
+   [
+    438,
+    398
+   ],
+   [
+    551,
+    398
+   ],
+   [
+    664,
+    398
+   ],
+   [
+    777,
+    398
+   ],
+   [
+    212,
+    516
+   ],
+   [
+    325,
+    516
+   ],
+   [
+    438,
+    516
+   ],
+   [
+    551,
+    516
+   ],
+   [
+    664,
+    516
+   ],
+   [
+    777,
+    516
+   ],
+   [
+    212,
+    634
+   ],
+   [
+    325,
+    634
+   ],
+   [
+    438,
+    634
+   ],
+   [
+    551,
+    634
+   ],
+   [
+    664,
+    634
+   ],
+   [
+    777,
+    634
+   ]
+  ],
+  "letter_sprite": "locations/letter.png",
+  "capacity": 24,
+  "clerk_feet": [
+   790,
+   1250
+  ],
+  "queue_feet_head_to_tail": [
+   [
+    290,
+    1420
+   ],
+   [
+    250,
+    1520
+   ],
+   [
+    210,
+    1620
+   ],
+   [
+    170,
+    1720
+   ],
+   [
+    130,
+    1820
+   ]
+  ],
+  "queue_scale_head_to_tail": [
+   0.48,
+   0.54,
+   0.6,
+   0.6599999999999999,
+   0.72
+  ],
+  "people_light": {
+   "map": "light/post.png",
+   "tint": [
+    0.92,
+    0.92,
+    0.9
+   ],
+   "floor": 0.18,
+   "rim": [
+    255,
+    240,
+    200
+   ],
+   "rim_dir": [
+    0,
+    -1
+   ],
+   "rim_px": 9
+  }
+ },
+ "docks": {
+  "bg": "bg/docks.png",
+  "worker_feet": [
+   [
+    540,
+    1360
+   ],
+   [
+    220,
+    1330
+   ],
+   [
+    880,
+    1340
+   ]
+  ],
+  "worker_scale": [
+   0.72,
+   0.52,
+   0.54
+  ],
+  "crate_spots": [
+   [
+    60,
+    1020
+   ],
+   [
+    820,
+    1040
+   ]
+  ],
+  "people_light": {
+   "map": "light/docks.png",
+   "tint": [
+    0.78,
+    0.84,
+    1.0
+   ],
+   "floor": 0.18,
+   "rim": [
+    200,
+    214,
+    240
+   ],
+   "rim_dir": [
+    0,
+    -1
+   ],
+   "rim_px": 9
+  }
+ },
+ "vault": {
+  "bg_open": "bg/vault_open.png",
+  "bg_closed": "bg/vault_closed.png",
+  "accountant_bust": {
+   "pos": [
+    300,
+    314
+   ],
+   "scale": 0.8
+  },
+  "desk_overlay": {
+   "file": "locations/vault_desk.png",
+   "at": [
+    130,
+    970
+   ]
+  },
+  "people_light": {
+   "map": "light/vault.png",
+   "tint": [
+    0.9,
+    0.98,
+    0.9
+   ],
+   "floor": 0.18,
+   "rim": [
+    200,
+    240,
+    210
+   ],
+   "rim_dir": [
+    -1,
+    0
+   ],
+   "rim_px": 9
+  }
+ }
+}

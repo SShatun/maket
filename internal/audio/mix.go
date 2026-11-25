@@ -3,6 +3,7 @@ package audio
 import (
 	"math"
 	"math/rand"
+	"strings"
 )
 
 const (
@@ -372,6 +373,9 @@ func synth(kind string, rng *rand.Rand) []float64 {
 }
 
 func long(kind string, dur float64, rng *rand.Rand) []float64 {
+	if name, ok := strings.CutPrefix(kind, "noir-"); ok {
+		return noirSignal(name, dur, rng)
+	}
 	if dur <= 0 {
 		dur = 4
 	}

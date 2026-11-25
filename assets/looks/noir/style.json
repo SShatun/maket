@@ -1,0 +1,28 @@
+{
+ "ink": [
+  14,
+  12,
+  16
+ ],
+ "paper": [
+  240,
+  232,
+  210
+ ],
+ "red": [
+  200,
+  36,
+  44
+ ],
+ "font": "fonts/Inter-ExtraBold.otf",
+ "caption": {
+  "title_px": 52,
+  "sub_px": 32,
+  "box": "paper, 16 px red strip left, at (60,60), height 130"
+ },
+ "speech": {
+  "px": 68
+ },
+ "floor_shadow": "ellipse under the feet: width 300×scale, height 36×scale, colour (10,10,14)",
+ "neon": "text in Inter ExtraBold, colour (255,200,196); glow = same text blurred 14 px, colour (255,60,60) at 80%; flicker = glow off and text (90,30,34) for 2–3 frames every 2–5 s"
+}

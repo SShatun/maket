@@ -22,6 +22,7 @@ import (
 	"maket/internal/style"
 	"maket/internal/style/maket"
 	"maket/internal/style/moe"
+	"maket/internal/style/noir"
 	"maket/internal/style/paper"
 	"maket/internal/style/park"
 	"maket/internal/style/pixel"
@@ -38,10 +39,11 @@ var styles = map[string]func(root, look string, fonts *render.Fonts) (style.Styl
 	"moe":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return moe.New(root, fonts) },
 	"rts":   func(root, _ string, fonts *render.Fonts) (style.Style, error) { return rts.New(root, fonts) },
 	"paper": func(root, _ string, fonts *render.Fonts) (style.Style, error) { return paper.New(root, fonts) },
+	"noir":  func(root, _ string, fonts *render.Fonts) (style.Style, error) { return noir.New(root, fonts) },
 	"park":  func(root, _ string, fonts *render.Fonts) (style.Style, error) { return park.New(root, fonts) },
 }
 
-var ownLooks = []string{"moe", "rts", "paper", "park"}
+var ownLooks = []string{"moe", "rts", "paper", "park", "noir"}
 
 var styleVoiceBackend = map[string]string{"pixel": "speechify", "maket": "speechify", "park": "speechify"}
 
@@ -263,7 +265,7 @@ func prepare(scenePath string, opt options) (*job, error) {
 		return nil, fmt.Errorf("style %q has no looks, look %q needs style pixel", name, sc.Look)
 	}
 	if len(sc.Shots) > 0 && name != "pixel" && !slices.Contains(ownLooks, name) {
-		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe, rts, paper or park", name)
+		return nil, fmt.Errorf("style %q has no shots, shots need style pixel, moe, rts, paper, park or noir", name)
 	}
 	st, err := mk(root, sc.Look, fonts)
 	if err != nil {

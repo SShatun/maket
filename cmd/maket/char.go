@@ -39,8 +39,8 @@ func charMain(cmd string, args []string) int {
 	dir := charkit.Dir(*root, *look)
 	var err error
 	switch {
-	case cmd == "list" && len(pos) == 0 && *look == "park":
-		err = charParkList(dir, *markdown)
+	case cmd == "list" && len(pos) == 0 && (*look == "park" || *look == "noir"):
+		err = charSpriteList(dir, *markdown)
 	case cmd == "list" && len(pos) == 0:
 		err = charList(dir, *markdown)
 	case cmd == "grid" && (len(pos) == 1 || len(pos) == 2):
@@ -68,24 +68,26 @@ func charMain(cmd string, args []string) int {
 	return 0
 }
 
-func charParkList(dir string, markdown bool) error {
+func charSpriteList(dir string, markdown bool) error {
 	b, err := os.ReadFile(filepath.Join(dir, "sprites.json"))
 	if err != nil {
 		return err
 	}
 	var catalog struct {
-		People map[string]json.RawMessage
+		People, Clients map[string]json.RawMessage
 	}
 	if err := json.Unmarshal(b, &catalog); err != nil {
 		return err
 	}
 	if len(catalog.People) == 0 {
-		return fmt.Errorf("park sprites.json has no people")
+		return fmt.Errorf("sprites.json has no people")
 	}
 	if markdown {
 		fmt.Println("| obj |\n|---|")
 	}
-	for _, id := range slices.Sorted(maps.Keys(catalog.People)) {
+	ids := append(slices.Collect(maps.Keys(catalog.People)), slices.Collect(maps.Keys(catalog.Clients))...)
+	slices.Sort(ids)
+	for _, id := range ids {
 		if markdown {
 			fmt.Printf("| %s |\n", id)
 		} else {

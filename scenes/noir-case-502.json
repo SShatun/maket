@@ -1,0 +1,137 @@
+{
+  "style": "noir",
+  "cases": {
+    "hotel": {
+      "title": "ДЕЛО № 502",
+      "sub": "12:03 · все запросы падают",
+      "culprit": "pool",
+      "cards": [
+        {"id": "clients", "icon": "КЛИЕНТЫ", "label": "КЛИЕНТЫ", "sub": "запросы", "centre": [290, 400], "rot": -3},
+        {"id": "gw", "icon": "ШЛЮЗ", "label": "ШЛЮЗ", "sub": "вход", "centre": [790, 570], "rot": 2.5},
+        {"id": "cache", "icon": "КЭШ", "label": "КЭШ", "sub": "быстрые ответы", "centre": [290, 810], "rot": -2},
+        {"id": "worker", "icon": "ВОРКЕР", "label": "ВОРКЕР", "sub": "обработчик", "centre": [790, 1010], "rot": 1.5},
+        {"id": "queue", "icon": "ОЧЕРЕДЬ", "label": "ОЧЕРЕДЬ", "sub": "задачи", "centre": [290, 1250], "rot": 3},
+        {"id": "pool", "icon": "ПУЛ", "label": "ПУЛ", "sub": "ключи к базе", "centre": [790, 1460], "rot": -2},
+        {"id": "db", "icon": "БАЗА", "label": "БАЗА", "sub": "данные", "centre": [290, 1680], "rot": 2}
+      ],
+      "links": [
+        ["clients", "gw", 0],
+        ["gw", "cache", 0],
+        ["gw", "worker", 1],
+        ["queue", "worker", 0],
+        ["worker", "pool", 1],
+        ["pool", "db", 0]
+      ],
+      "notes": [
+        {"t1": "ТАЙМАУТ", "t2": "30 сек → 502", "colour": "yellow", "centre": [880, 320], "rot": 4},
+        {"t1": "ВОРКЕРЫ", "t2": "ждут ключ", "colour": "white", "centre": [186, 1030], "rot": -4},
+        {"t1": "КЛЮЧЕЙ", "t2": "0 из 10", "colour": "yellow", "centre": [826, 1770], "rot": 3}
+      ]
+    }
+  },
+  "phrases": [
+    {"text": "Очередь растёт, внутрь не пускают.", "caption": "очередь растёт, внутрь не пускают"},
+    {"text": "В холле отеля кончились ключи.", "caption": "ХОЛЛ ОТЕЛЯ", "pause": 1.235714286},
+    {"text": "В архиве логи за двенадцать ноль три.", "caption": "логи за 12:03", "pause": 1.65},
+    {"text": "Где ключи?", "caption": "ГДЕ КЛЮЧИ?", "pause": 0.507142857},
+    {"text": "Воркеры не вернули.", "caption": "ВОРКЕРЫ НЕ ВЕРНУЛИ", "pause": 0.992857143},
+    {"text": "Дело пятьсот два. Все запросы падают.", "caption": "12:03 · все запросы падают", "pause": 0.378571429},
+    {"text": "Виновен пул. Ключи не вернули.", "caption": "виновен ПУЛ: ключи не вернули", "pause": 2.65}
+  ],
+  "shots": [
+    {
+      "at": 0,
+      "place": "street",
+      "cast": [
+        {"id": "gateway", "obj": "gateway", "slot": "doorman", "pose": "point", "state": "angry"},
+        {
+          "id": "line",
+          "crowd": {
+            "behavior": "queue",
+            "count": 6,
+            "every": 0.5,
+            "dur": 0.5,
+            "distance": 120
+          }
+        }
+      ],
+      "do": [
+        {"at": 0, "do": "plate", "title": "12:03 · У ОТЕЛЯ", "phrase": 1}
+      ]
+    },
+    {
+      "at": "p2",
+      "place": "lobby",
+      "cast": [
+        {"id": "pool", "obj": "pool", "slot": "pool"}
+      ],
+      "do": [
+        {
+          "at": "p2",
+          "do": "plate",
+          "title": "ХОЛЛ ОТЕЛЯ",
+          "sub": "ключей: {keys} из 10"
+        },
+        {"at": "p2", "do": "keys", "count": 10},
+        {"at": "p2+0.9", "do": "keys", "count": 9},
+        {"at": "p2+1.2", "do": "keys", "count": 8},
+        {"at": "p2+1.5", "do": "keys", "count": 7},
+        {"at": "p2+1.8", "do": "keys", "count": 6},
+        {"at": "p2+2.1", "do": "keys", "count": 5},
+        {"at": "p2+2.4", "do": "keys", "count": 4},
+        {"at": "p2+2.7", "do": "keys", "count": 3},
+        {"at": "p2+3.0", "do": "keys", "count": 2},
+        {"at": "p2+3.3", "do": "keys", "count": 1},
+        {"at": "p2+3.6", "do": "keys", "count": 0},
+        {"at": "p2+1.8", "do": "emotion", "target": "pool", "state": "nervous"},
+        {"at": "p2+1.8", "do": "speak", "target": "pool", "state": "nervous", "until": "p2+3"}
+      ]
+    },
+    {
+      "at": "p3",
+      "place": "archive",
+      "cast": [],
+      "do": [
+        {"at": "p3", "do": "plate", "title": "АРХИВ", "phrase": 3},
+        {"at": "p3+0.4", "do": "log", "row": 1, "time": "12:03:01", "text": "ПУЛ: ключей 0 из 10", "dur": 0.7},
+        {"at": "p3+1.3", "do": "log", "row": 2, "time": "12:03:02", "text": "ВОРКЕР: жду ключ", "dur": 0.7},
+        {"at": "p3+2.2", "do": "log", "row": 3, "time": "12:03:31", "text": "ШЛЮЗ: ответ 502", "dur": 0.7}
+      ]
+    },
+    {
+      "at": "p4",
+      "place": "interrogation",
+      "cast": [
+        {"id": "pool", "obj": "pool", "slot": "suspect", "state": "nervous"}
+      ],
+      "do": [
+        {"at": "p4", "do": "plate", "title": "ДОПРОС", "sub": "ПУЛ · ключи к базе"},
+        {"at": "p4", "do": "say", "phrase": 4, "until": "p5", "tip": [ 480, 1620 ]},
+        {"at": "p5", "do": "say", "target": "pool", "state": "guilty", "phrase": 5, "tip": [ 598, 1330 ]}
+      ]
+    },
+    {
+      "at": "p6",
+      "place": "board",
+      "case": "hotel",
+      "cast": [],
+      "do": [
+        {"at": "p6", "do": "zoom", "to": 1.04, "dur": 6},
+        {"at": "p6+0.9", "do": "reveal", "every": 0.6, "dur": 0.45}
+      ]
+    },
+    {
+      "at": "p7",
+      "place": "office",
+      "case": "hotel",
+      "cast": [
+        {"id": "detective", "obj": "detective", "slot": "detective"}
+      ],
+      "do": [
+        {"at": "p7", "do": "plate", "title": "ДЕЛО ЗАКРЫТО", "phrase": 7},
+        {"at": "p7+1.1", "do": "speak", "target": "detective", "until": "p7+2.6"}
+      ]
+    }
+  ],
+  "hold": 1.071429
+}

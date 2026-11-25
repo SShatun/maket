@@ -1,0 +1,159 @@
+{
+ "yarn": {
+  "twine": {
+   "base": [
+    214,
+    188,
+    134
+   ],
+   "hi": [
+    248,
+    234,
+    196
+   ],
+   "lo": [
+    124,
+    98,
+    60
+   ]
+  },
+  "red": {
+   "base": [
+    196,
+    34,
+    42
+   ],
+   "hi": [
+    246,
+    110,
+    104
+   ],
+   "lo": [
+    104,
+    12,
+    20
+   ]
+  },
+  "shadow": {
+   "color": [
+    40,
+    24,
+    14
+   ],
+   "dx": 9,
+   "dy": 13,
+   "width": 9
+  },
+  "outer": 11,
+  "core": 8,
+  "twist_every": 6,
+  "twist_len": 5,
+  "twist_w": 2.2,
+  "sag": "horizontal-ish (|dx| >= 0.3|dy|): +sin(pi*t)*(16+0.05*L) downward; steep: +sin(pi*t)*12 sideways",
+  "arrow_at": 0.55
+ },
+ "card": {
+  "size": [
+   280,
+   310
+  ],
+  "icon_at": [
+   20,
+   20
+  ],
+  "label": {
+   "at": [
+    140,
+    246
+   ],
+   "px": "40 (≤6 chars) / 34 (≤9) / 26",
+   "colour": "ink; culprit red"
+  },
+  "sub": {
+   "at": [
+    140,
+    284
+   ],
+   "px": 20,
+   "colour": [
+    110,
+    104,
+    96
+   ]
+  },
+  "shadow": [
+   12,
+   16
+  ],
+  "shadow_colour": [
+   30,
+   18,
+   10
+  ]
+ },
+ "title": {
+  "at": [
+   540,
+   140
+  ],
+  "rot": -1,
+  "t1": {
+   "at": [
+    308,
+    46
+   ],
+   "px": 58
+  },
+  "t2": {
+   "at": [
+    308,
+    94
+   ],
+   "px": 26,
+   "colour": "red"
+  }
+ },
+ "note": {
+  "t1": {
+   "at": [
+    122,
+    46
+   ],
+   "px": 38
+  },
+  "t2": {
+   "at": [
+    122,
+    94
+   ],
+   "px": 30,
+   "colour": "red"
+  },
+  "pin": "pin_red centred 52 px above note centre",
+  "shadow": [
+   9,
+   12
+  ]
+ },
+ "pin": {
+  "size": [
+   40,
+   44
+  ],
+  "anchor": [
+   15,
+   15
+  ],
+  "gold": "normal link",
+  "red": "failure link"
+ },
+ "arrow": {
+  "anchor": "centre",
+  "points": "right; rotate to the yarn direction at 55% of its length"
+ },
+ "marker": {
+  "file": "marker_circle.png",
+  "anchor": "centre on the culprit card, offset (-200,-210)"
+ },
+ "pin_point": "same column (|dx|<10): card corner (x+110, y±127); otherwise ray from card centre to the other centre, clipped to the card box shrunk by 24 px"
+}

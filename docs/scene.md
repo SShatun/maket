@@ -25,14 +25,14 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 | Поле | Что |
 |---|---|
-| `style` | `pixel`, `moe`, `rts`, `paper`, `park` или `maket`. У `moe`, `rts`, `paper` и `park` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в [moe](styles/moe.md), [rts](styles/rts.md), [paper](styles/paper.md) и [park](styles/park.md). Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
+| `style` | `pixel`, `moe`, `rts`, `paper`, `park`, `noir` или `maket`. У `moe`, `rts`, `paper`, `park` и `noir` своя папка `assets/looks/<стиль>`, поле `look` у них не задаётся, свои поля кадров, состава и событий описаны в [moe](styles/moe.md), [rts](styles/rts.md), [paper](styles/paper.md), [park](styles/park.md) и [noir](styles/noir.md). Голос по умолчанию: `-voice` > `voice` сцены > `voice` из look.json стиля или стилистики > `maket.json` |
 | `look` | стилистика Пикселей: папка `assets/looks/<look>/` со своими персонажами и необязательными `look.json` (фон, цвета, роли) и `badges/`; без поля — `assets/live`; с `maket` — ошибка |
 | `guess` | `{"text": "Ресинк сломан?"}` — неверная догадка крупно в начале |
 | `answer` | `{"at": момент, "card_at": момент, "text": "Шаблон пустой", "badge": "ok"\|"bad"\|"question"\|"wait", "size": 64}` — в `at` догадка зачёркивается, в `card_at` появляется ответ (без него через 0.7 с). Без `guess` ответ не рисуется. `size` по умолчанию 70. `badge` рисуется только в Пикселях |
 | `phrases` | что говорит голос, по порядку |
 | `entities` | кто в кадре |
 | `events` | что происходит: `{"at": момент, "do": "move", …}` |
-| `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`, `paper`, `park`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
+| `shots` | последовательность кадров (стили `pixel`, `moe`, `rts`, `paper`, `park`, `noir`); заменяет `entities` и `events`, у каждого кадра свои `cast` и `do` |
 | `diagram` | общая схема с обходом и осью времени; сохраняется при смене `shots` |
 | `code` | карточка кода внизу кадра, по желанию |
 | `hold` | секунд после последней фразы, по умолчанию 1.5 |
@@ -41,7 +41,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `seed` | seed голоса и раскладки толпы, по умолчанию 42 |
 | `voice` | папка в `voices/`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` стиля > конфигурация. В Paper не заменяет голоса персонажей |
 
-`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper выбирает `fish`. Для `pixel`, `maket` и `park` по умолчанию используется `speechify` (голос `speechify_voice`, Алексей). Moe и RTS используют Qwen со своими голосами.
+`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper выбирает `fish`. Для `pixel`, `maket` и `park` по умолчанию используется `speechify` (голос `speechify_voice`, Алексей). Moe и RTS используют Qwen со своими голосами. Нуар берёт голос и бэкенд из общих настроек.
 
 Длина ролика — конец последней фразы плюс `hold`. Полей `duration` и `captions` нет: время задают фразы.
 
@@ -319,7 +319,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 Новый мир от дизайнера обязательно приходит с разделом «Что есть» первым в `docs/styles/<имя>.md`: какой у мира вид, какие персонажи и сколько их в кадре, как они двигаются, какие есть места, надписи, таблички, числа, переходы и звук, и чего в мире нет. Режиссёр сравнивает эти разделы с тем, что его история должна показать, и выбирает мир. У Макета этот раздел находится ниже, рядом с его форматом.
 
-`go run ./cmd/maket styles` показывает стили `pixel`, `moe`, `rts`, `paper`, `park` и `maket`; у Пикселей — стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`, кроме папок стилей `moe`, `rts`, `paper` и `park`; у этих четырёх стилей — их `about` и голос. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
+`go run ./cmd/maket styles` показывает стили `pixel`, `moe`, `rts`, `paper`, `park`, `noir` и `maket`; у Пикселей — стилистику по умолчанию (`assets/live`) и папки `assets/looks/*`, кроме папок стилей `moe`, `rts`, `paper`, `park` и `noir`; у этих пяти стилей — их `about` и голос. Для каждой выводятся `about`, имена `palette` и `backdrops`. Эти поля необязательны в `look.json`; прежние `theme` и `roles` сохраняют своё значение. `palette` задаёт именованные цвета мест и не меняет тему сама по себе.
 
 ```json
 {"about": "Посылки, шаблоны и сервисы для историй о доставке.",
@@ -393,7 +393,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 - Персонажи меняют лицо и позу (`states`), цвет (`roles`), значок (`badges`), ловят и вздрагивают. Так видно, что с героем случилось.
 - Карточка кода внизу — настоящая строка как улика; в кадрах вместо неё `panel` со строками.
 - Длина — от конца последней фразы. Обычно ролик держит внимание 20–40 секунд.
-- В одном ролике один стиль. Что есть в каждом мире: разделы «Что есть» в `docs/styles/rts.md`, `docs/styles/pixel.md`, `docs/styles/moe.md`, `docs/styles/paper.md`, `docs/styles/park.md` и у «Макета» выше. Стилистики Пикселей перечисляет `go run ./cmd/maket styles`.
+- В одном ролике один стиль. Что есть в каждом мире: разделы «Что есть» в `docs/styles/rts.md`, `docs/styles/pixel.md`, `docs/styles/moe.md`, `docs/styles/paper.md`, `docs/styles/park.md`, `docs/styles/noir.md` и у «Макета» выше. Стилистики Пикселей перечисляет `go run ./cmd/maket styles`.
 
 Зоны кадра 1080×1920, общие для всех кадров:
 - y 112…136 — полоса прогресса; выше 140 ничего своего не ставят.
@@ -402,6 +402,7 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 
 ## Образцы
 
+- `scenes/noir-case-502.json` ведёт от очереди у гостиницы через архив и допрос к доске улик и кабинету сыщика.
 - `scenes/park-semaphore.json` показывает очередь из четырнадцати гостей, карусель на шесть мест и новую посадку после выхода седоков.
 - `scenes/magnit-suitcase.json` — Пиксели в кадрах: склад, крупная пачка, экран Контура, тёмная сцена «кто порезал», весы, аэропорт, развязка.
 - `scenes/resync-shots.json` — Пиксели в кадрах: кнопка ресинка, полка склада, расчёт, шаблон, лог, ожидание, развязка.

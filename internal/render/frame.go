@@ -161,6 +161,14 @@ func (o overlay) events() []scene.Event {
 }
 
 func Camera(all []scene.Event, tl *timeline.Timeline, t float64) [3]float64 {
+	return camera(all, tl, t, true)
+}
+
+func LinearCamera(all []scene.Event, tl *timeline.Timeline, t float64) [3]float64 {
+	return camera(all, tl, t, false)
+}
+
+func camera(all []scene.Event, tl *timeline.Timeline, t float64, smooth bool) [3]float64 {
 	var events []scene.Event
 	for _, ev := range all {
 		if ev.Do == "zoom" && t >= tl.MustResolve(ev.At) {
@@ -175,7 +183,9 @@ func Camera(all []scene.Event, tl *timeline.Timeline, t float64) [3]float64 {
 	start, end := 0.0, 0.0
 	at := func(t float64) [3]float64 {
 		u := prog(t, start, end)
-		u = u * u * (3 - 2*u)
+		if smooth {
+			u = u * u * (3 - 2*u)
+		}
 		return [3]float64{from[0] + (to[0]-from[0])*u, from[1] + (to[1]-from[1])*u, from[2] + (to[2]-from[2])*u}
 	}
 	for _, ev := range events {
