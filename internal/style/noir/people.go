@@ -26,7 +26,7 @@ func (p *location) slots() map[string]slot {
 			m[name] = slot{v.Pos, v.Scale, true, false}
 		}
 	}
-	for name, v := range map[string]slot{"clerk": {pos: p.Clerk, scale: .62}, "doorman": {pos: p.Doorman, scale: p.DoormanScale}, "newsboy": {pos: p.Newsboy, scale: p.NewsboyScale}, "buyer": {pos: p.Buyer, scale: .65, flip: true}} {
+	for name, v := range map[string]slot{"doorman": {pos: p.Doorman, scale: p.DoormanScale}, "newsboy": {pos: p.Newsboy, scale: p.NewsboyScale}, "buyer": {pos: p.Buyer, scale: .65, flip: true}} {
 		if v.pos != (point{}) {
 			m[name] = v
 		}
@@ -68,16 +68,16 @@ func (m movement) position(t float64) point {
 type person struct {
 	*art
 	slot
-	id, kind, dir     string
-	initial           appearance
-	client, atCounter bool
-	coat              *rgb
-	meta              sprite
-	enters            float64
-	moves             []movement
-	marks             []*action
-	mu                sync.Mutex
-	cache             map[appearance]*image.RGBA
+	id, kind, dir string
+	initial       appearance
+	client        bool
+	coat          *rgb
+	meta          sprite
+	enters        float64
+	moves         []movement
+	marks         []*action
+	mu            sync.Mutex
+	cache         map[appearance]*image.RGBA
 }
 
 func (a *art) person(id, kind, pose, emotion string, sl slot) (*person, error) {

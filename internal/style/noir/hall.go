@@ -11,6 +11,8 @@ import (
 	"strconv"
 
 	"github.com/fogleman/gg"
+
+	"maket/internal/scene"
 )
 
 const (
@@ -44,38 +46,54 @@ type hallPiece struct {
 type hall struct {
 	hallCam
 	windows, per, rows int
-	queue              []int
+	queue, used        []int
+	labels             []string
 	z0, pitch, lane    float64
 	zWall              float64
 	bg                 *image.RGBA
 	pieces             []hallPiece
 }
 
-func parseHall(raw json.RawMessage) (*hall, bool, error) {
+func parseHall(place, windows json.RawMessage, cast []scene.Cast) (*hall, error) {
 	var spec struct {
 		Room    string
 		Windows int
 		Queue   json.RawMessage
 		PerRow  int `json:"per_row"`
 	}
-	if len(raw) == 0 || raw[0] != '{' || json.Unmarshal(raw, &spec) != nil || spec.Room == "" {
-		return nil, false, nil
-	}
-	if spec.Room != "post" {
-		return nil, true, fmt.Errorf("unknown room %q, known: post", spec.Room)
+	var name string
+	var labels []string
+	switch {
+	case json.Unmarshal(place, &name) == nil && name == "post":
+		spec.Windows = 1
+		if len(windows) > 0 && json.Unmarshal(windows, &spec.Windows) != nil {
+			if json.Unmarshal(windows, &labels) != nil {
+				return nil, fmt.Errorf("windows must be a number or a list of labels")
+			}
+			spec.Windows = len(labels)
+		}
+	case len(place) == 0 || place[0] != '{' || json.Unmarshal(place, &spec) != nil || spec.Room == "":
+		if len(windows) > 0 {
+			return nil, fmt.Errorf("windows needs post")
+		}
+		return nil, nil
+	case spec.Room != "post":
+		return nil, fmt.Errorf("unknown room %q, known: post", spec.Room)
+	case len(windows) > 0:
+		return nil, fmt.Errorf("windows goes inside place")
 	}
 	n := spec.Windows
 	if n < 1 || n > hallMaxWindow {
-		return nil, true, fmt.Errorf("windows must be from 1 to %d", hallMaxWindow)
+		return nil, fmt.Errorf("windows must be from 1 to %d", hallMaxWindow)
 	}
 	per := min(n, hallMaxRow)
 	if spec.PerRow != 0 {
 		if spec.PerRow < 1 || spec.PerRow > hallMaxRow {
-			return nil, true, fmt.Errorf("per_row must be from 1 to %d", hallMaxRow)
+			return nil, fmt.Errorf("per_row must be from 1 to %d", hallMaxRow)
 		}
 		per = min(n, spec.PerRow)
 	}
-	h := &hall{windows: n, per: per, rows: (n + per - 1) / per, queue: make([]int, n)}
+	h := &hall{windows: n, per: per, rows: (n + per - 1) / per, labels: labels, queue: make([]int, n), used: make([]int, n)}
 	if len(spec.Queue) > 0 {
 		var one int
 		if json.Unmarshal(spec.Queue, &one) == nil {
@@ -83,21 +101,36 @@ func parseHall(raw json.RawMessage) (*hall, bool, error) {
 				h.queue[i] = one
 			}
 		} else if err := json.Unmarshal(spec.Queue, &h.queue); err != nil || len(h.queue) != n {
-			return nil, true, fmt.Errorf("queue must be a number or a list of %d numbers", n)
+			return nil, fmt.Errorf("queue must be a number or a list of %d numbers", n)
 		}
 	}
-	for _, q := range h.queue {
+	lines := append([]int(nil), h.queue...)
+	for _, c := range cast {
+		if c.Crowd == nil {
+			continue
+		}
+		var v struct{ Crowd struct{ Window int } }
+		if err := json.Unmarshal(c.Raw, &v); err != nil {
+			return nil, err
+		}
+		w := max(v.Crowd.Window, 1)
+		if w > n {
+			return nil, fmt.Errorf("window %d is not in the post (1…%d)", w, n)
+		}
+		lines[w-1] += c.Crowd.Count
+	}
+	for _, q := range lines {
 		if q < 0 || q > hallMaxQueue {
-			return nil, true, fmt.Errorf("a queue holds from 0 to %d people", hallMaxQueue)
+			return nil, fmt.Errorf("a queue holds from 0 to %d people", hallMaxQueue)
 		}
 	}
-	h.fit()
-	return h, true, nil
+	h.fit(lines)
+	return h, nil
 }
 
-func (h *hall) fit() {
+func (h *hall) fit(lines []int) {
 	longest := 0
-	for _, q := range h.queue {
+	for _, q := range lines {
 		longest = max(longest, q)
 	}
 	h.lane = hallFirst + float64(max(longest-1, 0))*hallStep + 0.5
@@ -138,6 +171,17 @@ func (h *hall) slot(X, Z float64) slot {
 func (h *hall) clerk(i int) slot {
 	X, zc := h.window(i)
 	return h.slot(X, zc+hallCounterD+0.45)
+}
+
+func (h *hall) label(i int) string {
+	if i < len(h.labels) {
+		return h.labels[i]
+	}
+	return strconv.Itoa(i + 1)
+}
+
+func (h *hall) coat(i, j int) rgb {
+	return hallCoats[(i*7+j*5+i/h.per*3)%len(hallCoats)]
 }
 
 func (h *hall) inLine(i, j int) slot {
@@ -183,7 +227,7 @@ func (h *hall) light(X, Z float64) float64 {
 
 func (sh *shot) buildHall() {
 	h := sh.hall
-	key := fmt.Sprintf("hall:%d:%d:%v", h.windows, h.per, h.queue)
+	key := fmt.Sprintf("hall:%d:%d:%v:%.3f:%q", h.windows, h.per, h.queue, h.lane, h.labels)
 	if im := sh.images[key]; im != nil {
 		h.bg = im
 	} else {
@@ -261,7 +305,7 @@ func (sh *shot) hallCounter(r int) hallPiece {
 		h.fill(im, red, sh.palette.Red.ink())
 		if px := float64(sign.Dy()) * 0.8; px >= 11 {
 			mid := point{float64(sign.Min.X+sign.Max.X)/2 + float64(red.Dx())/2, float64(sign.Min.Y+sign.Max.Y) / 2}
-			sh.text(im, strconv.Itoa(first+i+1), mid, px, float64(sign.Dx()-red.Dx()-4), sh.palette.Ink.ink(), true)
+			sh.text(im, h.label(first+i), mid, px, float64(sign.Dx()-red.Dx()-4), sh.palette.Ink.ink(), true)
 		}
 	}
 	h.plane(im, 0, zc-0.22, zc, x0-0.05, x1+0.15, func(X, Z float64) color.RGBA { return color.RGBA{10, 10, 13, 255} })
@@ -356,7 +400,7 @@ func (sh *shot) addHallPeople(taken map[int]bool) error {
 			if err != nil {
 				return err
 			}
-			coat := hallCoats[(i*7+j*5+i/h.per*3)%len(hallCoats)]
+			coat := h.coat(i, j)
 			p.coat = &coat
 			sh.people = append(sh.people, p)
 		}

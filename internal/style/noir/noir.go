@@ -96,20 +96,20 @@ func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 }
 
 func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
-	var spec struct{ Place json.RawMessage }
+	var spec struct{ Place, Windows json.RawMessage }
 	if err := json.Unmarshal(raw.Raw, &spec); err != nil {
 		return err
 	}
-	h, isHall, err := parseHall(spec.Place)
+	h, err := parseHall(spec.Place, spec.Windows, raw.Cast)
 	if err != nil {
 		return err
 	}
-	if isHall {
+	if h != nil {
 		sh.place, sh.hall = "hall", h
 		sh.buildHall()
 	}
 	sh.location = sh.places[sh.place]
-	if sh.place == "board" || isHall {
+	if sh.place == "board" || h != nil {
 		sh.location = &location{}
 	}
 	if sh.location == nil {
@@ -160,9 +160,13 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 	}
 	slots := sh.slots()
 	clerks := map[int]bool{}
-	if isHall {
+	if sh.hall != nil {
+		slots["clerk"] = h.clerk(0)
 		for i := range h.windows {
 			slots["clerk"+strconv.Itoa(i+1)] = h.clerk(i)
+		}
+		for j := range hallMaxQueue {
+			slots["queue"+strconv.Itoa(j+1)] = h.inLine(0, j)
 		}
 	}
 	for _, c := range raw.Cast {
@@ -207,14 +211,14 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 		if err != nil {
 			return err
 		}
-		p.atCounter = v.Slot == "clerk"
-		if n, err := strconv.Atoi(strings.TrimPrefix(v.Slot, "clerk")); isHall && err == nil {
-			clerks[n-1] = true
+		if sh.hall != nil && strings.HasPrefix(v.Slot, "clerk") {
+			n, _ := strconv.Atoi(strings.TrimPrefix(v.Slot, "clerk"))
+			clerks[max(n, 1)-1] = true
 		}
 		sh.byID[c.ID] = p
 		sh.people = append(sh.people, p)
 	}
-	if isHall {
+	if sh.hall != nil {
 		if err := sh.addHallPeople(clerks); err != nil {
 			return err
 		}
@@ -271,13 +275,31 @@ func (sh *shot) addQueue(c scene.Cast, slots map[string]slot) error {
 		Crowd struct {
 			Guests               []string
 			Every, Dur, Distance float64
+			Window               int
 		}
 	}
 	if err := json.Unmarshal(c.Raw, &v); err != nil {
 		return err
 	}
 	cfg := v.Crowd
-	if q.Behavior != "queue" || q.Count < 1 || q.Count > len(sh.Queue) || len(cfg.Guests) > 0 && len(cfg.Guests) != q.Count {
+	line := make([]slot, 0, q.Count)
+	for i := range min(q.Count, len(sh.Queue)) {
+		line = append(line, slots["queue"+strconv.Itoa(i+1)])
+	}
+	var coats []rgb
+	if h := sh.hall; h != nil {
+		w := max(cfg.Window, 1) - 1
+		line = line[:0]
+		for range q.Count {
+			j := h.queue[w] + h.used[w]
+			line = append(line, h.inLine(w, j))
+			coats = append(coats, h.coat(w, j))
+			h.used[w]++
+		}
+	} else if cfg.Window != 0 {
+		return fmt.Errorf("window needs post")
+	}
+	if q.Behavior != "queue" || q.Count < 1 || q.Count > len(line) || len(cfg.Guests) > 0 && len(cfg.Guests) != q.Count {
 		return fmt.Errorf("invalid queue or guest count")
 	}
 	if cfg.Every < 0 || cfg.Dur < 0 || cfg.Distance < 0 {
@@ -291,10 +313,13 @@ func (sh *shot) addQueue(c scene.Cast, slots map[string]slot) error {
 		if _, ok := sh.sprites.Clients[kind]; !ok {
 			return fmt.Errorf("unknown queue client %q", kind)
 		}
-		sl := slots["queue"+strconv.Itoa(i+1)]
+		sl := line[i]
 		p, err := sh.person("", kind, "stand", "calm", sl)
 		if err != nil {
 			return err
+		}
+		if coats != nil {
+			p.coat = &coats[i]
 		}
 		p.enters = sh.start + float64(i)*cfg.Every
 		if cfg.Dur > 0 {
