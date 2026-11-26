@@ -1,3 +1,10 @@
 {
-  "about": "Нуар 1930-х. Сыщик расследует сбои, допрашивает сервисы и связывает улики на пробковой доске."
+  "about": "Нуар 1930-х. Сыщик расследует сбои, допрашивает сервисы и связывает улики на пробковой доске.",
+  "voice_backend": "fish",
+  "voice": "noir-narrator",
+  "voices": {
+    "noir-narrator": "noir-narrator",
+    "noir-detective": "noir-detective",
+    "noir-suspect": "noir-suspect"
+  }
 }

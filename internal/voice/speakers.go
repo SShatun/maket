@@ -1,6 +1,7 @@
 package voice
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,7 +12,8 @@ import (
 
 func phraseVoices(sc *scene.Scene, fallback string) ([]string, error) {
 	voices := map[string]string{}
-	if sc.Style == "paper" {
+	roles := map[string]string{}
+	if sc.Style == "paper" || sc.Style == "noir" {
 		entities := append([]scene.Entity(nil), sc.Entities...)
 		for _, shot := range sc.Shots {
 			for _, cast := range shot.Cast {
@@ -19,11 +21,14 @@ func phraseVoices(sc *scene.Scene, fallback string) ([]string, error) {
 			}
 		}
 		for _, entity := range entities {
+			if entity.Kind != "" {
+				roles[entity.ID] = entity.Kind
+			}
 			if entity.Voice == "" {
 				continue
 			}
 			if previous := voices[entity.ID]; previous != "" && previous != entity.Voice {
-				return nil, fmt.Errorf("paper: speaker %q has conflicting voices %q and %q", entity.ID, previous, entity.Voice)
+				return nil, fmt.Errorf("%s: speaker %q has conflicting voices %q and %q", sc.Style, entity.ID, previous, entity.Voice)
 			}
 			voices[entity.ID] = entity.Voice
 		}
@@ -31,8 +36,16 @@ func phraseVoices(sc *scene.Scene, fallback string) ([]string, error) {
 	names := make([]string, len(sc.Phrases))
 	for i, phrase := range sc.Phrases {
 		names[i] = fallback
-		if phrase.Speaker != "" && voices[phrase.Speaker] != "" {
-			names[i] = voices[phrase.Speaker]
+		if phrase.Speaker == "" {
+			continue
+		}
+		if voice := voices[phrase.Speaker]; voice != "" {
+			names[i] = voice
+		} else if sc.Style == "noir" {
+			names[i] = "noir-suspect"
+			if cmp.Or(roles[phrase.Speaker], phrase.Speaker) == "detective" {
+				names[i] = "noir-detective"
+			}
 		}
 	}
 	return names, nil

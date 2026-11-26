@@ -91,8 +91,6 @@ func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 		tl.AddActivity(p.Start, p.Start)
 		tl.AddActivity(p.End+.35, p.End+.35)
 	}
-	chord, _ := audio.NoirCue("jazz-end")
-	s.addSound(chord, max(0., tl.Duration-chord.Dur), tl.Duration)
 	return nil
 }
 
@@ -371,7 +369,7 @@ func (sh *shot) prepare(e *action) error {
 			return fmt.Errorf("empty plate")
 		}
 	case "sfx":
-		c, ok := audio.NoirCue(e.Name)
+		c, ok := sh.sound(e.Name)
 		if !ok {
 			return fmt.Errorf("unknown noir sound %q", e.Name)
 		}

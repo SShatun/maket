@@ -48,8 +48,18 @@ func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
 	}
 	n := max(int(duration*Rate), len(voice))
 	fx := make([]float64, n)
+	var music []float64
 	sharedRNG := rand.New(rand.NewSource(7))
 	for _, c := range cues {
+		if c.MusicFile != "" {
+			if music == nil {
+				music = make([]float64, n)
+			}
+			if err := addMusic(music, c); err != nil {
+				return err
+			}
+			continue
+		}
 		rng := sharedRNG
 		if c.Seed != 0 {
 			rng = rand.New(rand.NewSource(c.Seed))
@@ -91,9 +101,13 @@ func Mix(voiceTrack string, cues []Cue, duration float64, out string) error {
 		}
 	}
 	duck := envelope(voice, n)
+	duckMusic(music, voice)
 	mix := make([]float32, n)
 	for i := range mix {
 		v := fx[i] * duck[i]
+		if music != nil {
+			v += music[i]
+		}
 		if i < len(voice) {
 			v += float64(voice[i])
 		}

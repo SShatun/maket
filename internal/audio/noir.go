@@ -12,7 +12,6 @@ type noirSound struct {
 
 var noirSounds = map[string]noirSound{
 	"rain":          {.32, 0, noirRain},
-	"jazz":          {.11, 0, noirJazz},
 	"type-key":      {.35, .075, typeKey},
 	"click":         {.18, .14, func(_ float64, r *rand.Rand) []float64 { return parkClick(r) }},
 	"carriage-bell": {.16, .55, func(d float64, _ *rand.Rand) []float64 { return bell(1280, d) }},
@@ -64,28 +63,6 @@ func noirRain(dur float64, rng *rand.Rand) []float64 {
 		drop *= .995
 		wind := .86 + .10*math.Sin(.71*t) + .04*math.Sin(2.3*t)
 		x[i] = ((near-far)*.78 + far*1.4 + drop*math.Sin(phase)) * wind * min(1., t/.18)
-	}
-	return x
-}
-
-func noirJazz(dur float64, rng *rand.Rand) []float64 {
-	const beat = .58
-	walk := [...]int{38, 41, 45, 44, 43, 46, 50, 48, 45, 49, 52, 46, 38, 41, 40, 37}
-	x := make([]float64, samples(dur))
-	for i := 0; float64(i)*beat < dur; i++ {
-		start := float64(i) * beat
-		f := 440 * math.Exp2(float64(walk[i%len(walk)]-69)/12)
-		bass := tone(f, f, .56, .31, .012)
-		bass = add(bass, tone(2*f, 2*f, .5, .19, .007), .48)
-		bass = add(bass, tone(3*f, 3*f, .37, .11, .004), .20)
-		x = at(x, start, bass)
-		if i%2 == 1 {
-			brush := noiseStroke(.18, .36, .052, rng)
-			for j := range brush {
-				brush[j] *= .24
-			}
-			x = at(x, start+.015, brush)
-		}
 	}
 	return x
 }

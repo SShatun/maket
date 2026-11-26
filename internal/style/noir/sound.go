@@ -1,6 +1,8 @@
 package noir
 
 import (
+	"math"
+	"path/filepath"
 	"strings"
 	"unicode/utf8"
 
@@ -19,8 +21,15 @@ func (s *Style) addSound(c audio.Cue, at, end float64) {
 	s.cues = append(s.cues, c)
 }
 
+func (s *Style) sound(name string) (audio.Cue, bool) {
+	if name == "jazz" {
+		return audio.Cue{MusicFile: filepath.Join(s.root, "music", "dark-bar.mp3"), Gain: math.Pow(10, -6.0/20)}, true
+	}
+	return audio.NoirCue(name)
+}
+
 func (s *Style) play(name string, at, end float64) {
-	c, _ := audio.NoirCue(name)
+	c, _ := s.sound(name)
 	s.addSound(c, at, end)
 }
 

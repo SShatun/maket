@@ -1,14 +1,15 @@
 package audio
 
 type Cue struct {
-	T       float64
-	Kind    string
-	Gain    float64
-	Dur     float64
-	Pitch   float64
-	Chord   int
-	Seed    int64
-	Accents [][2]float64
+	T         float64
+	Kind      string
+	MusicFile string
+	Gain      float64
+	Dur       float64
+	Pitch     float64
+	Chord     int
+	Seed      int64
+	Accents   [][2]float64
 }
 
 const (
