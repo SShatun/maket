@@ -37,6 +37,7 @@ type shot struct {
 	board      *board
 	mini       *image.RGBA
 	rain       bool
+	hall       *hall
 }
 
 type action struct {
@@ -95,8 +96,20 @@ func (s *Style) Layout(sc *scene.Scene, tl *timeline.Timeline) error {
 }
 
 func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
+	var spec struct{ Place json.RawMessage }
+	if err := json.Unmarshal(raw.Raw, &spec); err != nil {
+		return err
+	}
+	h, isHall, err := parseHall(spec.Place)
+	if err != nil {
+		return err
+	}
+	if isHall {
+		sh.place, sh.hall = "hall", h
+		sh.buildHall()
+	}
 	sh.location = sh.places[sh.place]
-	if sh.place == "board" {
+	if sh.place == "board" || isHall {
 		sh.location = &location{}
 	}
 	if sh.location == nil {
@@ -146,6 +159,12 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 		return fmt.Errorf("board needs case")
 	}
 	slots := sh.slots()
+	clerks := map[int]bool{}
+	if isHall {
+		for i := range h.windows {
+			slots["clerk"+strconv.Itoa(i+1)] = h.clerk(i)
+		}
+	}
 	for _, c := range raw.Cast {
 		if sh.place == "board" || sh.place == "archive" {
 			return fmt.Errorf("place has no people")
@@ -189,8 +208,16 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 			return err
 		}
 		p.atCounter = v.Slot == "clerk"
+		if n, err := strconv.Atoi(strings.TrimPrefix(v.Slot, "clerk")); isHall && err == nil {
+			clerks[n-1] = true
+		}
 		sh.byID[c.ID] = p
 		sh.people = append(sh.people, p)
+	}
+	if isHall {
+		if err := sh.addHallPeople(clerks); err != nil {
+			return err
+		}
 	}
 	for _, ev := range raw.Do {
 		e := &action{Event: ev, at: sh.tl.MustResolve(ev.At), end: sh.end}

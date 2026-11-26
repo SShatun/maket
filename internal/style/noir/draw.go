@@ -126,6 +126,9 @@ func (sh *shot) caseAt(t float64) *image.RGBA {
 }
 
 func (sh *shot) setting(dst *image.RGBA, t float64, v stage) {
+	if sh.hall != nil {
+		draw.Draw(dst, dst.Rect, sh.hall.bg, image.Point{}, draw.Src)
+	}
 	bg := sh.BG
 	if bg == "" {
 		bg = v.door
@@ -195,6 +198,9 @@ func (sh *shot) setting(dst *image.RGBA, t float64, v stage) {
 }
 
 func (sh *shot) figures(dst *image.RGBA, t float64) []figure {
+	if sh.hall != nil {
+		return sh.hallFigures(dst, t)
+	}
 	var figures []figure
 	var bounds image.Rectangle
 	var hands *image.RGBA

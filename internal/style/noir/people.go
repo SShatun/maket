@@ -71,6 +71,7 @@ type person struct {
 	id, kind, dir     string
 	initial           appearance
 	client, atCounter bool
+	coat              *rgb
 	meta              sprite
 	enters            float64
 	moves             []movement
@@ -166,6 +167,9 @@ func (p *person) image(a appearance) *image.RGBA {
 		out := image.NewRGBA(body.Rect)
 		copy(out.Pix, body.Pix)
 		paste(out, im, p.meta.Head[a.pose].pixel())
+		if p.coat != nil {
+			backCoat(out, int(p.meta.Head[a.pose][1])+im.Rect.Dy(), *p.coat)
+		}
 		im = out
 	}
 	im = resize(im, p.scale, a.flip)
