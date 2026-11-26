@@ -55,6 +55,7 @@ type location struct {
 	QueueScale  float64   `json:"queue_scale"`
 	QueueScales []float64 `json:"queue_scale_head_to_tail"`
 	QueueFlip   bool      `json:"queue_flip"`
+	QueueBack   bool      `json:"queue_from_behind"`
 	Hooks       []point   `json:"key_hooks"`
 	Key         string    `json:"key_sprite"`
 	Holes       []point   `json:"pigeonholes"`

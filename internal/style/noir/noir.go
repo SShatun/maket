@@ -269,6 +269,7 @@ func (sh *shot) addQueue(c scene.Cast, slots map[string]slot) error {
 		if err != nil {
 			return err
 		}
+		p.back = sh.QueueBack
 		p.enters = sh.start + float64(i)*cfg.Every
 		if cfg.Dur > 0 {
 			dist := cfg.Distance

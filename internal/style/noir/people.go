@@ -71,6 +71,7 @@ type person struct {
 	id, kind, dir     string
 	initial           appearance
 	client, atCounter bool
+	back              bool
 	meta              sprite
 	enters            float64
 	moves             []movement
@@ -165,6 +166,10 @@ func (p *person) image(a appearance) *image.RGBA {
 		body := p.images[p.dir+"body_"+a.pose+".png"]
 		out := image.NewRGBA(body.Rect)
 		copy(out.Pix, body.Pix)
+		if p.back {
+			backOfBody(out, int(p.sprites.Feet[0]))
+			im = backOfHead(im)
+		}
 		paste(out, im, p.meta.Head[a.pose].pixel())
 		im = out
 	}
@@ -277,6 +282,54 @@ func (l *lamp) apply(layer *image.RGBA) {
 			light := (l.Floor + (1-l.Floor)*m) * (1 - edge)
 			for j := range 3 {
 				px[j] = uint8(float64(px[j])*l.Tint[j]*light + float64(l.Rim[j])*alpha*edge)
+			}
+		}
+	}
+}
+
+func backOfHead(src *image.RGBA) *image.RGBA {
+	out := image.NewRGBA(src.Rect)
+	copy(out.Pix, src.Pix)
+	b := out.Rect
+	skin := b.Max.Y
+	for y := b.Min.Y; y < b.Max.Y && skin == b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if c := out.RGBAAt(x, y); c.A == 255 && int(c.R)+int(c.G)+int(c.B) >= 3*60 {
+				skin = y
+				break
+			}
+		}
+	}
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			c := out.RGBAAt(x, y)
+			if c.A == 0 || y < skin+12 && int(c.R)+int(c.G)+int(c.B) < 3*40 {
+				continue
+			}
+			k := float64(c.A) / 255
+			out.SetRGBA(x, y, color.RGBA{uint8(30 * k), uint8(29 * k), uint8(31 * k), c.A})
+		}
+	}
+	return out
+}
+
+func backOfBody(im *image.RGBA, mid int) {
+	const half = 90
+	b := im.Rect
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		var r, g, bl, n int
+		for x := mid - half; x <= mid+half; x++ {
+			if c := im.RGBAAt(x, y); c.A == 255 {
+				r, g, bl, n = r+int(c.R), g+int(c.G), bl+int(c.B), n+1
+			}
+		}
+		if n < half {
+			continue
+		}
+		fill := color.RGBA{uint8(r / n), uint8(g / n), uint8(bl / n), 255}
+		for x := mid - half; x <= mid+half; x++ {
+			if im.RGBAAt(x, y).A > 0 {
+				im.SetRGBA(x, y, fill)
 			}
 		}
 	}

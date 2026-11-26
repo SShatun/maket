@@ -522,6 +522,7 @@
     1600
    ]
   ],
+  "queue_from_behind": true,
   "queue_scale_head_to_tail": [
    0.42,
    0.48,
