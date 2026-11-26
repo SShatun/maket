@@ -20,11 +20,14 @@ import (
 	"unicode/utf8"
 
 	"maket/internal/audio"
+	"maket/internal/charkit"
 	"maket/internal/scene"
 	"maket/internal/timeline"
 )
 
 type Config struct {
+	Fallback *charkit.VoiceFallback `json:"-"`
+
 	FishPython       string `json:"fish_python"`
 	FishModel        string `json:"fish_model"`
 	FishKeyFile      string `json:"fish_key_file"`
@@ -152,6 +155,9 @@ func newRun(ctx context.Context, root string, cfg Config, sc *scene.Scene, name 
 	if err := json.Unmarshal(specBytes, &spec); err != nil {
 		return nil, nil, fmt.Errorf("voice %q: %w", name, err)
 	}
+	if spec.RefAudio == "" {
+		return nil, nil, fmt.Errorf("voice %q has no local ref_audio", name)
+	}
 	sharedBytes, err := os.ReadFile(filepath.Join(root, "voices", "stress.json"))
 	if err != nil {
 		return nil, nil, err
@@ -181,11 +187,11 @@ func Mark(ctx context.Context, root string, cfg Config, sc *scene.Scene, name st
 		return nil, err
 	}
 	if cfg.Backend == "fish" {
-		runs, err := fishRuns(ctx, root, cfg, sc, name)
+		take, err := prepareDialogue(ctx, root, cfg, sc, name, true)
 		if err != nil {
 			return nil, err
 		}
-		return fishTexts(runs), nil
+		return take.texts, nil
 	}
 	if cfg.Backend == "yandex" {
 		return yandexTexts(root, sc)
@@ -205,7 +211,11 @@ func Synthesize(ctx context.Context, root string, cfg Config, sc *scene.Scene, n
 		return nil, err
 	}
 	if cfg.Backend == "fish" {
-		return synthesizeFish(ctx, root, cfg, sc, name)
+		take, err := prepareDialogue(ctx, root, cfg, sc, name, false)
+		if err != nil {
+			return nil, err
+		}
+		return take.place(sc)
 	}
 	if cfg.Backend == "yandex" {
 		return synthesizeYandex(ctx, root, cfg, sc)
@@ -739,7 +749,12 @@ func (r *run) python(py, script string, job any) error {
 	}
 	cmd := exec.CommandContext(r.ctx, py, "-I", filepath.Join(r.root, "tools", "voice", script), jobPath)
 	cmd.Env = append(os.Environ(), "HF_HUB_OFFLINE=1", "TRANSFORMERS_VERBOSITY=error", "TRANSFORMERS_NO_ADVISORY_WARNINGS=1")
-	cmd.Stderr = os.Stderr
+	var fishError bytes.Buffer
+	if script == "fish.py" {
+		cmd.Stderr = &fishError
+	} else {
+		cmd.Stderr = os.Stderr
+	}
 	if busy := os.Getenv("MAKET_BUSY_CHECK"); busy != "" && (script == "tts.py" || script == "asr.py") {
 		for {
 			err := exec.CommandContext(r.ctx, "bash", busy).Run()
@@ -765,6 +780,9 @@ func (r *run) python(py, script string, job any) error {
 		defer unlock()
 	}
 	if err := cmd.Run(); err != nil {
+		if detail := strings.TrimSpace(fishError.String()); detail != "" {
+			return fishWorkerError(detail, err, r.cfg.FishKeyFile)
+		}
 		return fmt.Errorf("%s: %w", script, err)
 	}
 	return nil

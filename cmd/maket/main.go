@@ -65,6 +65,7 @@ func voiceConfig(sc *scene.Scene, opt options) (voice.Config, string, error) {
 		backend = styleVoiceBackend[sc.Style]
 	}
 	cfg, err := voice.LoadConfig(opt.root, backend)
+	cfg.Fallback = lk.VoiceFallback
 	name := lk.Voice
 	if sc.Voice != "" {
 		name = sc.Voice

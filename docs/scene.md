@@ -41,7 +41,11 @@ go run ./cmd/maket render <scene.json> -o <out.mp4> [-voice NAME] [-seed N] [-si
 | `seed` | seed голоса и раскладки толпы, по умолчанию 42 |
 | `voice` | папка в `voices/`. Голос по умолчанию: `-voice` > `voice` сцены > `voice` стиля > конфигурация. В Paper не заменяет голоса персонажей |
 
-`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper выбирает `fish`. Для `pixel`, `maket` и `park` по умолчанию используется `speechify` (голос `speechify_voice`, Алексей). Moe и RTS используют Qwen со своими голосами. Нуар берёт голос и бэкенд из общих настроек.
+`voice_backend` задаётся в `look.json` стиля. Приоритет: `MAKET_VOICE_BACKEND` > `voice_backend` стиля > `maket.local.json` > `maket.json` > Qwen. Paper и Нуар выбирают `fish`. Для `pixel`, `maket` и `park` по умолчанию используется `speechify` (голос `speechify_voice`, Алексей). Moe и RTS используют Qwen со своими голосами.
+
+Стиль может задать в `look.json` поле `voice_fallback`. В Нуаре его `backend` равен `qwen`, а `voices` сопоставляет имена голосов Fish с папками локальных клонов. Если Fish не смог озвучить хотя бы одну фразу, движок сообщает причину и повторяет всю сцену через Qwen. Это работает и при явном `MAKET_VOICE_BACKEND=fish`. Дубли хранятся раздельно.
+
+В таком стиле `stress` тоже проверяет доступность озвучки. Если фраз ещё нет в кеше Fish, команда запрашивает их и сохраняет для рендера. При сбое она выводит ударения локальных голосов. Команды `voice`, `stills`, `render` и проверка готового видео через `hear` используют тот же выбор голосов.
 
 Длина ролика — конец последней фразы плюс `hold`. Полей `duration` и `captions` нет: время задают фразы.
 
