@@ -37,6 +37,7 @@ type shot struct {
 	board      *board
 	mini       *image.RGBA
 	rain       bool
+	post       *postRoom
 }
 
 type action struct {
@@ -106,8 +107,9 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 		return err
 	}
 	var cfg struct {
-		Case json.RawMessage
-		Rain *bool
+		Case    json.RawMessage
+		Rain    *bool
+		Windows json.RawMessage
 	}
 	if err := json.Unmarshal(raw.Raw, &cfg); err != nil {
 		return err
@@ -146,6 +148,24 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 		return fmt.Errorf("board needs case")
 	}
 	slots := sh.slots()
+	if sh.place == "post" {
+		room, err := sh.newPostRoom(cfg.Windows)
+		if err != nil {
+			return err
+		}
+		sh.post = room
+		slots["clerk"] = room.clerk(0)
+		for i := range room.centres {
+			slots["clerk"+strconv.Itoa(i+1)] = room.clerk(i)
+		}
+		line, _ := room.queue(0, postMaxQueue)
+		for i, sl := range line {
+			slots["queue"+strconv.Itoa(i+1)] = sl
+		}
+	} else if len(cfg.Windows) > 0 {
+		return fmt.Errorf("windows needs post")
+	}
+	clerks := map[int]bool{}
 	for _, c := range raw.Cast {
 		if sh.place == "board" || sh.place == "archive" {
 			return fmt.Errorf("place has no people")
@@ -188,9 +208,18 @@ func (sh *shot) layout(raw scene.Shot, boards map[string]*board) error {
 		if err != nil {
 			return err
 		}
-		p.atCounter = v.Slot == "clerk"
+		if sh.post != nil && strings.HasPrefix(v.Slot, "clerk") {
+			n, _ := strconv.Atoi(strings.TrimPrefix(v.Slot, "clerk"))
+			clerks[max(n, 1)-1] = true
+			p.atCounter = true
+		}
 		sh.byID[c.ID] = p
 		sh.people = append(sh.people, p)
+	}
+	if sh.post != nil {
+		if err := sh.addClerks(clerks); err != nil {
+			return err
+		}
 	}
 	for _, ev := range raw.Do {
 		e := &action{Event: ev, at: sh.tl.MustResolve(ev.At), end: sh.end}
@@ -244,13 +273,26 @@ func (sh *shot) addQueue(c scene.Cast, slots map[string]slot) error {
 		Crowd struct {
 			Guests               []string
 			Every, Dur, Distance float64
+			Window               int
 		}
 	}
 	if err := json.Unmarshal(c.Raw, &v); err != nil {
 		return err
 	}
 	cfg := v.Crowd
-	if q.Behavior != "queue" || q.Count < 1 || q.Count > len(sh.Queue) || len(cfg.Guests) > 0 && len(cfg.Guests) != q.Count {
+	line := make([]slot, 0, q.Count)
+	for i := range min(q.Count, len(sh.Queue)) {
+		line = append(line, slots["queue"+strconv.Itoa(i+1)])
+	}
+	if sh.post != nil {
+		var err error
+		if line, err = sh.post.queue(max(cfg.Window, 1)-1, q.Count); err != nil {
+			return err
+		}
+	} else if cfg.Window != 0 {
+		return fmt.Errorf("window needs post")
+	}
+	if q.Behavior != "queue" || q.Count < 1 || q.Count > len(line) || len(cfg.Guests) > 0 && len(cfg.Guests) != q.Count {
 		return fmt.Errorf("invalid queue or guest count")
 	}
 	if cfg.Every < 0 || cfg.Dur < 0 || cfg.Distance < 0 {
@@ -264,12 +306,12 @@ func (sh *shot) addQueue(c scene.Cast, slots map[string]slot) error {
 		if _, ok := sh.sprites.Clients[kind]; !ok {
 			return fmt.Errorf("unknown queue client %q", kind)
 		}
-		sl := slots["queue"+strconv.Itoa(i+1)]
+		sl := line[i]
 		p, err := sh.person("", kind, "stand", "calm", sl)
 		if err != nil {
 			return err
 		}
-		p.back = sh.QueueBack
+		p.back = sh.post != nil
 		p.enters = sh.start + float64(i)*cfg.Every
 		if cfg.Dur > 0 {
 			dist := cfg.Distance

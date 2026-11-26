@@ -130,6 +130,10 @@ func (sh *shot) setting(dst *image.RGBA, t float64, v stage) {
 	if bg == "" {
 		bg = v.door
 	}
+	if sh.post != nil {
+		bg = ""
+		draw.Draw(dst, dst.Rect, sh.post.bg, image.Point{}, draw.Src)
+	}
 	if bg != "" {
 		paste(dst, sh.images[bg], image.Point{})
 	}
@@ -143,11 +147,6 @@ func (sh *shot) setting(dst *image.RGBA, t float64, v stage) {
 	for _, pos := range sh.Holes[:v.letters] {
 		im := sh.images[sh.Letter]
 		paste(dst, im, pos.pixel())
-	}
-	if sh.place == "post" {
-		for _, r := range []image.Rectangle{image.Rect(120, 520, 461, 801), image.Rect(620, 520, 961, 801)} {
-			draw.Draw(dst, r, sh.images[bg], r.Min, draw.Src)
-		}
 	}
 	if e := v.headline; e != nil {
 		col := sh.palette.Ink.ink()
@@ -197,8 +196,8 @@ func (sh *shot) figures(dst *image.RGBA, t float64) []figure {
 			continue
 		}
 		f := p.figure(t)
-		if sh.place == "post" && p.atCounter && f.feet[0] >= sh.Clerk[0]-190 && f.feet[0] <= sh.Clerk[0]+210 && f.feet[1] <= sh.Clerk[1] {
-			cut := int(sh.Counter)
+		if sh.post != nil && p.atCounter && f.feet[1] <= postClerkFeet+1 {
+			cut := postCounter
 			r := f.body.Rect
 			r.Max.Y = min(r.Max.Y, cut-f.origin.Y)
 			if r.Empty() {

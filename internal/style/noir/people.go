@@ -26,7 +26,7 @@ func (p *location) slots() map[string]slot {
 			m[name] = slot{v.Pos, v.Scale, true, false}
 		}
 	}
-	for name, v := range map[string]slot{"clerk": {pos: p.Clerk, scale: p.ClerkScale}, "doorman": {pos: p.Doorman, scale: p.DoormanScale}, "newsboy": {pos: p.Newsboy, scale: p.NewsboyScale}, "buyer": {pos: p.Buyer, scale: .65, flip: true}} {
+	for name, v := range map[string]slot{"doorman": {pos: p.Doorman, scale: p.DoormanScale}, "newsboy": {pos: p.Newsboy, scale: p.NewsboyScale}, "buyer": {pos: p.Buyer, scale: .65, flip: true}} {
 		if v.pos != (point{}) {
 			m[name] = v
 		}

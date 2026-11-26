@@ -494,42 +494,6 @@
   ],
   "letter_sprite": "locations/letter.png",
   "capacity": 24,
-  "clerk_feet": [
-   835,
-   1078
-  ],
-  "clerk_scale": 0.46,
-  "counter_top": 800,
-  "queue_feet_head_to_tail": [
-   [
-    675,
-    1010
-   ],
-   [
-    560,
-    1120
-   ],
-   [
-    440,
-    1250
-   ],
-   [
-    315,
-    1410
-   ],
-   [
-    185,
-    1600
-   ]
-  ],
-  "queue_from_behind": true,
-  "queue_scale_head_to_tail": [
-   0.42,
-   0.48,
-   0.55,
-   0.63,
-   0.73
-  ],
   "people_light": {
    "map": "light/post.png",
    "tint": [
