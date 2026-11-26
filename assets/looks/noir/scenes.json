@@ -495,37 +495,39 @@
   "letter_sprite": "locations/letter.png",
   "capacity": 24,
   "clerk_feet": [
-   790,
-   1250
+   835,
+   1078
   ],
+  "clerk_scale": 0.46,
+  "counter_top": 800,
   "queue_feet_head_to_tail": [
    [
-    290,
-    1420
+    675,
+    1010
    ],
    [
-    250,
-    1520
+    560,
+    1120
    ],
    [
-    210,
-    1620
+    440,
+    1250
    ],
    [
-    170,
-    1720
+    315,
+    1410
    ],
    [
-    130,
-    1820
+    185,
+    1600
    ]
   ],
   "queue_scale_head_to_tail": [
+   0.42,
    0.48,
-   0.54,
-   0.6,
-   0.6599999999999999,
-   0.72
+   0.55,
+   0.63,
+   0.73
   ],
   "people_light": {
    "map": "light/post.png",

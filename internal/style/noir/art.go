@@ -89,6 +89,8 @@ type location struct {
 	Crowd        []point   `json:"crowd_feet"`
 	CrowdScale   float64   `json:"crowd_scale"`
 	Clerk        point     `json:"clerk_feet"`
+	ClerkScale   float64   `json:"clerk_scale"`
+	Counter      float64   `json:"counter_top"`
 	Buyer        point     `json:"buyer_feet"`
 	Newsboy      point     `json:"newsboy_feet"`
 	NewsboyScale float64   `json:"newsboy_scale"`

@@ -148,12 +148,6 @@ func (sh *shot) setting(dst *image.RGBA, t float64, v stage) {
 		for _, r := range []image.Rectangle{image.Rect(120, 520, 461, 801), image.Rect(620, 520, 961, 801)} {
 			draw.Draw(dst, r, sh.images[bg], r.Min, draw.Src)
 		}
-		left, top := int(sh.Clerk[0])-190, int(sh.Clerk[1])-150
-		wood := image.NewUniform(color.RGBA{153, 120, 87, 255})
-		for y := 0; y < 40; y++ {
-			w := min(400, (40-y)*20)
-			draw.Draw(dst, image.Rect(left, top+y, left+w, top+y+1), wood, image.Point{}, draw.Src)
-		}
 	}
 	if e := v.headline; e != nil {
 		col := sh.palette.Ink.ink()
@@ -204,7 +198,7 @@ func (sh *shot) figures(dst *image.RGBA, t float64) []figure {
 		}
 		f := p.figure(t)
 		if sh.place == "post" && p.atCounter && f.feet[0] >= sh.Clerk[0]-190 && f.feet[0] <= sh.Clerk[0]+210 && f.feet[1] <= sh.Clerk[1] {
-			cut := int(sh.Clerk[1]) - 150
+			cut := int(sh.Counter)
 			r := f.body.Rect
 			r.Max.Y = min(r.Max.Y, cut-f.origin.Y)
 			if r.Empty() {
